@@ -3,11 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "NODE_ENV=development next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
+  "//dev": "NODE_ENV=development e explicit: gazda de preview (providerul Atelierului) rulează ca serviciu cu NODE_ENV=production, iar `next dev` moștenit cu production sare peste pipeline-ul PostCSS → Tailwind nu compilează. Forțarea aici repară fără să atingem gazda.",
   "//": "Build-critical deps stau în dependencies (nu devDependencies): unele medii de hosting rulează `npm install` cu NODE_ENV=production, care sare peste devDependencies. Fără Tailwind/PostCSS aici, CSS-ul nu s-ar compila.",
   "dependencies": {
     "next": "^15.5.20",
