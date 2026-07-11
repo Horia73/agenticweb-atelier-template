@@ -12,13 +12,17 @@
   --color-bg: #ffffff;
   --color-surface: #faf9f7;
   --color-line: #eae7e2;
-  --font-display: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  /* stac de sistem — fără dependență de rețea; agentul poate adăuga un font
+     din next/font dacă identitatea clientului o cere */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
 }
 
 html {
   scroll-behavior: smooth;
 }
 body {
+  font-family: var(--font-sans);
   background: var(--color-bg);
   color: var(--color-ink);
   -webkit-font-smoothing: antialiased;
