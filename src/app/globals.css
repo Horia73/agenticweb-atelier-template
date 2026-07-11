@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+/* Tema site-ului — UN SINGUR loc de schimbat pentru identitatea clientului.
+   Agentul rescrie aceste variabile din manualul de identitate (culori din
+   brief): --brand = accentul, --ink = textul, --bg = fundalul. Restul
+   componentelor le folosesc, deci reculoarea întregului site se face de aici. */
+@theme {
+  --color-brand: #e2620f;
+  --color-brand-ink: #ffffff;
+  --color-ink: #1a1712;
+  --color-muted: #6b665c;
+  --color-bg: #ffffff;
+  --color-surface: #faf9f7;
+  --color-line: #eae7e2;
+  --font-display: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+}
