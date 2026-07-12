@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "NODE_ENV=development next dev",
+    "dev:preview": "NODE_ENV=development NEXT_DIST_DIR=.next-preview next dev",
     "build": "next build",
     "start": "next start",
     "test:booking": "node tests/booking-form.browser.mjs",
