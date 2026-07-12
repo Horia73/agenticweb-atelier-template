@@ -1,0 +1,54 @@
+[
+  {
+    "id": "F-001",
+    "severity": "P1",
+    "category": "release-readiness",
+    "title": "Porțile intenționate E2E blochează deployment-ul public",
+    "verified": true,
+    "intentionalE2E": true,
+    "locations": ["src/content.ts", "src/app/layout.tsx", "src/app/page.tsx"],
+    "evidence": "Conținutul declară publishable=false și date sintetice, metadata este noindex/nofollow, iar wordmark-ul, placeholder-ele, contactele și activele nu sunt aprobate pentru publicare.",
+    "impact": "Publicarea ar expune informații neconfirmate și o identitate neaprobată.",
+    "acceptanceCriterion": "Datele și activele reale sunt aprobate și înlocuiesc complet valorile E2E, politicile/contactele sunt aprobate și există aprobare explicită de publicare înainte de schimbarea noindex.",
+    "releaseBlocker": true
+  },
+  {
+    "id": "F-002",
+    "severity": "P2",
+    "category": "tooling",
+    "title": "Verificarea lint nu este executabilă",
+    "verified": true,
+    "intentionalE2E": false,
+    "locations": ["package.json"],
+    "evidence": "npm run lint eșuează deoarece next lint din Next.js 16 este interpretat ca directorul inexistent lint.",
+    "impact": "Poarta statică declarată nu poate detecta probleme înainte de release.",
+    "acceptanceCriterion": "Un script lint compatibil este configurat și rulează cu exit 0 în gate-ul de build.",
+    "releaseBlocker": true
+  },
+  {
+    "id": "F-003",
+    "severity": "P2",
+    "category": "testing-accessibility",
+    "title": "Testul browser nu acoperă eroarea, retry-ul și pre-hidratarea",
+    "verified": true,
+    "intentionalE2E": false,
+    "locations": ["tests/booking-form.browser.mjs", "src/components/booking-form.tsx"],
+    "evidence": "Testul așteaptă hidratarea și simulează numai 201; nu exercită 4xx/5xx, focusul pe alertă, valorile păstrate, retry-ul sau submit-ul pre-hidratare.",
+    "impact": "Regresii în stările critice de eroare și în gardul de hidratare pot rămâne nedetectate.",
+    "acceptanceCriterion": "Testele acoperă 500 urmat de retry 201, alertă și focus, valori păstrate, un POST per încercare și absența POST/navigării înainte de hidratare.",
+    "releaseBlocker": true
+  },
+  {
+    "id": "F-004",
+    "severity": "P2",
+    "category": "privacy",
+    "title": "URL-ul complet este transmis fără o politică pentru query și fragment",
+    "verified": true,
+    "intentionalE2E": false,
+    "locations": ["src/components/booking-form.tsx", "src/content.ts", "tests/booking-form.browser.mjs"],
+    "evidence": "Payloadul folosește window.location.href, iar testul confirmă transmiterea query-ului; disclosure-ul nu menționează URL-ul complet.",
+    "impact": "Parametri care conțin accidental identificatori pot fi trimiși fără necesitate explicită.",
+    "acceptanceCriterion": "Contractul decide URL complet versus origin+pathname; query/fragment sunt eliminate dacă nu sunt necesare sau sunt acoperite de o politică și disclosure aprobate.",
+    "releaseBlocker": true
+  }
+]
