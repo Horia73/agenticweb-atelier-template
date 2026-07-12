@@ -9,9 +9,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { site } from "@/content";
 
 export function BookingForm() {
+  const [hydrated, setHydrated] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const confirmationRef = useRef<HTMLDivElement>(null);
   const copy = site.booking;
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   useEffect(() => {
     if (submitted) {
@@ -43,21 +48,23 @@ export function BookingForm() {
   }
 
   return (
-    <form className="space-y-5" onSubmit={handleSubmit}>
-      <div className="grid gap-5 sm:grid-cols-2">
-        <div className="space-y-2"><Label htmlFor="name">{copy.fields.name}</Label><Input id="name" name="name" autoComplete="name" required className="min-h-12 bg-card" /></div>
-        <div className="space-y-2"><Label htmlFor="email">{copy.fields.email}</Label><Input id="email" name="email" type="email" autoComplete="email" required className="min-h-12 bg-card" /></div>
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="session">{copy.fields.session}</Label>
-        <select id="session" name="session" required defaultValue="" className="min-h-12 w-full rounded-md border border-input bg-card px-3 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring">
-          <option value="" disabled>{copy.sessionPlaceholder}</option>
-          {site.workshop.schedule.map((session) => <option key={session} value={session}>{session}</option>)}
-        </select>
-      </div>
-      <div className="space-y-2"><Label htmlFor="message">{copy.fields.message}</Label><Textarea id="message" name="message" rows={4} className="bg-card" /></div>
-      <p className="text-sm leading-relaxed text-muted-foreground">{copy.privacy}</p>
-      <Button type="submit" size="lg" className="min-h-12 w-full sm:w-auto">{copy.submit}</Button>
+    <form data-booking-form="local-demo" data-hydrated={hydrated} aria-busy={!hydrated} onSubmit={handleSubmit}>
+      <fieldset disabled={!hydrated} className="space-y-5 disabled:opacity-70">
+        <div className="grid gap-5 sm:grid-cols-2">
+          <div className="space-y-2"><Label htmlFor="name">{copy.fields.name}</Label><Input id="name" name="name" autoComplete="name" required className="min-h-12 bg-card" /></div>
+          <div className="space-y-2"><Label htmlFor="email">{copy.fields.email}</Label><Input id="email" name="email" type="email" autoComplete="email" required className="min-h-12 bg-card" /></div>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="session">{copy.fields.session}</Label>
+          <select id="session" name="session" required defaultValue="" className="min-h-12 w-full rounded-md border border-input bg-card px-3 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <option value="" disabled>{copy.sessionPlaceholder}</option>
+            {site.workshop.schedule.map((session) => <option key={session} value={session}>{session}</option>)}
+          </select>
+        </div>
+        <div className="space-y-2"><Label htmlFor="message">{copy.fields.message}</Label><Textarea id="message" name="message" rows={4} className="bg-card" /></div>
+        <p className="text-sm leading-relaxed text-muted-foreground">{copy.privacy}</p>
+        <Button type="submit" size="lg" className="min-h-12 w-full sm:w-auto">{copy.submit}</Button>
+      </fieldset>
     </form>
   );
 }

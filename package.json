@@ -6,6 +6,7 @@
     "dev": "NODE_ENV=development next dev",
     "build": "next build",
     "start": "next start",
+    "test:booking": "node tests/booking-form.browser.mjs",
     "lint": "next lint"
   },
   "//dev": "NODE_ENV=development e explicit: gazda de preview (providerul Atelierului) rulează ca serviciu cu NODE_ENV=production, iar `next dev` moștenit cu production sare peste pipeline-ul PostCSS → Tailwind nu compilează. Forțarea aici repară fără să atingem gazda.",
