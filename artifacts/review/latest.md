@@ -1,80 +1,70 @@
-# Review site integrat — Studio Ceramic E2E
+# Review final independent — Studio Ceramic E2E
 
-**Data:** 12 iulie 2026  
-**Etapă:** Review  
-**Verdict:** implementarea este sigură pentru următorul pas gated de remediere/aprobare, dar **nu este pregătită pentru deployment public**.
+**Data:** 12 iulie 2026
+
+**Etapă:** Review după remedierea Builder
+
+**Verdict tehnic:** **acceptat** — toate remediile tehnice cerute și toate porțile obligatorii trec.
+
+**Verdict publicare:** **blocat intenționat** — preview-ul conține date și identitate E2E nepublicabile, păstrează `noindex, nofollow` și nu are aprobare de publicare.
 
 ## Rezumat
 
-Fluxul principal este coerent cu brief-ul: atelierul introductiv și cererea de rezervare domină ierarhia, obiectele nu sunt prezentate ca ecommerce, capacitatea confirmată este separată de datele sintetice, iar preview-ul este marcat vizibil și `noindex, nofollow`. Formularul este blocat în HTML înainte de hidratare, folosește endpointul și proprietatea `key` aprobate, păstrează datele la eroare și mută focusul către rezultatul accesibil.
+Review-ul independent confirmă în cod și în Chromium că cele trei findings tehnice din review-ul anterior sunt remediate: lint-ul este executabil, testul acoperă gardul pre-hidratare și traseele succes/eroare/retry, iar `page` transmite exclusiv `window.location.pathname`. URL-ul browserului rămâne neschimbat, toate cele trei POST-uri sunt interceptate și simulate, iar testul nu poate crea lead-uri reale.
 
-Build-ul, TypeScript și testul browser al succesului trec. Nu s-a trimis niciun lead real: endpointul a fost interceptat integral în test. Review-ul nu aprobă publicarea.
+Nu există blocker tehnic rămas pentru remedierea evaluată. F-001 rămâne o poartă intenționată de publicare, distinctă de acceptarea tehnică. `npm audit` raportează două vulnerabilități moderate, dar acestea sunt două noduri ale aceleiași cauze tranzitive: `next@16.2.10` include `postcss@8.4.31`, afectat de GHSA-qx2v-qp2m-jg93. În această aplicație CSS-ul este local și compilat la build, fără CSS neîncrezător furnizat de utilizatori și fără stringify PostCSS la runtime; nu a fost demonstrată o cale de exploatare în runtime sau în site-ul static rezultat. Riscul de build/deployment rămâne redus și neblocant, dar dependența trebuie actualizată când Next oferă o versiune compatibilă. Nu s-a rulat `npm audit fix --force`.
 
 ## Verificări executate
 
 | Verificare | Rezultat |
 |---|---|
-| `npm run build` | Trecut; `/`, `/_not-found` și `/icon.svg` sunt statice. |
+| `npm run lint` | Trecut, fără erori sau avertismente; rulează `eslint .` cu configurația flat Next.js. |
+| `npm run test:booking` | Trecut pe build de producție servit local la `127.0.0.1:3210`. |
 | `npx tsc --noEmit` | Trecut. |
-| `npm run test:booking` cu server local de producție | Trecut; exact un POST simulat, payload canonic cu `key`, sesiune în `meta`, honeypot, pagina curentă, URL neschimbat și confirmare accesibilă. |
+| `npm run build` | Trecut; `/`, `/_not-found` și `/icon.svg` sunt prerandate static. |
 | `git diff --check` înaintea artefactelor | Trecut. |
-| `npm run lint` | Eșuat: scriptul `next lint` nu mai este valid în Next.js 16 și este interpretat ca director `lint`. |
-| Inspecție statică SSR/formular | Trecut pentru gardul pre-hidratare: `fieldset disabled={!hydrated ...}`; submit-ul este prevenit și nu rulează înainte de hidratare. |
-| Inspecție vizuală Chromium, desktop 1440 px | Hero, navigație, CTA, marcaj E2E și începutul modulului atelierului sunt lizibile și coerente cu direcția aprobată. |
-| Inspecție mobilă | Captura CLI nu a oferit emulare mobilă de încredere pentru întregul document; riscul este consemnat în F-003, fără a inventa un defect vizual. |
+| `npm audit --json` | Exit 1: 2 moderate, 0 high/critical; `next` direct este raportat prin `postcss@8.4.31` tranzitiv. |
+| `npm ls next postcss @tailwindcss/postcss --all` | `next@16.2.10 -> postcss@8.4.31` este ramura afectată; ramurile Tailwind/shadcn folosesc `postcss@8.5.17`. |
+| HTML de producție | Confirmă `<meta name="robots" content="noindex, nofollow">` și marcajele vizibile E2E/nepublicabile. |
 
-Nu a fost disponibil un runner automat de accesibilitate în dependențele repo-ului. Structura semantică, focusul, etichetele, stările live, țintele și contrastele aprobate au fost inspectate în cod, dar aceasta nu înlocuiește un audit automat și unul cu tastatura pe toate stările.
+## Confirmări focalizate ale formularului
 
-## Findings
+- **`page` minimizat:** implementarea folosește exclusiv `window.location.pathname`. Testul pornește de la `/?verify=booking%20test#fragment-test`, iar toate cele trei payloaduri conțin exact `page: "/"`, fără origin, query sau hash.
+- **Succes direct:** primul POST primește 201; apare `role="status"`, iar focusul este mutat pe confirmare.
+- **Eroare și retry:** al doilea POST primește 500; apare `role="alert"` cu focus, iar numele, emailul și mesajul rămân completate. Reîncercarea primește 201 și confirmarea primește focus.
+- **Gard pre-hidratare:** cu JavaScript dezactivat, SSR livrează `data-hydrated="false"` și `fieldset` dezactivat; `requestSubmit()` nu produce POST și nu navighează.
+- **URL neschimbat:** URL-ul complet, inclusiv query și fragment, este identic înainte și după toate încercările.
+- **Fără lead real:** interceptarea CDP `Fetch` corespunde exact endpointului AgenticWeb și răspunde local; sunt observate exact trei POST-uri simulate.
 
-### F-001 — P1 — Porțile intenționate E2E blochează deployment-ul public
+## Findings active
 
-- **Evidență:** `src/content.ts` declară `e2e.publishable: false`, marchează prețul, programul, procesul, instructorul și confirmarea ca sintetice; `src/app/layout.tsx` setează `noindex, nofollow`; pagina folosește wordmark și placeholder-e locale de test. Lipsesc fotografiile originale, datele reale comerciale/de contact, domeniul și aprobarea de publicare.
-- **Locație:** `src/content.ts`, `src/app/layout.tsx`, `src/app/page.tsx`; contractul de identitate aprobat numai pentru E2E.
-- **Impact:** publicarea ar expune informații neconfirmate și o identitate neaprobată. Acesta este un blocker intenționat al preview-ului, nu o regresie a implementării E2E.
-- **Criteriu de acceptare:** toate valorile sintetice și placeholder-ele sunt înlocuite cu date/active aprobate; numele, contactul, politicile și textul de confidențialitate sunt aprobate; aprobarea explicită de publicare există; abia apoi se decide eliminarea marcajelor și a `noindex`.
+### F-001 — P1 — Poarta intenționată E2E blochează numai publicarea
 
-### F-002 — P2 — Verificarea lint nu este executabilă
+- **Evidență:** `src/content.ts` declară `publishable: false` și marchează datele sintetice; `src/app/layout.tsx` setează `noindex, nofollow`; HTML-ul de producție afișează marcajele; lipsesc activele și datele reale aprobate, iar aprobarea de publicare este explicit absentă.
+- **Locație:** `src/content.ts`, `src/app/layout.tsx`, `src/app/page.tsx`, contractul de identitate.
+- **Impact:** un deployment public ar expune informații sintetice și o identitate de test. Aceasta nu invalidează remedierea tehnică și este o protecție intenționată a preview-ului.
+- **Criteriu de acceptare:** datele, contactele, politicile, wordmark-ul și fotografiile reale sunt furnizate și aprobate; conținutul E2E este înlocuit; există aprobare explicită de publicare; numai apoi se elimină marcajele și `noindex`.
 
-- **Evidență:** `npm run lint` rulează `next lint`; Next.js 16.2.10 răspunde `Invalid project directory .../lint`.
-- **Locație:** `package.json`, scriptul `lint`.
-- **Impact:** poarta statică declarată a repo-ului nu poate detecta probleme de calitate înainte de release; review-ul nu poate considera toate verificările obligatorii trecute.
-- **Criteriu de acceptare:** scriptul lint este migrat la un linter compatibil și configurat, comanda rulează cu exit 0, iar rezultatul este inclus în gate-ul de build.
+### F-005 — P2 — PostCSS vulnerabil este inclus tranzitiv de Next
 
-### F-003 — P2 — Testul browser nu acoperă eroarea, retry-ul și starea pre-hidratare
+- **Evidență:** `npm audit --json` raportează GHSA-qx2v-qp2m-jg93 pentru `postcss <8.5.10`; `npm ls` arată `next@16.2.10 -> postcss@8.4.31`. Intrarea `next` din audit este efectul aceleiași dependențe, nu o a doua vulnerabilitate distinctă. Remedierea sugerată automat este downgrade major la `next@9.3.3` și nu este sigură/aplicabilă.
+- **Locație:** `package-lock.json`, dependența tranzitivă `node_modules/next/node_modules/postcss`.
+- **Impact:** advisory-ul privește XSS la serializarea CSS cu secvența neescapată `</style>`. Site-ul compilează CSS local la build și nu acceptă CSS neîncrezător, deci nu există o cale runtime confirmată și finding-ul nu blochează deployment-ul tehnic actual. Un pipeline viitor care ar procesa CSS neîncrezător ar putea deveni afectat.
+- **Criteriu de acceptare:** actualizarea la o versiune Next compatibilă care include `postcss >=8.5.10`, urmată de lint, teste, TypeScript, build și audit; fără `npm audit fix --force` și fără downgrade major automat.
 
-- **Evidență:** `tests/booking-form.browser.mjs` așteaptă `data-hydrated=true`, simulează numai răspuns 201 și verifică numai succesul. Starea 4xx/5xx, păstrarea valorilor, focusul pe alertă, retry-ul și imposibilitatea submit-ului înainte de hidratare sunt implementate, dar nu sunt exercitate end-to-end.
-- **Locație:** `tests/booking-form.browser.mjs`, `src/components/booking-form.tsx`.
-- **Impact:** regresii într-un flux de rețea eșuat sau în gardul critic de hidratare pot ajunge nedetectate la pasul următor.
-- **Criteriu de acceptare:** testele simulează cel puțin un răspuns 500 urmat de retry 201, verifică `role=alert`, focusul, valorile păstrate și un singur POST per încercare; un test separat verifică HTML-ul/formularul dezactivat înainte de hidratare și absența navigării/POST-ului.
+## Findings anterioare închise
 
-### F-004 — P2 — URL-ul complet al paginii este transmis fără o politică pentru query/fragment
+- **F-002 lint:** închis; `npm run lint` trece cu ESLint flat config.
+- **F-003 acoperire browser:** închis; pre-hidratarea, succesul direct, 500, focusul, păstrarea valorilor și retry 201 sunt exercitate.
+- **F-004 minimizarea URL:** închis; payloadul conține numai pathname.
 
-- **Evidență:** payloadul folosește `page: window.location.href`; textul de privacy spune că datele introduse sunt transmise, dar nu explică transmiterea URL-ului complet. Testul confirmă că inclusiv query-ul `?verify=...` ajunge în payload.
-- **Locație:** `src/components/booking-form.tsx`, `src/content.ts`, `tests/booking-form.browser.mjs`.
-- **Impact:** parametri de campanie sunt de regulă benigni, dar query-ul poate conține accidental identificatori sau alte date care nu sunt necesare lead-ului.
-- **Criteriu de acceptare:** proprietarul contractului decide și documentează dacă AgenticWeb necesită URL complet; dacă nu, se transmite numai origin + pathname (fără query/fragment). Dacă da, disclosure-ul și politica de linkuri interzic parametri sensibili și sunt aprobate înainte de publicare.
+## Release blockers și secvență recomandată
 
-## Accesibilitate și responsive
+**Blocaje tehnice:** niciunul pentru remedierea evaluată. F-005 este mentenanță neblocantă în configurația actuală.
 
-- Există `lang="ro"`, skip link, un singur `main`, ierarhie coerentă de titluri, navigație etichetată, label-uri asociate și controluri native.
-- CTA-urile și sumarul FAQ au minimum 44 px; meniul desktop este ascuns pe mobil, dar CTA-ul principal rămâne disponibil.
-- Succesul folosește `role=status`, eroarea `role=alert`, ambele primesc focus programatic; butonul și fieldset-ul comunică starea de trimitere.
-- `prefers-reduced-motion` este tratat. Perechile cromatice intenționate sunt cele aprobate anterior WCAG AA.
-- Nu a fost verificată cu instrument automat întreaga pagină la breakpoint-uri intermediare și zoom 200%; aceasta rămâne parte din acceptarea F-003, nu un defect vizual confirmat.
+**Porți intenționate de publicare:** F-001 rămâne activ și interzice deployment-ul public.
 
-## Corectitudine, adevăr și date
-
-- Capacitatea de maximum 8 și București sunt fapte din brief; restul detaliilor operaționale de test sunt marcate explicit.
-- Placeholder-ele sunt locale, neutre și nu pretind fotografii, produse sau persoane reale.
-- Formularul transmite nume, email, mesaj opțional, URL, honeypot și sesiune către AgenticWeb. Nu există persistență locală și formularul se golește numai după succes.
-- Nu există checkbox de consimțământ sau link către o politică; legalitatea bazei de prelucrare nu poate fi stabilită din repo și trebuie aprobată înainte de publicare, ca parte din F-001/F-004.
-
-## Release blockers și ordine recomandată
-
-1. Reparați poarta lint și extindeți testele pentru eroare/retry și pre-hidratare (F-002, F-003).
-2. Decideți minimizarea câmpului `page` și aprobați disclosure-ul de date (F-004).
-3. Furnizați și aprobați datele reale, identitatea, activele, contactele și politicile; înlocuiți numai în etapa de fix/build, nu în review (F-001).
-4. Rulați auditul final accesibilitate/responsive pe desktop, mobil, tastatură, zoom și toate stările formularului.
-5. Solicitați aprobarea explicită de publicare; deployment-ul rămâne interzis până atunci.
-
+1. Acceptați remedierea tehnică Builder.
+2. Actualizați Next/PostCSS când există o versiune compatibilă și rerulați porțile, fără force/downgrade automat.
+3. Într-o etapă de build separată, înlocuiți datele, contactele, politicile și activele E2E cu variante aprobate.
+4. Obțineți aprobarea explicită de publicare și abia apoi eliminați marcajele/noindex și efectuați review-ul de release.
