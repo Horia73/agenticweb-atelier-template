@@ -2,10 +2,15 @@
   "$schema": "https://design-tokens.github.io/community-group/format/",
   "meta": {
     "name": "Studio Ceramic E2E — Atelierul ca pagină vie",
-    "version": "1.0.0",
-    "status": "proposed",
+    "version": "1.1.0",
+    "status": "approved-for-e2e-construction",
+    "approvalScope": "Direcția, paleta și perechea Fraunces–Manrope sunt aprobate pentru construcție și test E2E; nu constituie aprobare de publicare.",
     "source": "brief, production brief, artifacts/research/market-research.md și judecăți de design trasabile în visual-direction.md",
     "implementationNote": "Tokenii sunt semantici. Constructorul îi mapează în variabilele :root din src/app/globals.css; nu se introduc culori direct în componente."
+  },
+  "brand": {
+    "wordmarkText": { "$type": "string", "$value": "Studio Ceramic" },
+    "wordmarkStatus": { "$type": "string", "$value": "E2E test only; not approved for publication or as a registered mark" }
   },
   "color": {
     "primitive": {

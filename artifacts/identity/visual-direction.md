@@ -1,8 +1,8 @@
-# Direcție vizuală — Studio Ceramic E2E
+# Direcție vizuală — Studio Ceramic (E2E)
 
 **Etapă:** Identitate vizuală  
 **Data:** 12 iulie 2026  
-**Statut:** direcție propusă pentru construcție; aprobarea clientului și activele originale lipsesc
+**Statut:** aprobată pentru construcția și testarea E2E; nu reprezintă aprobare de publicare
 
 ## Rezumat
 
@@ -22,12 +22,36 @@ Ideea leagă trei intrări confirmate: cerința „cald, editorial, artizanal”
 - tonul: cald, editorial și artizanal;
 - prima etapă nu include ecommerce.
 
-### Încă deschise
+### Aprobate pentru construcție și test
 
-- nu există logo; se poate folosi temporar numele ca wordmark tipografic, fără a-l prezenta ca logo aprobat;
-- nu există fotografii originale; layout-ul poate fi construit cu cadre placeholder etichetate, dar lansarea nu trebuie să simuleze spațiul cu imagini stock;
-- nu sunt confirmate prețul, adresa, calendarul, tehnica, rezultatul atelierului, politica de anulare și mecanismul exact de confirmare;
-- fonturile recomandate mai jos sunt o alegere de design pentru construcție, nu o preferință declarată de client.
+- direcția „Atelierul ca pagină vie”, paleta teracotă–crem–salvie și perechea Fraunces–Manrope;
+- wordmark-ul textual de test este **„Studio Ceramic”**, compus în Fraunces 600; este o soluție aprobată pentru E2E, nu o revendicare de marcă;
+- în lipsa fotografiilor originale, Constructorul folosește suprafețe grafice neutre și placeholder-e locale, etichetate ca atare; acestea nu vor inventa persoane, produse, spațiul ori drepturi asupra imaginilor;
+- setul operațional sintetic documentat mai jos poate alimenta exclusiv testele și preview-ul nepublicabil.
+
+### Încă deschise pentru publicare
+
+- nu există fotografii originale sau acorduri pentru persoane recognoscibile;
+- numele juridic/public final și eventualele cerințe de marcă nu sunt confirmate de această aprobare E2E;
+- datele comerciale și operaționale reale, inclusiv politica de anulare/reprogramare, trebuie furnizate și validate;
+- lipsesc domeniul, URL-ul Instagram și telefonul public.
+
+## Set de conținut sintetic — exclusiv E2E, nepublicabil
+
+Următoarele valori sunt date de test furnizate explicit pentru Constructor. Ele trebuie marcate în sursa de conținut și în orice preview ca **„E2E / date sintetice / nu publica”**. Nu devin fapte despre client și nu pot fi copiate într-un build public fără înlocuire și aprobare:
+
+| Câmp de test | Valoare sintetică E2E |
+|---|---|
+| Atelier introductiv | 180 lei; 2 ore |
+| Include | materiale, unelte, glazurare și două arderi |
+| Locație | „Strada Atelierului 12, București — adresă E2E” |
+| Calendar | marți și joi la 18:30; sâmbătă la 11:00 |
+| Confirmare | rezervarea este o cerere confirmată ulterior pe email |
+| Tehnică și rezultat | modelaj manual; participantul realizează o cană sau un bol |
+| Ridicare | după aproximativ 14 zile |
+| Instructor | „Ana Ceramica — profil E2E” |
+
+Capacitatea de maximum 8 persoane și București provin din brief și rămân fapte confirmate, nu date sintetice. Constructorul trebuie să păstreze delimitarea dintre acestea și tabelul E2E.
 
 ## Direcția principală: „Atelierul ca pagină vie”
 
@@ -61,7 +85,7 @@ Contrast verificat matematic: cărbune/crem 13,32:1; teracotă/crem 5,99:1; crem
 - Titlurile sunt în sentence case, nu cu majuscule integrale. Corpul are 16–18 px și line-height generos. Textele lungi au maximum aproximativ 68 caractere pe rând.
 - Labelurile pot fi mici, dar nu sub 12 px și nu cu tracking exagerat. Cifrele pentru dată, durată și locuri trebuie să fie ușor de scanat.
 
-Fallback-ul păstrează contrastul serif/sans chiar dacă fonturile web nu se încarcă. Numele studioului poate apărea temporar în Fraunces 600 ca wordmark textual; nu se desenează simbol și nu se pretinde existența unei mărci aprobate.
+Fallback-ul păstrează contrastul serif/sans chiar dacă fonturile web nu se încarcă. În test, numele apare ca wordmark textual „Studio Ceramic” în Fraunces 600; nu se desenează simbol și nu se pretinde existența unei mărci înregistrate sau aprobarea numelui pentru publicare.
 
 ### Spațiere, forme, borduri și profunzime
 
@@ -81,7 +105,7 @@ Fallback-ul păstrează contrastul serif/sans chiar dacă fonturile web nu se î
 
 ## Imagistică și art direction
 
-Fotografia este principalul purtător de încredere. Setul recomandat înainte de publicare:
+În produsul public, fotografia originală va fi principalul purtător de încredere. Setul recomandat înainte de publicare:
 
 1. un cadru orizontal amplu cu spațiul și oameni reali în lucru;
 2. mâini în contact cu lutul, fără pozare artificială;
@@ -99,13 +123,14 @@ Reguli de imagine:
 - raporturi dominante 4:5, 3:2 și 16:10; crop-ul nu taie mâinile în punctele de acțiune;
 - alt text factual descrie conținutul, nu atmosfera presupusă;
 - nu se folosesc imagini AI sau stock pentru a reprezenta atelierul, instructorul, participanții ori produsele reale;
-- până la livrarea fotografiilor, placeholder-ele trebuie să includă eticheta cadrului cerut și raportul său, fără fundaluri care pot fi confundate cu dovezi.
+- pentru E2E, se folosesc numai suprafețe grafice neutre/placeholder-e locale, etichetate și fără oameni, produse ori spații inventate; nu se presupun licențe sau drepturi;
+- placeholder-ele includ eticheta cadrului cerut și raportul său și nu pot fi confundate cu dovezi despre studio.
 
 ## Layout, ritm și conversie
 
 - **Hero:** compoziție editorială în două zone pe desktop și o singură coloană pe mobil. Mesajul și CTA-ul preced fotografia în ordinea DOM. Titlul nu depășește aproximativ 10–12 cuvinte, iar faptele confirmate „2 ore”, „București”, „maximum 8” apar ca informație scanabilă, nu ca badge-uri decorative în exces.
-- **Modulul atelierului introductiv:** cea mai densă zonă de informație și principalul punct de conversie. Include numai după confirmare preț, ce include, dată, locuri și mecanism de confirmare. CTA-ul primar este „Rezervă un loc”.
-- **Poveste / proces:** alternanță între o fotografie dominantă și text scurt; dacă procesul ceramic nu este confirmat, structura rămâne placeholder, nu copy speculativ.
+- **Modulul atelierului introductiv:** cea mai densă zonă de informație și principalul punct de conversie. În test poate afișa setul sintetic E2E de mai sus, cu marcajul nepublicabil păstrat. În public include numai date reale confirmate. CTA-ul primar este „Rezervă un loc”, iar răspunsul trebuie să spună că cererea a fost primită, nu că locul este confirmat.
+- **Poveste / proces:** alternanță între o suprafață grafică neutră și text scurt în E2E. Modelajul manual, cana/bolul, glazurarea, arderile și ridicarea la aproximativ 14 zile sunt exclusiv date sintetice de test; în public, structura rămâne placeholder până la confirmarea procesului real.
 - **Grupa mică:** cifra 8 poate fi un reper tipografic mare, însoțită strict de formularea factuală „maximum 8 persoane”. Beneficiile presupuse nu se formulează ca promisiuni.
 - **Obiecte:** galerie cu ritm de catalog editorial, secundară față de atelier; fără prețuri, stoc, butoane de cumpărare sau disponibilitate inventate.
 - **CTA repetat:** după dovadă și după FAQ, nu după fiecare secțiune. CTA-ul secundar pentru grupuri private/corporate are tratament outline și verb specific.
@@ -126,9 +151,9 @@ Ierarhia vizuală trebuie să păstreze raportul aproximativ 70/20/10: suprafeț
 - CTA-uri concurente, formular de rezervare ascuns sau „Contactează-ne” folosit în locul unei acțiuni specifice;
 - text decorativ peste zone aglomerate ale fotografiei.
 
-## Direcție de rezervă (numai dacă fotografia originală întârzie)
+## Mod de construcție fără fotografie originală
 
-**„Caiet de atelier”** păstrează aceiași tokeni, tipografie și ierarhie, dar înlocuiește temporar hero-ul fotografic cu o compoziție tipografică, grilă fină și placeholder-e editoriale explicit etichetate. Poate folosi macro-fotografii autentice ale materialelor furnizate ulterior, dar nu ilustrații care pretind un proces real. Este o soluție de construcție și preview, nu recomandarea pentru publicare.
+**„Caiet de atelier”** păstrează aceiași tokeni, tipografie și ierarhie, dar înlocuiește hero-ul fotografic cu o compoziție tipografică, grilă fină, suprafețe grafice neutre și placeholder-e editoriale locale explicit etichetate. Nu folosește ilustrații care pretind un proces real. Este modul aprobat pentru construcția E2E, nu recomandarea pentru publicare.
 
 ## Trasabilitatea alegerilor
 
@@ -143,15 +168,15 @@ Ierarhia vizuală trebuie să păstreze raportul aproximativ 70/20/10: suprafeț
 | Serif display + sans funcțional | judecată de design pentru a combina voce editorială și claritate operațională |
 | Borduri, profunzime redusă, mișcare discretă | judecată de design în acord cu ținta calmă și tactilă |
 | Fără imagini stock/AI care simulează studioul | lipsa activelor reale și nevoia de dovezi autentice din research |
+| „Studio Ceramic” în Fraunces 600 | aprobare explicită pentru wordmark-ul de test |
+| Suprafețe neutre și placeholder-e locale în Constructor | instrucțiune explicită pentru E2E; nu există fotografii originale |
+| Setul operațional sintetic | date furnizate explicit pentru test, marcate nepublicabile |
 
-## Întrebări deschise înainte de publicare
+## Cerințe rămase înainte de publicare
 
-- Aprobă clientul direcția „Atelierul ca pagină vie”, paleta și perechea tipografică?
-- Care este forma exactă a numelui ce trebuie folosită în wordmark și există cerințe legale de marcă?
-- Pot fi furnizate fotografiile originale din lista de cadre și acordurile necesare pentru persoanele recognoscibile?
-- Care sunt prețul atelierului introductiv și elementele incluse?
-- Care sunt adresa, calendarul și regulile de anulare sau reprogramare?
-- Rezervarea este confirmată imediat sau este o cerere aprobată ulterior?
-- Ce tehnică se folosește, ce realizează participantul și cum sunt arse, glazurate și ridicate piesele?
-- Cine conduce atelierul și ce biografie factuală poate fi publicată?
-
+- înlocuirea tuturor datelor sintetice cu date comerciale și operaționale reale, aprobate;
+- confirmarea politicilor reale de anulare/reprogramare, plată, accesibilitate și protecția datelor;
+- confirmarea numelui public final și a oricăror cerințe juridice/de marcă;
+- fotografii originale și acordurile necesare sau o decizie editorială separată pentru o identitate publică fără fotografie;
+- identitatea și biografia factuală a instructorului real;
+- domeniul, URL-ul Instagram, telefonul și datele legale/publice.
