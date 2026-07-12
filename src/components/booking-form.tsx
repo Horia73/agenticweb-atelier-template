@@ -37,7 +37,7 @@ export function BookingForm() {
     const data = new FormData(form);
     const message = String(data.get("message") ?? "").trim();
     const body = {
-      siteKey: "aw_d63fa8fdb1db55ee5f982b378b0231d5",
+      key: "aw_d63fa8fdb1db55ee5f982b378b0231d5",
       source: "form",
       name: String(data.get("name") ?? "").trim(),
       email: String(data.get("email") ?? "").trim(),

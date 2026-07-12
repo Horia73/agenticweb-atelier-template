@@ -124,7 +124,7 @@ try {
   }
   const leadRequest = leadRequests[0];
   const expectedBody = {
-    siteKey: "aw_d63fa8fdb1db55ee5f982b378b0231d5",
+    key: "aw_d63fa8fdb1db55ee5f982b378b0231d5",
     source: "form",
     name: "Nume Test",
     email: "test@example.com",
