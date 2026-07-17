@@ -106,7 +106,7 @@ export function Chatbot({
 }: {
   className?: string
   title?: string
-  suggestions?: string[]
+  suggestions?: readonly string[]
   conversationStorageKey?: string
   onClose?: () => void
 }) {
@@ -447,7 +447,7 @@ export function ChatWidget({
   suggestions,
 }: {
   title?: string
-  suggestions?: string[]
+  suggestions?: readonly string[]
 }) {
   const [open, setOpen] = React.useState(false)
 
