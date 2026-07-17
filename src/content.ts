@@ -8,6 +8,15 @@ export const site = {
   tagline: "Ateliere de ceramică pentru adulți în București",
   description:
     "Ateliere de ceramică pentru adulți, în grupe de maximum 8 persoane, și obiecte realizate manual în București.",
+  chatbot: {
+    enabled: true,
+    title: "Asistent Studio Ceramic",
+    suggestions: [
+      "Cum decurge un atelier?",
+      "Cât costă o sesiune?",
+      "Cum rezerv un loc?",
+    ],
+  },
   previewNotice: "Preview E2E · datele marcate sunt sintetice și nu pot fi publicate",
   accessibility: { skipToContent: "Sari la conținut", mainNavigation: "Navigație principală", backToTop: "începutul paginii" },
   navigation: [

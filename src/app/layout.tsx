@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Fraunces, Manrope } from "next/font/google";
 import { site } from "@/content";
 import "./globals.css";
+import { ChatWidget } from "@/components/agenticweb/chatbot";
 
 const manrope = Manrope({ subsets: ["latin", "latin-ext"], variable: "--font-manrope" });
 const fraunces = Fraunces({ subsets: ["latin", "latin-ext"], variable: "--font-fraunces", weight: ["500", "600"] });
@@ -15,7 +16,15 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="ro" className={`${manrope.variable} ${fraunces.variable}`}>
-      <body>{children}</body>
+      <body>
+        {children}
+        {site.chatbot.enabled && process.env.NEXT_PUBLIC_AWOS_SITE_KEY ? (
+          <ChatWidget
+            title={site.chatbot.title}
+            suggestions={site.chatbot.suggestions}
+          />
+        ) : null}
+      </body>
     </html>
   );
 }
