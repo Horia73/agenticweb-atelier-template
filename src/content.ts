@@ -12,6 +12,16 @@ export const site = {
   address: "Str. Exemplu 1, Oraș",
   hours: "Luni–Vineri, 9:00–18:00",
 
+  chatbot: {
+    enabled: true,
+    title: "Asistent virtual",
+    suggestions: [
+      "Cu ce mă puteți ajuta?",
+      "Cât costă serviciile?",
+      "Cum pot lua legătura cu voi?",
+    ],
+  },
+
   hero: {
     eyebrow: "Bine ai venit",
     title: "Un titlu care spune clar ce oferi.",
