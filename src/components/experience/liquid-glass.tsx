@@ -4,6 +4,7 @@ import * as React from "react";
 import { motion, useReducedMotion } from "motion/react";
 
 import { cn } from "@/lib/utils";
+import { useExperienceViewport } from "@/components/experience/experience-runtime";
 
 export type LiquidGlassSurfaceProps = React.ComponentProps<"div"> & {
   tint?: string;
@@ -129,16 +130,18 @@ export function LiquidGlassNav({
   const [internalActive, setInternalActive] = React.useState(defaultActiveId ?? items[0]?.id ?? "");
   const resolvedActive = activeId ?? internalActive;
   const reducedMotion = useReducedMotion();
+  const viewport = useExperienceViewport();
+  const resolvedCompact = compact || viewport === "mobile";
   const choose = (id: string) => {
     if (activeId === undefined) setInternalActive(id);
     onActiveChange?.(id);
   };
 
   return (
-    <nav aria-label={label} className={cn("w-full", className)} {...props}>
-      <LiquidGlassSurface tint="225 239 255" blur={18} saturation={1.42} variant="clear" {...surfaceProps} className={cn("flex items-center gap-2 rounded-[1.35rem] p-1.5 text-sm text-white", surfaceClassName)}>
+    <nav aria-label={label} data-experience-viewport={viewport} className={cn("w-full min-w-0", className)} {...props}>
+      <LiquidGlassSurface tint="225 239 255" blur={18} saturation={1.42} variant="clear" {...surfaceProps} className={cn("flex flex-wrap items-center gap-1.5 rounded-[1.15rem] p-1.5 text-sm text-white sm:flex-nowrap sm:gap-2 sm:rounded-[1.35rem]", surfaceClassName)}>
         {brand ? <div className="shrink-0 px-3 font-semibold tracking-[-0.03em]">{brand}</div> : null}
-        <ul className="flex min-w-0 flex-1 items-center justify-center gap-0.5" role="list">
+        <ul className="order-3 flex w-full min-w-0 snap-x items-center justify-start gap-0.5 overflow-x-auto [scrollbar-width:none] sm:order-none sm:w-auto sm:flex-1 sm:justify-center" role="list">
           {items.map((item) => {
             const selected = item.id === resolvedActive;
             return (
@@ -154,11 +157,11 @@ export function LiquidGlassNav({
                 <a
                   href={item.href}
                   aria-current={selected ? "page" : undefined}
-                  className={cn("relative flex h-10 items-center justify-center gap-2 rounded-[1rem] px-3 font-medium text-white/68 outline-none transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-white/70", selected && "text-white", compact && "size-10 px-0")}
+                  className={cn("relative flex min-h-11 items-center justify-center gap-2 rounded-[1rem] px-3 font-medium text-white/68 outline-none transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-white/70", selected && "text-white", resolvedCompact && "size-11 px-0")}
                   onClick={() => choose(item.id)}
                 >
                   {item.icon}
-                  <span className={cn(compact && "sr-only")}>{item.label}</span>
+                  <span className={cn(resolvedCompact && "sr-only")}>{item.label}</span>
                 </a>
               </li>
             );

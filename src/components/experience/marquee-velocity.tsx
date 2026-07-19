@@ -3,7 +3,7 @@
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
-import { damp, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
+import { damp, useExperienceViewport, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
 
 export type MarqueeVelocityProps = Omit<React.ComponentProps<"section">, "children"> & {
   label: string;
@@ -50,6 +50,9 @@ export function MarqueeVelocity({
   const hoveredRef = React.useRef(false);
   const [copies, setCopies] = React.useState(2);
   const reducedMotion = usePrefersReducedMotion();
+  const viewport = useExperienceViewport();
+  const activeSpeed = speed * (viewport === "mobile" ? .68 : viewport === "tablet" ? .84 : 1);
+  const activeGap = gap * (viewport === "mobile" ? .58 : viewport === "tablet" ? .78 : 1);
 
   React.useEffect(() => {
     const root = rootRef.current;
@@ -61,14 +64,14 @@ export function MarqueeVelocity({
     let frame = 0;
     let previous = performance.now();
     let offset = 0;
-    let contentWidth = Math.max(1, content.offsetWidth + gap);
+    let contentWidth = Math.max(1, content.offsetWidth + activeGap);
     let onScreen = true;
     let lastScrollY = window.scrollY;
     let smoothedScrollVelocity = 0;
     let pauseFactor = 1;
 
     const measure = () => {
-      contentWidth = Math.max(1, content.offsetWidth + gap);
+      contentWidth = Math.max(1, content.offsetWidth + activeGap);
       const needed = Math.max(2, Math.ceil((root.clientWidth * 2) / contentWidth) + 1);
       setCopies((current) => (current === needed ? current : needed));
     };
@@ -97,7 +100,7 @@ export function MarqueeVelocity({
         const boost = Math.min(maxBoost, Math.abs(smoothedScrollVelocity) * (velocityInfluence / 1000));
         let travelDirection = direction;
         if (flipOnScroll && smoothedScrollVelocity < -40) travelDirection = (direction * -1) as 1 | -1;
-        offset -= travelDirection * speed * (1 + boost) * pauseFactor * delta;
+        offset -= travelDirection * activeSpeed * (1 + boost) * pauseFactor * delta;
         offset = ((offset % contentWidth) + contentWidth) % contentWidth;
         track.style.transform = `translate3d(${-offset}px, 0, 0)`;
       }
@@ -112,12 +115,12 @@ export function MarqueeVelocity({
       resizeObserver.disconnect();
       intersectionObserver.disconnect();
     };
-  }, [direction, flipOnScroll, gap, maxBoost, pauseOnHover, reducedMotion, speed, velocityInfluence]);
+  }, [activeGap, activeSpeed, direction, flipOnScroll, maxBoost, pauseOnHover, reducedMotion, velocityInfluence]);
 
   if (reducedMotion) {
     return (
-      <section aria-label={label} data-marquee-velocity data-static className={cn("relative overflow-x-auto", className)} {...props}>
-        <div className={cn("flex w-max items-center", contentClassName)} style={{ gap }}>
+      <section aria-label={label} data-marquee-velocity data-experience-viewport={viewport} data-static className={cn("relative overflow-x-auto", className)} {...props}>
+        <div className={cn("flex w-max items-center", contentClassName)} style={{ gap: activeGap }}>
           {children}
         </div>
       </section>
@@ -129,6 +132,7 @@ export function MarqueeVelocity({
       ref={rootRef}
       aria-label={label}
       data-marquee-velocity
+      data-experience-viewport={viewport}
       className={cn("relative overflow-hidden", className)}
       onPointerEnter={() => {
         hoveredRef.current = true;
@@ -138,14 +142,14 @@ export function MarqueeVelocity({
       }}
       {...props}
     >
-      <div ref={trackRef} className={cn("flex w-max items-center will-change-transform", trackClassName)} style={{ gap }}>
+      <div ref={trackRef} className={cn("flex w-max items-center will-change-transform", trackClassName)} style={{ gap: activeGap }}>
         {Array.from({ length: copies }, (_, index) => (
           <div
             key={index}
             ref={index === 0 ? contentRef : undefined}
             aria-hidden={index > 0 || undefined}
             className={cn("flex shrink-0 items-center", contentClassName)}
-            style={{ gap }}
+            style={{ gap: activeGap }}
           >
             {children}
           </div>

@@ -15,10 +15,13 @@
     "enforcementScript": "check:ui"
   },
   "experience": {
-    "catalogVersion": "2.0.0",
+    "catalogVersion": "3.1.0",
     "registry": "registry.json",
+    "catalog": "experience.catalog.json",
+    "grammar": "creative-grammar.json",
     "components": "src/components/experience",
     "skill": ".agents/skills/experience-primitives/SKILL.md",
+    "responsiveContract": "docs/experience/responsive-contract.md",
     "labRoute": "/experience-lab",
     "labEnv": "EXPERIENCE_LAB=1"
   },

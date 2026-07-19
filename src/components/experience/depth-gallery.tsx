@@ -11,7 +11,7 @@ import {
 import { cn } from "@/lib/utils";
 import {
   clamp01,
-  useHydrated,
+  useExperienceViewport,
   useMediaQuery,
   usePrefersReducedMotion,
 } from "@/components/experience/experience-runtime";
@@ -137,11 +137,9 @@ export function DepthGallery({
 }: DepthGalleryProps) {
   const rootRef = React.useRef<HTMLElement>(null);
   const reducedMotion = usePrefersReducedMotion();
-  const hydrated = useHydrated();
-  const coarseOrNarrow = useMediaQuery("(pointer: coarse), (max-width: 767.98px)");
-  // SSR tradeoff: the server cannot know pointer/viewport, so mobile's first paint is the 3D stack; gating on hydration makes the carousel swap land exactly once, post-mount.
-  const compact = hydrated && coarseOrNarrow;
-  const staticLayout = reducedMotion || compact;
+  const viewport = useExperienceViewport();
+  const coarsePointer = useMediaQuery("(pointer: coarse)");
+  const staticLayout = reducedMotion || coarsePointer || viewport !== "desktop";
   const [activeIndex, setActiveIndex] = React.useState(0);
   const scrollYProgress = useElementScrollProgress(rootRef);
 
@@ -160,7 +158,7 @@ export function DepthGallery({
 
   if (staticLayout) {
     return (
-      <section ref={rootRef} aria-label={label} data-depth-gallery data-static className={cn("relative min-h-svh", className)} style={style} {...props}>
+      <section ref={rootRef} aria-label={label} data-depth-gallery data-experience-viewport={viewport} data-static className={cn("relative min-h-svh", className)} style={style} {...props}>
         <div role="list" className="flex min-h-svh snap-x snap-mandatory items-center gap-4 overflow-x-auto px-5 py-24 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {items.map((item) => (
             <article key={item.id} role="listitem" aria-label={item.label ?? item.title} className={cn("relative aspect-[4/5] min-w-[84vw] snap-center overflow-hidden rounded-[1.5rem] bg-muted sm:min-w-[52vw]", itemClassName, item.className)}>
@@ -181,6 +179,7 @@ export function DepthGallery({
       aria-label={label}
       data-active-index={activeIndex}
       data-depth-gallery
+      data-experience-viewport={viewport}
       className={cn("relative isolate", className)}
       style={{ minHeight: `${Math.max(items.length, scrollScreens ?? items.length) * 100}svh`, perspective: 1200, ...style }}
       {...props}

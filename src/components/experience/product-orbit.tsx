@@ -9,7 +9,7 @@ import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { damp, useMediaQuery, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
+import { damp, useExperienceViewport, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
 import { useWebGLStage } from "@/components/experience/use-webgl-stage";
 
 type Vector3Tuple = [number, number, number];
@@ -37,9 +37,12 @@ export type ProductOrbitProps = Omit<React.ComponentProps<"section">, "children"
   transmission?: number;
   modelScale?: number;
   mobileModelScale?: number;
+  tabletModelScale?: number;
   /** Normalizes any model so its bounding-sphere diameter matches this world-space size; `modelScale` then multiplies on top. */
   fitDiameter?: number;
   cameraPosition?: Vector3Tuple;
+  mobileCameraPosition?: Vector3Tuple;
+  tabletCameraPosition?: Vector3Tuple;
   autoRotate?: number;
   dragSensitivity?: number;
   hotspots?: ProductOrbitHotspot[];
@@ -150,10 +153,13 @@ export function ProductOrbit({
   metalness = .48,
   modelScale = 1,
   mobileModelScale,
+  mobileCameraPosition,
   modelSrc,
   primitive = "bottle",
   roughness = .2,
   transmission = .08,
+  tabletCameraPosition,
+  tabletModelScale,
   onKeyDown,
   onPointerDown,
   onPointerMove,
@@ -172,10 +178,19 @@ export function ProductOrbit({
     autoRotateRef.current = autoRotate;
     hotspotsRef.current = hotspots;
   });
-  const mobile = useMediaQuery("(max-width: 639.98px)");
+  const viewport = useExperienceViewport();
   const staticMode = usePrefersReducedMotion();
   const [activeHotspot, setActiveHotspot] = React.useState<string | null>(null);
-  const resolvedModelScale = mobile && mobileModelScale ? mobileModelScale : modelScale;
+  const resolvedModelScale = viewport === "mobile"
+    ? mobileModelScale ?? tabletModelScale ?? modelScale
+    : viewport === "tablet"
+      ? tabletModelScale ?? modelScale
+      : modelScale;
+  const resolvedCameraPosition = viewport === "mobile"
+    ? mobileCameraPosition ?? tabletCameraPosition ?? cameraPosition
+    : viewport === "tablet"
+      ? tabletCameraPosition ?? cameraPosition
+      : cameraPosition;
 
   const { ready, failed } = useWebGLStage({
     stageRef: rootRef,
@@ -185,7 +200,7 @@ export function ProductOrbit({
     antialias: true,
     alpha: true,
     signature: JSON.stringify([
-      cameraPosition,
+      resolvedCameraPosition,
       color,
       dracoDecoderPath ?? null,
       fitDiameter ?? null,
@@ -206,7 +221,7 @@ export function ProductOrbit({
       let ktx2Loader: KTX2Loader | null = null;
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(34, 1, .1, 100);
-      camera.position.set(...cameraPosition);
+      camera.position.set(...resolvedCameraPosition);
       const pmrem = new THREE.PMREMGenerator(renderer);
       const environment = pmrem.fromScene(new RoomEnvironment(), .04);
       scene.environment = environment.texture;
@@ -341,12 +356,12 @@ export function ProductOrbit({
   };
 
   return (
-    <section ref={rootRef} aria-label={label} tabIndex={0} data-product-orbit data-ready={ready || undefined} data-fallback={failed || staticMode || undefined} className={cn("relative isolate overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-white/70", className)} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerCancel={handlePointerUp} onKeyDown={handleKeyDown} {...props}>
+    <section ref={rootRef} aria-label={label} tabIndex={0} data-product-orbit data-experience-viewport={viewport} data-ready={ready || undefined} data-fallback={failed || staticMode || undefined} className={cn("relative isolate overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-white/70", className)} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerCancel={handlePointerUp} onKeyDown={handleKeyDown} {...props}>
       {description ? <p className="sr-only">{description}</p> : null}
       <canvas ref={canvasRef} aria-hidden className={cn("absolute inset-0 -z-10 size-full touch-none transition-opacity duration-500", ready && !failed && !staticMode ? "opacity-100" : "opacity-0", canvasClassName)} />
       {(failed || staticMode) && fallback ? <div className="absolute inset-0 -z-10">{fallback}</div> : null}
       {!failed && !staticMode ? hotspots.map((hotspot, index) => <Button ref={(node) => { if (node) hotspotRefs.current.set(hotspot.id, node); else hotspotRefs.current.delete(hotspot.id); }} key={hotspot.id} type="button" variant="ghost" size="icon" aria-label={hotspot.label} className="absolute left-[var(--hotspot-x)] top-[var(--hotspot-y)] z-20 size-10 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/55 bg-black/48 font-mono text-[.62rem] font-semibold tracking-[.08em] text-white shadow-lg backdrop-blur-md transition-[opacity,background-color] hover:bg-black/78 hover:text-white focus-visible:ring-white" onClick={() => setActiveHotspot((current) => current === hotspot.id ? null : hotspot.id)}>{hotspot.marker ?? String(index + 1).padStart(2, "0")}</Button>) : null}
-      {activeHotspot ? <div className="absolute bottom-6 right-6 z-20 max-w-xs rounded-2xl border border-white/15 bg-black/58 p-4 text-sm text-white shadow-2xl backdrop-blur-xl">{hotspots.find((item) => item.id === activeHotspot)?.content ?? hotspots.find((item) => item.id === activeHotspot)?.label}</div> : null}
+      {activeHotspot ? <div className="absolute inset-x-4 bottom-4 z-20 max-h-[min(40svh,20rem)] overflow-y-auto rounded-2xl border border-white/15 bg-black/58 p-4 text-sm text-white shadow-2xl backdrop-blur-xl sm:inset-x-auto sm:bottom-6 sm:right-6 sm:w-[min(22rem,calc(100vw-3rem))]">{hotspots.find((item) => item.id === activeHotspot)?.content ?? hotspots.find((item) => item.id === activeHotspot)?.label}</div> : null}
       {children}
     </section>
   );

@@ -5,7 +5,7 @@ import { type MotionValue, useMotionValue, useMotionValueEvent } from "motion/re
 import * as THREE from "three";
 
 import { cn } from "@/lib/utils";
-import { clamp01, damp, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
+import { clamp01, damp, useExperienceViewport, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
 import { useElementScrollProgress } from "@/components/experience/use-element-scroll-progress";
 import { useWebGLStage } from "@/components/experience/use-webgl-stage";
 
@@ -113,6 +113,8 @@ export function ParticleAssembly({
     progressRef.current = progress;
   });
   const staticMode = usePrefersReducedMotion();
+  const viewport = useExperienceViewport();
+  const activeParticleCount = Math.min(particleCount, viewport === "mobile" ? 4200 : viewport === "tablet" ? 7200 : 32000);
   useMotionValueEvent(progress, "change", (value) => {
     desiredRef.current = invert ? 1 - clamp01(value) : clamp01(value);
   });
@@ -131,7 +133,7 @@ export function ParticleAssembly({
     alpha: true,
     // `trigger` swaps the stage DOM (and therefore the canvas element), so the
     // scene must rebuild against the freshly mounted canvas.
-    signature: JSON.stringify([color, colorBoost, colorSrc, particleCount, pointSize, relief, sampling, scatter, smoothing, sourceColorMix, src, trigger]),
+    signature: JSON.stringify([activeParticleCount, color, colorBoost, colorSrc, pointSize, relief, sampling, scatter, smoothing, sourceColorMix, src, trigger]),
     create: ({ renderer, markReady, markFailed, isDisposed }) => {
       let elapsed = 0;
       const scene = new THREE.Scene();
@@ -211,7 +213,7 @@ export function ParticleAssembly({
             }
           }
           if (!candidates.length) throw new Error("No target pixels");
-          const count = Math.min(Math.max(600, particleCount), 32000);
+          const count = Math.min(Math.max(600, activeParticleCount), 32000);
           const target = new Float32Array(count * 3);
           const scattered = new Float32Array(count * 3);
           const seeds = new Float32Array(count);
@@ -248,8 +250,8 @@ export function ParticleAssembly({
         onResize: (width, height) => {
           camera.aspect = width / height;
           camera.updateProjectionMatrix();
-          const mobileScale = width < 640 ? 0.74 : 1;
-          points.scale.setScalar(mobileScale);
+          const responsiveScale = width < 640 ? 0.74 : width < 1024 ? 0.88 : 1;
+          points.scale.setScalar(responsiveScale);
         },
         onFrame: (delta) => {
           elapsed += delta;
@@ -287,7 +289,7 @@ export function ParticleAssembly({
   );
 
   return (
-    <section ref={rootRef} aria-label={label} data-particle-assembly data-trigger={trigger} data-ready={ready || undefined} className={cn("relative", className)} style={trigger === "scroll" ? { minHeight: `${Math.max(1, scrollScreens) * 100}svh` } : undefined} onPointerEnter={handlePointerEnter} onPointerLeave={handlePointerLeave} {...props}>
+    <section ref={rootRef} aria-label={label} data-particle-assembly data-experience-viewport={viewport} data-trigger={trigger} data-ready={ready || undefined} className={cn("relative", className)} style={trigger === "scroll" ? { minHeight: `${Math.max(1, scrollScreens) * 100}svh` } : undefined} onPointerEnter={handlePointerEnter} onPointerLeave={handlePointerLeave} {...props}>
       {trigger === "scroll" ? content : <div className="h-svh">{React.cloneElement(content, { className: cn("relative h-full", stageClassName) })}</div>}
     </section>
   );

@@ -6,7 +6,7 @@ import { useReducedMotion } from "motion/react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useMediaQuery } from "@/components/experience/experience-runtime";
+import { useCoarsePointer, useExperienceViewport } from "@/components/experience/experience-runtime";
 
 export type SpatialCanvasItem = {
   id: string;
@@ -66,7 +66,8 @@ export function SpatialCanvas({
   ...props
 }: SpatialCanvasProps) {
   const reducedMotion = useReducedMotion();
-  const narrow = useMediaQuery("(max-width: 639.98px)");
+  const viewport = useExperienceViewport();
+  const coarsePointer = useCoarsePointer();
   const [view, setView] = React.useState(initialView);
   const dragRef = React.useRef<DragState | null>(null);
   const planeRef = React.useRef<HTMLDivElement>(null);
@@ -84,8 +85,8 @@ export function SpatialCanvas({
     });
   }, [maxZoom, minZoom, onViewChange]);
 
-  if (narrow || reducedMotion) {
-    return <section aria-label={label} data-spatial-canvas data-static className={cn("min-h-svh overflow-hidden py-24", className, stageClassName)} {...props}><div className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-5 [scrollbar-width:none]">{items.map((item, index) => <article key={item.id} className={cn("relative aspect-[4/5] w-[82vw] shrink-0 snap-center overflow-hidden rounded-[2rem]", typeof itemClassName === "function" ? itemClassName(item, index) : itemClassName, item.className)} aria-label={item.label}>{item.content}</article>)}</div></section>;
+  if (viewport !== "desktop" || coarsePointer || reducedMotion) {
+    return <section aria-label={label} data-spatial-canvas data-experience-viewport={viewport} data-static className={cn("min-h-svh overflow-hidden py-16 sm:py-20", className, stageClassName)} {...props}><div className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-5 [scrollbar-width:none] sm:gap-6 sm:px-8">{items.map((item, index) => <article key={item.id} className={cn("relative aspect-[4/5] w-[82vw] shrink-0 snap-center overflow-hidden rounded-[1.5rem] sm:aspect-[5/4] sm:w-[min(68vw,34rem)] sm:rounded-[2rem]", typeof itemClassName === "function" ? itemClassName(item, index) : itemClassName, item.className)} aria-label={item.label}>{item.content}</article>)}</div></section>;
   }
 
   // Drag writes the pan straight to the DOM; React state commits on release.
@@ -139,7 +140,7 @@ export function SpatialCanvas({
   };
   const controlClass = "grid size-10 place-items-center rounded-xl border border-white/15 bg-black/45 text-white shadow-lg backdrop-blur-xl transition-colors hover:bg-black/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white";
   return (
-    <section aria-label={label} tabIndex={0} data-spatial-canvas className={cn("relative h-svh touch-none overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/60", className, stageClassName)} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerCancel={handlePointerUp} onWheel={handleWheel} onKeyDown={handleKeyDown} {...props}>
+    <section aria-label={label} tabIndex={0} data-spatial-canvas data-experience-viewport={viewport} className={cn("relative h-svh touch-none overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/60", className, stageClassName)} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerCancel={handlePointerUp} onWheel={handleWheel} onKeyDown={handleKeyDown} {...props}>
       <p className="sr-only">{instructions}</p>
       <div ref={backdropRef} aria-hidden className="absolute inset-0 opacity-35" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.16) 1px, transparent 1px),linear-gradient(90deg,rgba(255,255,255,.16) 1px,transparent 1px)", backgroundSize: `${gridSize * view.zoom}px ${gridSize * view.zoom}px`, backgroundPosition: `${view.x}px ${view.y}px` }} />
       <div ref={planeRef} className="absolute left-1/2 top-1/2 will-change-transform" style={{ width: worldSize[0], height: worldSize[1], transform: `translate3d(calc(-50% + ${view.x}px), calc(-50% + ${view.y}px), 0) scale(${view.zoom})`, transformOrigin: "center" }}>

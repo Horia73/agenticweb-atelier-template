@@ -5,7 +5,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 import {
   useHydrated,
-  useMediaQuery,
+  useExperienceViewport,
   usePrefersReducedMotion,
 } from "@/components/experience/experience-runtime";
 
@@ -49,7 +49,8 @@ export function StickyStory({
   const rootRef = React.useRef<HTMLElement>(null);
   const [activeIndex, setActiveIndex] = React.useState(0);
   const hydrated = useHydrated();
-  const desktop = useMediaQuery("(min-width: 1024px)");
+  const viewport = useExperienceViewport();
+  const desktop = viewport === "desktop";
   const prefersReducedMotion = usePrefersReducedMotion();
 
   React.useEffect(() => {
@@ -168,6 +169,7 @@ export function StickyStory({
     <section
       ref={rootRef}
       data-sticky-story
+      data-experience-viewport={viewport}
       data-visual-side={visualSide}
       className={cn(
         "grid items-start gap-0 lg:grid-cols-[minmax(0,1fr)_minmax(22rem,1fr)]",

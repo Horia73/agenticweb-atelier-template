@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import {
   damp,
   useCoarsePointer,
+  useExperienceViewport,
   usePrefersReducedMotion,
 } from "@/components/experience/experience-runtime";
 
@@ -65,7 +66,10 @@ export function ElasticImageGrid({
   const wakeRef = React.useRef<() => void>(() => undefined);
   const reducedMotion = usePrefersReducedMotion();
   const coarse = useCoarsePointer();
+  const viewport = useExperienceViewport();
   const staticMode = reducedMotion || coarse;
+  const activeTravel = maxTravel * (viewport === "tablet" ? .72 : viewport === "mobile" ? .5 : 1);
+  const activeTilt = maxTilt * (viewport === "tablet" ? .72 : viewport === "mobile" ? .5 : 1);
 
   React.useEffect(() => {
     if (staticMode) return;
@@ -136,14 +140,14 @@ export function ElasticImageGrid({
         const dy = pointer.y - center.y;
         const distance = Math.hypot(dx, dy);
         const influence = pointer.active ? Math.max(0, 1 - distance / radius) : 0;
-        const targetX = distance ? (dx / distance) * maxTravel * influence : 0;
-        const targetY = distance ? (dy / distance) * maxTravel * influence : 0;
+        const targetX = distance ? (dx / distance) * activeTravel * influence : 0;
+        const targetY = distance ? (dy / distance) * activeTravel * influence : 0;
         const state = motionStates.get(id) ?? { ...REST_STATE };
         state.x = damp(state.x, targetX, smoothing, delta);
         state.y = damp(state.y, targetY, smoothing, delta);
         state.scale = damp(state.scale, 1 + maxScale * influence, smoothing, delta);
-        state.rotateX = damp(state.rotateX, -(dy / Math.max(1, radius)) * maxTilt * influence, smoothing, delta);
-        state.rotateY = damp(state.rotateY, (dx / Math.max(1, radius)) * maxTilt * influence, smoothing, delta);
+        state.rotateX = damp(state.rotateX, -(dy / Math.max(1, radius)) * activeTilt * influence, smoothing, delta);
+        state.rotateY = damp(state.rotateY, (dx / Math.max(1, radius)) * activeTilt * influence, smoothing, delta);
         motionStates.set(id, state);
         element.style.transform = `translate3d(${state.x}px,${state.y}px,0) rotateX(${state.rotateX}deg) rotateY(${state.rotateY}deg) scale(${state.scale})`;
         if (settled && !isAtRest(state)) settled = false;
@@ -209,7 +213,7 @@ export function ElasticImageGrid({
       });
       motionStates.clear();
     };
-  }, [maxScale, maxTilt, maxTravel, radius, smoothing, staticMode]);
+  }, [activeTilt, activeTravel, maxScale, radius, smoothing, staticMode]);
 
   const trackPointer = (event: React.PointerEvent<HTMLElement>) => {
     if (event.pointerType === "touch") return;
@@ -234,6 +238,7 @@ export function ElasticImageGrid({
       ref={rootRef}
       aria-label={label}
       data-elastic-image-grid
+      data-experience-viewport={viewport}
       data-static={staticMode || undefined}
       className={cn("relative", className)}
       onPointerEnter={handlePointerEnter}
@@ -256,7 +261,7 @@ export function ElasticImageGrid({
             key={item.id}
             aria-label={item.label}
             className={cn(
-              "relative transform-gpu overflow-hidden rounded-[2rem] will-change-transform",
+              "relative transform-gpu overflow-hidden rounded-[1.25rem] will-change-transform sm:rounded-[1.75rem] lg:rounded-[2rem]",
               typeof itemClassName === "function" ? itemClassName(item, index) : itemClassName,
               item.className,
             )}

@@ -10,7 +10,7 @@ import {
 } from "motion/react";
 
 import { cn } from "@/lib/utils";
-import { useFinePointer } from "@/components/experience/experience-runtime";
+import { useExperienceViewport, useFinePointer } from "@/components/experience/experience-runtime";
 
 type PointerSample = { active: boolean; x: number; y: number };
 type PointerListener = (sample: PointerSample) => void;
@@ -44,6 +44,7 @@ export function MagneticField({
   });
   const reducedMotion = useReducedMotion();
   const finePointer = useFinePointer();
+  const viewport = useExperienceViewport();
   const disabled = Boolean(reducedMotion) || !finePointer;
 
   // One shared, rAF-coalesced rect refresh for every registered target.
@@ -111,6 +112,7 @@ export function MagneticField({
     <MagneticContext.Provider value={context}>
       <div
         data-magnetic-field
+        data-experience-viewport={viewport}
         data-magnetic-disabled={disabled || undefined}
         className={cn("relative", className)}
         {...props}

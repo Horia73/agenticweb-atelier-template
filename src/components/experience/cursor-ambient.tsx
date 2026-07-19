@@ -11,6 +11,7 @@ import {
 
 import { cn } from "@/lib/utils";
 import {
+  useExperienceViewport,
   useFinePointer,
   usePrefersReducedMotion,
 } from "@/components/experience/experience-runtime";
@@ -23,6 +24,7 @@ type CursorAmbientProps = Omit<React.ComponentProps<"div">, "children"> & {
   label: string;
   lensClassName?: string;
   lensSize?: number;
+  tabletLensSize?: number;
 };
 
 /**
@@ -42,6 +44,7 @@ export function CursorAmbient({
   onPointerMove,
   reveal,
   style,
+  tabletLensSize,
   ...props
 }: CursorAmbientProps) {
   const x = useMotionValue(0);
@@ -52,11 +55,13 @@ export function CursorAmbient({
   const smoothY = useSpring(y, { stiffness: 420, damping: 38, mass: 0.35 });
   const smoothRadius = useSpring(radius, { stiffness: 240, damping: 25, mass: 0.3 });
   const smoothOpacity = useSpring(opacity, { stiffness: 260, damping: 28 });
-  const ringX = useTransform(smoothX, (value) => value - lensSize / 2);
-  const ringY = useTransform(smoothY, (value) => value - lensSize / 2);
-  const clipPath = useMotionTemplate`circle(${smoothRadius}px at ${smoothX}px ${smoothY}px)`;
   const prefersReducedMotion = usePrefersReducedMotion();
   const finePointer = useFinePointer();
+  const viewport = useExperienceViewport();
+  const activeLensSize = viewport === "tablet" ? tabletLensSize ?? Math.min(lensSize, 190) : lensSize;
+  const ringX = useTransform(smoothX, (value) => value - activeLensSize / 2);
+  const ringY = useTransform(smoothY, (value) => value - activeLensSize / 2);
+  const clipPath = useMotionTemplate`circle(${smoothRadius}px at ${smoothX}px ${smoothY}px)`;
   const [activeLabel, setActiveLabel] = React.useState(cursorLabel);
   // rAF-coalesced label lookup: the `.closest` walk runs at most once per frame.
   const labelLookupRef = React.useRef({ frame: 0, target: null as HTMLElement | null });
@@ -84,7 +89,7 @@ export function CursorAmbient({
       const rect = event.currentTarget.getBoundingClientRect();
       x.set(event.clientX - rect.left);
       y.set(event.clientY - rect.top);
-      radius.set(lensSize / 2);
+      radius.set(activeLensSize / 2);
       opacity.set(1);
       scheduleLabelUpdate(event.target as HTMLElement);
     }
@@ -95,7 +100,7 @@ export function CursorAmbient({
       const rect = event.currentTarget.getBoundingClientRect();
       x.set(event.clientX - rect.left);
       y.set(event.clientY - rect.top);
-      radius.set(lensSize / 2);
+      radius.set(activeLensSize / 2);
       opacity.set(1);
     }
     onPointerEnter?.(event);
@@ -116,8 +121,9 @@ export function CursorAmbient({
       role="region"
       aria-label={label}
       data-cursor-lens
+      data-experience-viewport={viewport}
       className={cn("relative isolate overflow-hidden", className)}
-      style={{ cursor: canFollow ? "none" : undefined, ...style }}
+      style={style}
       onPointerEnter={handlePointerEnter}
       onPointerLeave={handlePointerLeave}
       onPointerMove={handlePointerMove}
@@ -141,8 +147,8 @@ export function CursorAmbient({
             lensClassName,
           )}
           style={{
-            width: lensSize,
-            height: lensSize,
+            width: activeLensSize,
+            height: activeLensSize,
             x: ringX,
             y: ringY,
             opacity: smoothOpacity,

@@ -11,7 +11,7 @@ import {
 } from "motion/react";
 
 import { cn } from "@/lib/utils";
-import { usePrefersReducedMotion } from "@/components/experience/experience-runtime";
+import { useExperienceViewport, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
 import { useElementScrollProgress } from "@/components/experience/use-element-scroll-progress";
 
 export type MediaPortalProps = Omit<React.ComponentProps<"section">, "children"> & {
@@ -20,6 +20,8 @@ export type MediaPortalProps = Omit<React.ComponentProps<"section">, "children">
   media: React.ReactNode;
   children?: React.ReactNode;
   shape?: "circle" | "rounded" | "vertical" | "diamond";
+  mobileShape?: "circle" | "rounded" | "vertical" | "diamond";
+  tabletShape?: "circle" | "rounded" | "vertical" | "diamond";
   trigger?: "scroll" | "hover" | "controlled";
   progress?: MotionValue<number>;
   scrollScreens?: number;
@@ -66,12 +68,14 @@ export function MediaPortal({
   className,
   label,
   media,
+  mobileShape,
   portalClassName,
   progress: controlledProgress,
   reducedMotionFallback,
   scrollScreens = 2.6,
   shape = "circle",
   stageClassName,
+  tabletShape,
   trigger = "scroll",
   ...props
 }: MediaPortalProps) {
@@ -84,8 +88,10 @@ export function MediaPortal({
       ? hoverTarget
       : scrollProgress;
   const reducedMotion = usePrefersReducedMotion();
+  const viewport = useExperienceViewport();
+  const activeShape = viewport === "mobile" ? mobileShape ?? shape : viewport === "tablet" ? tabletShape ?? shape : shape;
   const progress = useSpring(source, { stiffness: 125, damping: 30, mass: 0.25 });
-  const shapeConfig = SHAPES[shape];
+  const shapeConfig = SHAPES[activeShape];
   const top = useTransform(progress, [0, 0.32, 1], [...shapeConfig.top]);
   const right = useTransform(progress, [0, 0.32, 1], [...shapeConfig.right]);
   const bottom = useTransform(progress, [0, 0.32, 1], [...shapeConfig.bottom]);
@@ -98,15 +104,15 @@ export function MediaPortal({
   const rightPct = useMotionTemplate`${right}%`;
   const bottomPct = useMotionTemplate`${bottom}%`;
   const leftPct = useMotionTemplate`${left}%`;
-  const rotate = useTransform(progress, [0, 0.55, 1], shape === "diamond" ? [45, 45, 0] : [0, 0, 0]);
-  const mediaRotate = useTransform(progress, [0, 0.55, 1], shape === "diamond" ? [-45, -45, 0] : [0, 0, 0]);
+  const rotate = useTransform(progress, [0, 0.55, 1], activeShape === "diamond" ? [45, 45, 0] : [0, 0, 0]);
+  const mediaRotate = useTransform(progress, [0, 0.55, 1], activeShape === "diamond" ? [-45, -45, 0] : [0, 0, 0]);
   const scale = useTransform(progress, [0, 0.4, 1], [0.9, 1, 1]);
   const ringOpacity = useTransform(progress, [0, 0.18, 0.7, 1], [0.85, 1, 0.4, 0]);
   const backdropScale = useTransform(progress, [0, 1], [1, 1.08]);
   const backdropOpacity = useTransform(progress, [0, 0.72, 1], [1, 0.72, 0]);
 
   if (reducedMotion) {
-    return <section ref={rootRef} aria-label={label} data-media-portal data-reduced-motion className={cn("relative min-h-svh overflow-hidden", className)} {...props}>{reducedMotionFallback ?? media}{children ? <div className="pointer-events-none absolute inset-0">{children}</div> : null}</section>;
+    return <section ref={rootRef} aria-label={label} data-media-portal data-experience-viewport={viewport} data-reduced-motion className={cn("relative min-h-svh overflow-hidden", className)} {...props}>{reducedMotionFallback ?? media}{children ? <div className="pointer-events-none absolute inset-0">{children}</div> : null}</section>;
   }
 
   const scrollDriven = trigger !== "hover";
@@ -115,7 +121,8 @@ export function MediaPortal({
       ref={rootRef}
       aria-label={label}
       data-media-portal
-      data-shape={shape}
+      data-experience-viewport={viewport}
+      data-shape={activeShape}
       data-trigger={trigger}
       className={cn("relative isolate", className)}
       style={{ minHeight: scrollDriven ? `${Math.max(1, scrollScreens) * 100}svh` : "100svh" }}

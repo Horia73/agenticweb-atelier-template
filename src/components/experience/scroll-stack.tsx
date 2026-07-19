@@ -3,7 +3,7 @@
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
-import { clamp01, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
+import { clamp01, useExperienceViewport, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
 
 export type ScrollStackProps = React.ComponentProps<"section"> & {
   label: string;
@@ -43,11 +43,17 @@ export function ScrollStack({
 }: ScrollStackProps) {
   const rootRef = React.useRef<HTMLElement>(null);
   const reducedMotion = usePrefersReducedMotion();
+  const viewport = useExperienceViewport();
+  const plainList = reducedMotion || viewport === "mobile";
+  const activeTopOffset = viewport === "tablet" ? Math.min(topOffset, 72) : topOffset;
+  const activePeek = viewport === "tablet" ? Math.min(peek, 12) : peek;
+  const activeScaleStep = viewport === "tablet" ? Math.min(scaleStep, .035) : scaleStep;
+  const activeDim = viewport === "tablet" ? Math.min(dim, .25) : dim;
   const items = React.Children.toArray(children);
 
   React.useEffect(() => {
     const root = rootRef.current;
-    if (!root || reducedMotion) return;
+    if (!root || plainList) return;
     let frame = 0;
     let onScreen = true;
     const cards = Array.from(root.querySelectorAll<HTMLElement>("[data-scroll-stack-item]"));
@@ -63,8 +69,8 @@ export function ScrollStack({
           const rect = inner.getBoundingClientRect();
           // 0 while the next card is still below, 1 once it fully covers this one.
           const covered = clamp01(1 - (next.getBoundingClientRect().top - rect.top) / Math.max(1, rect.height));
-          inner.style.transform = covered > 0 ? `scale(${(1 - covered * scaleStep).toFixed(4)})` : "";
-          inner.style.filter = covered > 0 && dim > 0 ? `brightness(${(1 - covered * dim).toFixed(3)})` : "";
+          inner.style.transform = covered > 0 ? `scale(${(1 - covered * activeScaleStep).toFixed(4)})` : "";
+          inner.style.filter = covered > 0 && activeDim > 0 ? `brightness(${(1 - covered * activeDim).toFixed(3)})` : "";
         }
       });
     };
@@ -86,11 +92,11 @@ export function ScrollStack({
       resizeObserver.disconnect();
       window.removeEventListener("scroll", update);
     };
-  }, [dim, reducedMotion, scaleStep, items.length]);
+  }, [activeDim, activeScaleStep, items.length, plainList]);
 
-  if (reducedMotion) {
+  if (plainList) {
     return (
-      <section ref={rootRef} aria-label={label} data-scroll-stack data-static className={className} {...props}>
+      <section ref={rootRef} aria-label={label} data-scroll-stack data-experience-viewport={viewport} data-static className={className} {...props}>
         <div className="flex flex-col" style={{ gap }}>
           {items.map((item, index) => (
             <div key={index} className={itemClassName}>
@@ -103,13 +109,13 @@ export function ScrollStack({
   }
 
   return (
-    <section ref={rootRef} aria-label={label} data-scroll-stack className={className} {...props}>
+    <section ref={rootRef} aria-label={label} data-scroll-stack data-experience-viewport={viewport} className={className} {...props}>
       {items.map((item, index) => (
         <div
           key={index}
           data-scroll-stack-item
           className="sticky"
-          style={{ top: topOffset + index * peek, marginTop: index === 0 ? 0 : gap }}
+          style={{ top: activeTopOffset + index * activePeek, marginTop: index === 0 ? 0 : gap }}
         >
           <div data-scroll-stack-inner className={cn("origin-top will-change-transform", itemClassName)}>
             {item}

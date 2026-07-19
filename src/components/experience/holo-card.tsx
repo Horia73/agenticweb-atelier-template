@@ -3,7 +3,7 @@
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
-import { damp, useFinePointer, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
+import { damp, useExperienceViewport, useFinePointer, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
 
 export type HoloCardProps = React.ComponentProps<"div"> & {
   children: React.ReactNode;
@@ -56,6 +56,8 @@ export function HoloCard({
   const wakeRef = React.useRef<() => void>(() => undefined);
   const finePointer = useFinePointer();
   const reducedMotion = usePrefersReducedMotion();
+  const viewport = useExperienceViewport();
+  const activeMaxTilt = maxTilt * (viewport === "tablet" ? .72 : viewport === "mobile" ? .55 : 1);
   const interactive = finePointer && !reducedMotion;
 
   const foilGradient = `linear-gradient(115deg, ${foilStops.join(", ")})`;
@@ -132,8 +134,8 @@ export function HoloCard({
       const target = targetRef.current;
       target.px = px;
       target.py = py;
-      target.ry = (px - 0.5) * 2 * maxTilt;
-      target.rx = (0.5 - py) * 2 * maxTilt;
+      target.ry = (px - 0.5) * 2 * activeMaxTilt;
+      target.rx = (0.5 - py) * 2 * activeMaxTilt;
       target.presence = 1;
       wakeRef.current();
     }
@@ -163,6 +165,7 @@ export function HoloCard({
   return (
     <div
       data-holo-card
+      data-experience-viewport={viewport}
       data-static={!interactive || undefined}
       className={cn("relative", className)}
       onPointerEnter={handlePointerEnter}

@@ -8,7 +8,7 @@ import {
 } from "motion/react";
 
 import { cn } from "@/lib/utils";
-import { usePrefersReducedMotion } from "@/components/experience/experience-runtime";
+import { useExperienceViewport, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
 import { useElementScrollProgress } from "@/components/experience/use-element-scroll-progress";
 
 export type KineticTypeFrame = {
@@ -43,6 +43,8 @@ type KineticTypeProps = Omit<React.ComponentProps<"section">, "children"> & {
   scrollScreens?: number;
   segmentClassName?: string;
   segments?: KineticTypeSegment[];
+  mobileSegments?: KineticTypeSegment[];
+  tabletSegments?: KineticTypeSegment[];
   split?: "words" | "characters";
   stageClassName?: string;
   text: string;
@@ -140,6 +142,7 @@ export function KineticType({
   as: Tag = "h2",
   className,
   label,
+  mobileSegments,
   progress: controlledProgress,
   range = [0.08, 0.92],
   scrollScreens = 2.6,
@@ -148,17 +151,24 @@ export function KineticType({
   split = "words",
   stageClassName,
   style,
+  tabletSegments,
   text,
   textClassName,
   ...props
 }: KineticTypeProps) {
   const rootRef = React.useRef<HTMLElement>(null);
   const reducedMotion = usePrefersReducedMotion();
+  const viewport = useExperienceViewport();
   const localProgress = useElementScrollProgress(rootRef);
   const progress = controlledProgress ?? localProgress;
+  const activeSegments = viewport === "mobile"
+    ? mobileSegments ?? tabletSegments ?? segments
+    : viewport === "tablet"
+      ? tabletSegments ?? segments
+      : segments;
   const resolvedSegments = React.useMemo(
-    () => segments?.length ? segments : createFallbackSegments(text, split),
-    [segments, split, text],
+    () => activeSegments?.length ? activeSegments : createFallbackSegments(text, split),
+    [activeSegments, split, text],
   );
   const warnedRef = React.useRef(false);
 
@@ -177,9 +187,10 @@ export function KineticType({
     <section
       ref={rootRef}
       aria-label={label}
-      data-kinetic-type={segments?.length ? "segments" : split}
+      data-kinetic-type={activeSegments?.length ? "segments" : split}
+      data-experience-viewport={viewport}
       className={cn("relative", className)}
-      style={{ minHeight: reducedMotion ? "auto" : `${Math.max(1, scrollScreens) * 100}svh`, ...style }}
+      style={{ minHeight: reducedMotion ? "auto" : `${Math.max(1, scrollScreens * (viewport === "mobile" ? .76 : viewport === "tablet" ? .88 : 1)) * 100}svh`, ...style }}
       {...props}
     >
       <div className={cn(reducedMotion ? "relative" : "sticky top-0 flex min-h-svh items-center overflow-hidden", stageClassName)}>

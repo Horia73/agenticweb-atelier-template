@@ -8,7 +8,7 @@ import {
 } from "motion/react";
 
 import { cn } from "@/lib/utils";
-import { usePrefersReducedMotion } from "@/components/experience/experience-runtime";
+import { useExperienceViewport, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
 import { useElementScrollProgress } from "@/components/experience/use-element-scroll-progress";
 import {
   type ProgressPlayback,
@@ -27,6 +27,8 @@ type ExpandingMediaProps = Omit<React.ComponentProps<"section">, "children"> & {
   scrimClassName?: string;
   stageClassName?: string;
   startInset?: string;
+  mobileStartInset?: string;
+  tabletStartInset?: string;
   resetKey?: React.Key;
 };
 
@@ -35,6 +37,7 @@ export function ExpandingMedia({
   className,
   label,
   media,
+  mobileStartInset,
   overlay,
   overlayClassName,
   playback = "scrub",
@@ -46,14 +49,21 @@ export function ExpandingMedia({
   startInset = "12% 10% 12% 10%",
   resetKey,
   style,
+  tabletStartInset,
   ...props
 }: ExpandingMediaProps) {
   const rootRef = React.useRef<HTMLElement>(null);
   const reducedMotion = usePrefersReducedMotion();
+  const viewport = useExperienceViewport();
   const localProgress = useElementScrollProgress(rootRef);
   const sourceProgress = controlledProgress ?? localProgress;
   const progress = useCommittedProgress(sourceProgress, playback, resetKey);
-  const clipPath = useTransform(progress, range, [`inset(${startInset} round 2rem)`, "inset(0% 0% 0% 0% round 0rem)"], { clamp: true });
+  const activeStartInset = viewport === "mobile"
+    ? mobileStartInset ?? "18% 5% 14% 5%"
+    : viewport === "tablet"
+      ? tabletStartInset ?? "14% 8% 12% 8%"
+      : startInset;
+  const clipPath = useTransform(progress, range, [`inset(${activeStartInset} round 2rem)`, "inset(0% 0% 0% 0% round 0rem)"], { clamp: true });
   const scale = useTransform(progress, range, [0.96, 1], { clamp: true });
 
   return (
@@ -61,6 +71,7 @@ export function ExpandingMedia({
       ref={rootRef}
       aria-label={label}
       data-expanding-media
+      data-experience-viewport={viewport}
       data-playback={playback}
       className={cn("relative isolate", className)}
       style={{ minHeight: reducedMotion ? "100svh" : `${Math.max(1.5, scrollScreens) * 100}svh`, ...style }}

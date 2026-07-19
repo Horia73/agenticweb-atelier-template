@@ -3,7 +3,7 @@
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
-import { usePrefersReducedMotion } from "@/components/experience/experience-runtime";
+import { useExperienceViewport, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
 
 export type TextScrambleProps = Omit<React.ComponentProps<"span">, "children"> & {
   /** Final text (also the server-rendered content, so SEO and no-JS read it). */
@@ -56,6 +56,8 @@ export function TextScramble({
   const [activeTarget, setActiveTarget] = React.useState(text);
   const [staticText, setStaticText] = React.useState(text);
   const reducedMotion = usePrefersReducedMotion();
+  const viewport = useExperienceViewport();
+  const activeDurationMs = durationMs * (viewport === "mobile" ? 0.72 : viewport === "tablet" ? 0.86 : 1);
   const sequence = React.useMemo(() => (phrases && phrases.length > 0 ? phrases : [text]), [phrases, text]);
   const cycling = sequence.length > 1;
 
@@ -66,7 +68,7 @@ export function TextScramble({
       setActiveTarget(target);
       const length = target.length;
       // Each slot locks at a jittered point of the timeline, biased left-to-right.
-      const locks = Array.from({ length }, (_, index) => ((index / Math.max(1, length - 1)) * 0.7 + Math.random() * 0.3) * durationMs);
+      const locks = Array.from({ length }, (_, index) => ((index / Math.max(1, length - 1)) * 0.7 + Math.random() * 0.3) * activeDurationMs);
       const startedAt = performance.now();
       let lastFlicker = 0;
       const tick = (now: number) => {
@@ -103,7 +105,7 @@ export function TextScramble({
       };
       frameRef.current = requestAnimationFrame(tick);
     },
-    [charset, cycling, durationMs, holdMs, sequence],
+    [activeDurationMs, charset, cycling, holdMs, sequence],
   );
 
   React.useEffect(() => {
@@ -121,9 +123,9 @@ export function TextScramble({
     const interval = setInterval(() => {
       phraseIndexRef.current = (phraseIndexRef.current + 1) % sequence.length;
       setStaticText(sequence[phraseIndexRef.current]!);
-    }, holdMs + durationMs);
+    }, holdMs + activeDurationMs);
     return () => clearInterval(interval);
-  }, [cycling, durationMs, holdMs, reducedMotion, sequence]);
+  }, [activeDurationMs, cycling, holdMs, reducedMotion, sequence]);
 
   React.useEffect(() => {
     const element = rootRef.current;
@@ -135,11 +137,11 @@ export function TextScramble({
         play(sequence[phraseIndexRef.current]!);
         if (once) observer.disconnect();
       },
-      { threshold: 0.5 },
+      { threshold: viewport === "mobile" ? 0.25 : viewport === "tablet" ? 0.38 : 0.5 },
     );
     observer.observe(element);
     return () => observer.disconnect();
-  }, [once, play, reducedMotion, sequence, trigger]);
+  }, [once, play, reducedMotion, sequence, trigger, viewport]);
 
   React.useEffect(() => {
     if (reducedMotion || trigger !== "load") return;
@@ -155,7 +157,7 @@ export function TextScramble({
 
   if (reducedMotion) {
     return (
-      <span ref={rootRef} data-text-scramble data-static className={className} {...props}>
+      <span ref={rootRef} data-text-scramble data-experience-viewport={viewport} data-static className={className} {...props}>
         {cycling ? staticText : text}
       </span>
     );
@@ -165,9 +167,10 @@ export function TextScramble({
     <span
       ref={rootRef}
       data-text-scramble
+      data-experience-viewport={viewport}
       aria-label={cells ? activeTarget : text}
       role="text"
-      className={cn("whitespace-pre-wrap", className)}
+      className={cn("max-w-full whitespace-pre-wrap break-words", className)}
       onPointerEnter={handlePointerEnter}
       {...props}
     >

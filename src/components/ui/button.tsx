@@ -19,6 +19,12 @@ const buttonVariants = cva(
         destructive:
           "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
         link: "text-primary underline-offset-4 hover:underline",
+        dock:
+          "bg-background text-foreground hover:bg-muted focus-visible:border-background focus-visible:ring-background/40",
+        "dock-ghost":
+          "text-dock-foreground hover:bg-dock-accent hover:text-dock-foreground focus-visible:border-dock-foreground focus-visible:ring-dock-foreground/40",
+        screen:
+          "bg-screen-accent text-screen-panel hover:bg-screen-accent/85 focus-visible:border-screen-accent focus-visible:ring-screen-accent/40",
       },
       size: {
         default:
@@ -32,6 +38,9 @@ const buttonVariants = cva(
         "icon-sm":
           "size-8 rounded-[min(var(--radius-md),10px)] in-data-[slot=button-group]:rounded-md",
         "icon-lg": "size-10",
+        pill: "h-11 gap-2 rounded-full px-6 text-sm shadow-[var(--shadow-action)] has-data-[icon=inline-end]:pr-5 has-data-[icon=inline-start]:pl-5",
+        "pill-sm": "h-8 gap-1.5 rounded-full px-3 text-xs has-data-[icon=inline-end]:pr-2.5 has-data-[icon=inline-start]:pl-2.5",
+        screen: "h-5 gap-1 rounded-full px-2 text-[0.56rem] has-data-[icon=inline-start]:pl-1.5",
       },
     },
     defaultVariants: {

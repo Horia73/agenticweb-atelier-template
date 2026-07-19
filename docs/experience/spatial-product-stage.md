@@ -22,8 +22,8 @@ Fixture-ul raster se reconstruiește cu:
 
 ```bash
 uv run --with numpy --with pillow python scripts/build-spatial-product-assets.py \
-  --source public/experience/spatial-product-stage-v1/source/respirator.png \
-  --output public/experience/spatial-product-stage-v1/respirator
+  --source assets/source/product-master.png \
+  --output public/experience/product-stage
 ```
 
 Pentru alpha curat folosește matting și edge decontamination; un checkerboard „transparent” desenat în pixeli nu este alpha.

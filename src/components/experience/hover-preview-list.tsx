@@ -3,7 +3,7 @@
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
-import { damp, useFinePointer, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
+import { damp, useExperienceViewport, useFinePointer, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
 
 export type HoverPreviewItem = {
   id: string;
@@ -66,6 +66,7 @@ export function HoverPreviewList({
   const [activeId, setActiveId] = React.useState<string | null>(null);
   const finePointer = useFinePointer();
   const reducedMotion = usePrefersReducedMotion();
+  const viewport = useExperienceViewport();
   const floating = finePointer && !reducedMotion;
   const previewHeight = previewWidth / previewAspect;
 
@@ -154,6 +155,7 @@ export function HoverPreviewList({
       ref={rootRef}
       aria-label={label}
       data-hover-preview-list
+      data-experience-viewport={viewport}
       data-static={!floating || undefined}
       className={cn("relative", className)}
       onPointerMove={handlePointerMove}

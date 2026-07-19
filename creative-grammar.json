@@ -1,0 +1,44 @@
+{
+  "$schema": "./schemas/creative-grammar.schema.json",
+  "version": "3.1.0",
+  "purpose": "A compositional grammar for original sites, never a collection of page templates.",
+  "directionPolicy": {
+    "internalHypothesisCount": 4,
+    "presentationCount": 2,
+    "bothDirectionsMustBeBespoke": true,
+    "forceSafeVersusWowSplit": false,
+    "atLeastOneDirectionMustBeFeasibleNow": true,
+    "recommendExactlyOne": true,
+    "mechanicsAreChosenAfterConcept": true
+  },
+  "experienceIntent": ["none", "subtle", "signature", "immersive"],
+  "axes": {
+    "framing": ["editorial", "cinematic", "object-led", "interface-led", "environmental"],
+    "dominantSubject": ["message", "product", "person", "place", "proof", "system"],
+    "mediaRole": ["evidence", "atmosphere", "narrative", "navigation", "interactive-object"],
+    "hierarchy": ["monumental", "layered", "modular", "dense", "quiet"],
+    "rhythm": ["measured", "alternating", "accelerating", "chaptered", "continuous"],
+    "overlap": ["none", "controlled", "structural", "immersive"],
+    "flow": ["linear", "chaptered", "spatial", "catalog", "guided"],
+    "motionEnergy": ["still", "restrained", "responsive", "cinematic"],
+    "proofMode": ["editorial", "demonstration", "data", "social", "process"],
+    "ctaMode": ["direct", "progressive", "contextual", "concierge"]
+  },
+  "wowBudget": {
+    "signatureMechanicsPerPage": { "min": 0, "max": 1 },
+    "supportMechanicsPerViewport": { "max": 2 },
+    "simultaneousHighCostMechanics": { "max": 1 },
+    "requireQuietSectionAfterIntenseBeat": true,
+    "requireBusinessReasonForEveryMechanic": true,
+    "requireFallbackBeforeImplementation": true,
+    "preferCustomCompositionOverMoreEffects": true
+  },
+  "antiPatterns": [
+    "Choosing a mechanism before the dominant idea and composition are clear.",
+    "Treating visual intensity as a substitute for hierarchy, copy or proof.",
+    "Reusing a fixed hero-plus-logo-strip-plus-cards page skeleton.",
+    "Stacking multiple signature moments in the same viewport.",
+    "Making the two client directions a predictable safe-versus-wild pair.",
+    "Using a 3D scene without product, narrative or spatial justification."
+  ]
+}

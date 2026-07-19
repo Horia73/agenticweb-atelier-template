@@ -2,6 +2,9 @@ node_modules
 /.next
 /.next-*
 .asset-cache/
+.playwright-cli/
+.playwright-mcp/
+output/
 /out
 /build
 .env*

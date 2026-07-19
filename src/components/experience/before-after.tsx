@@ -4,6 +4,7 @@ import * as React from "react";
 import { ChevronsLeftRight } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { useExperienceViewport } from "@/components/experience/experience-runtime";
 
 type BeforeAfterProps = Omit<React.ComponentProps<"div">, "children"> & {
   after: React.ReactNode;
@@ -37,6 +38,7 @@ export function BeforeAfter({
   value: controlledValue,
   ...props
 }: BeforeAfterProps) {
+  const viewport = useExperienceViewport();
   const [internalValue, setInternalValue] = React.useState(defaultValue);
   const value = Math.max(0, Math.min(100, controlledValue ?? internalValue));
   const update = (next: number) => {
@@ -49,7 +51,8 @@ export function BeforeAfter({
       role="group"
       aria-label={label}
       data-before-after
-      className={cn("group relative isolate overflow-hidden", className)}
+      data-experience-viewport={viewport}
+      className={cn("group relative isolate min-w-0 touch-pan-y overflow-hidden", className)}
       style={{ "--comparison-position": `${value}%`, ...style } as React.CSSProperties}
       {...props}
     >
@@ -58,10 +61,10 @@ export function BeforeAfter({
         {before}
       </div>
 
-      <span className="pointer-events-none absolute left-4 top-4 z-10 rounded-full bg-background/80 px-3 py-1 text-xs font-medium text-foreground backdrop-blur">
+      <span className="pointer-events-none absolute left-2 top-2 z-10 max-w-[42%] truncate rounded-full bg-background/80 px-2.5 py-1 text-[.6875rem] font-medium text-foreground backdrop-blur sm:left-4 sm:top-4 sm:max-w-none sm:px-3 sm:text-xs">
         {beforeLabel}
       </span>
-      <span className="pointer-events-none absolute right-4 top-4 z-10 rounded-full bg-background/80 px-3 py-1 text-xs font-medium text-foreground backdrop-blur">
+      <span className="pointer-events-none absolute right-2 top-2 z-10 max-w-[42%] truncate rounded-full bg-background/80 px-2.5 py-1 text-[.6875rem] font-medium text-foreground backdrop-blur sm:right-4 sm:top-4 sm:max-w-none sm:px-3 sm:text-xs">
         {afterLabel}
       </span>
 

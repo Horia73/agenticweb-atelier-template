@@ -4,7 +4,7 @@ import * as React from "react";
 import { motion, type MotionValue, useTransform } from "motion/react";
 
 import { cn } from "@/lib/utils";
-import { clamp01 } from "@/components/experience/experience-runtime";
+import { clamp01, useExperienceViewport } from "@/components/experience/experience-runtime";
 
 export type HorizontalTrackMetrics = {
   distance: number;
@@ -54,6 +54,7 @@ export function HorizontalTrack({
   trackClassName,
   ...props
 }: HorizontalTrackProps) {
+  const viewport = useExperienceViewport();
   const viewportRef = React.useRef<HTMLDivElement>(null);
   const trackRef = React.useRef<HTMLDivElement>(null);
   const metricsRef = React.useRef<HorizontalTrackMetrics>({
@@ -96,7 +97,8 @@ export function HorizontalTrack({
     <div
       ref={viewportRef}
       data-horizontal-track-viewport
-      className={cn("relative flex h-full w-full items-center overflow-hidden", className)}
+      data-experience-viewport={viewport}
+      className={cn("relative flex h-full w-full min-w-0 items-center overflow-hidden", className)}
       style={style}
       {...props}
     >
@@ -106,7 +108,7 @@ export function HorizontalTrack({
         aria-label={label}
         data-horizontal-track
         className={cn(
-          "flex w-max items-stretch gap-[clamp(1rem,2.5vw,2.5rem)] px-[max(1.25rem,5vw)] will-change-transform",
+          "flex w-max items-stretch gap-4 px-5 will-change-transform sm:gap-6 sm:px-8 lg:gap-[clamp(1rem,2.5vw,2.5rem)] lg:px-[max(1.25rem,5vw)]",
           trackClassName,
         )}
         style={{ x }}
@@ -127,7 +129,7 @@ export function HorizontalTrack({
               role="listitem"
               aria-label={counterLabel}
               data-horizontal-track-item={index}
-              className={cn("w-[min(82vw,62rem)] shrink-0", resolvedItemClassName)}
+              className={cn("w-[86vw] shrink-0 sm:w-[min(68vw,42rem)] lg:w-[min(82vw,62rem)]", resolvedItemClassName)}
             >
               {counterLabel === undefined ? <span className="sr-only">{counter}</span> : null}
               {child}
@@ -140,7 +142,7 @@ export function HorizontalTrack({
         <div
           aria-hidden
           className={cn(
-            "absolute inset-x-[max(1.25rem,5vw)] bottom-6 h-px origin-left bg-current/20",
+            "absolute inset-x-5 bottom-4 h-px origin-left bg-current/20 sm:inset-x-8 sm:bottom-6 lg:inset-x-[max(1.25rem,5vw)]",
             progressClassName,
           )}
         >

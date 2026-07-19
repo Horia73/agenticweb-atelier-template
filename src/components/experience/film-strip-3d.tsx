@@ -4,7 +4,7 @@ import * as React from "react";
 import { motion, type MotionValue, useMotionValue, useReducedMotion, useTransform } from "motion/react";
 
 import { cn } from "@/lib/utils";
-import { useMediaQuery } from "@/components/experience/experience-runtime";
+import { useCoarsePointer, useExperienceViewport } from "@/components/experience/experience-runtime";
 import { useElementScrollProgress } from "@/components/experience/use-element-scroll-progress";
 
 export type FilmStrip3DItem = { id: string; label: string; content: React.ReactNode; className?: string };
@@ -39,7 +39,8 @@ export function FilmStrip3D({ className, curve = 190, itemClassName, items, labe
   const fallbackProgress = useMotionValue(0);
   const progress = controlledProgress ?? localProgress ?? fallbackProgress;
   const reducedMotion = useReducedMotion();
-  const narrow = useMediaQuery("(max-width: 639.98px)");
-  if (reducedMotion || narrow) return <section ref={rootRef} aria-label={label} data-film-strip-3d data-static className={cn("min-h-svh overflow-hidden py-24", className, stageClassName)} {...props}><div className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-5 [scrollbar-width:none]">{items.map((item, index) => <article key={item.id} aria-label={item.label} className={cn("aspect-[4/5] w-[78vw] shrink-0 snap-center overflow-hidden rounded-[2rem]", typeof itemClassName === "function" ? itemClassName(item, index) : itemClassName, item.className)}>{item.content}</article>)}</div>{overlay}</section>;
-  return <section ref={rootRef} aria-label={label} data-film-strip-3d className={cn("relative", className)} style={{ minHeight: `${Math.max(1, scrollScreens) * 100}svh` }} {...props}><div className={cn("sticky top-0 h-svh overflow-hidden", stageClassName)} style={{ perspective: `${perspective}px`, perspectiveOrigin: "50% 48%" }}><div className="absolute inset-0" style={{ transformStyle: "preserve-3d" }}>{items.map((item, index) => <FilmFrame key={item.id} curve={curve} index={index} item={item} itemClassName={itemClassName} progress={progress} spacing={spacing} total={items.length} />)}</div>{overlay ? <div className="pointer-events-none absolute inset-0 z-20">{overlay}</div> : null}</div></section>;
+  const viewport = useExperienceViewport();
+  const coarsePointer = useCoarsePointer();
+  if (reducedMotion || coarsePointer || viewport !== "desktop") return <section ref={rootRef} aria-label={label} data-film-strip-3d data-experience-viewport={viewport} data-static className={cn("min-h-svh overflow-hidden py-16 sm:py-20", className, stageClassName)} {...props}><div className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-5 [scrollbar-width:none] sm:gap-6 sm:px-8">{items.map((item, index) => <article key={item.id} aria-label={item.label} className={cn("aspect-[4/5] w-[78vw] shrink-0 snap-center overflow-hidden rounded-[1.5rem] sm:w-[min(62vw,30rem)] sm:rounded-[2rem]", typeof itemClassName === "function" ? itemClassName(item, index) : itemClassName, item.className)}>{item.content}</article>)}</div>{overlay}</section>;
+  return <section ref={rootRef} aria-label={label} data-film-strip-3d data-experience-viewport={viewport} className={cn("relative", className)} style={{ minHeight: `${Math.max(1, scrollScreens) * 100}svh` }} {...props}><div className={cn("sticky top-0 h-svh overflow-hidden", stageClassName)} style={{ perspective: `${perspective}px`, perspectiveOrigin: "50% 48%" }}><div className="absolute inset-0" style={{ transformStyle: "preserve-3d" }}>{items.map((item, index) => <FilmFrame key={item.id} curve={curve} index={index} item={item} itemClassName={itemClassName} progress={progress} spacing={spacing} total={items.length} />)}</div>{overlay ? <div className="pointer-events-none absolute inset-0 z-20">{overlay}</div> : null}</div></section>;
 }

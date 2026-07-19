@@ -4,7 +4,7 @@ import * as React from "react";
 import * as THREE from "three";
 
 import { cn } from "@/lib/utils";
-import { damp, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
+import { damp, useExperienceViewport, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
 import { useWebGLStage } from "@/components/experience/use-webgl-stage";
 
 export type ShaderFieldProps = Omit<React.ComponentProps<"section">, "children"> & {
@@ -180,6 +180,10 @@ export function ShaderField({
   const pointerRef = React.useRef({ x: 0.5, y: 0.5 });
   const targetPointerRef = React.useRef({ x: 0.5, y: 0.5 });
   const prefersReducedMotion = usePrefersReducedMotion();
+  const viewport = useExperienceViewport();
+  const activeIntensity = intensity * (viewport === "mobile" ? 0.78 : viewport === "tablet" ? 0.9 : 1);
+  const activeSpeed = speed * (viewport === "mobile" ? 0.68 : viewport === "tablet" ? 0.84 : 1);
+  const activePointerStrength = pointerStrength * (viewport === "mobile" ? 0 : viewport === "tablet" ? 0.72 : 1);
 
   const { ready, failed } = useWebGLStage({
     stageRef: rootRef,
@@ -187,7 +191,7 @@ export function ShaderField({
     enabled: !prefersReducedMotion,
     maxDpr,
     alpha: true,
-    signature: JSON.stringify([colors, intensity, mode, speed]),
+    signature: JSON.stringify([colors, activeIntensity, activeSpeed, mode, viewport]),
     create: ({ renderer, markReady }) => {
       let elapsed = 0;
       const scene = new THREE.Scene();
@@ -196,7 +200,7 @@ export function ShaderField({
       const uniforms = {
         uTime: { value: 0 },
         uMode: { value: MODE_VALUES[mode] },
-        uIntensity: { value: intensity },
+        uIntensity: { value: activeIntensity },
         uResolution: { value: new THREE.Vector2(1, 1) },
         uPointer: { value: new THREE.Vector2(pointerRef.current.x, pointerRef.current.y) },
         uColorA: { value: new THREE.Color(colors[0]) },
@@ -212,7 +216,7 @@ export function ShaderField({
           renderer.render(scene, camera);
         },
         onFrame: (delta) => {
-          elapsed += delta * speed;
+          elapsed += delta * activeSpeed;
           pointerRef.current.x = damp(pointerRef.current.x, targetPointerRef.current.x, 7, delta);
           pointerRef.current.y = damp(pointerRef.current.y, targetPointerRef.current.y, 7, delta);
           uniforms.uTime.value = elapsed;
@@ -232,8 +236,8 @@ export function ShaderField({
       const rect = event.currentTarget.getBoundingClientRect();
       const x = (event.clientX - rect.left) / Math.max(1, rect.width);
       const y = 1 - (event.clientY - rect.top) / Math.max(1, rect.height);
-      targetPointerRef.current.x = 0.5 + (x - 0.5) * pointerStrength;
-      targetPointerRef.current.y = 0.5 + (y - 0.5) * pointerStrength;
+      targetPointerRef.current.x = 0.5 + (x - 0.5) * activePointerStrength;
+      targetPointerRef.current.y = 0.5 + (y - 0.5) * activePointerStrength;
     }
     onPointerMove?.(event);
   };
@@ -243,11 +247,11 @@ export function ShaderField({
   };
 
   if (prefersReducedMotion) {
-    return <section ref={rootRef} aria-label={label} data-shader-field data-reduced-motion className={cn("relative isolate overflow-hidden bg-black", className)} {...props}>{fallback ? <div className="absolute inset-0 -z-10">{fallback}</div> : null}{children}</section>;
+    return <section ref={rootRef} aria-label={label} data-shader-field data-experience-viewport={viewport} data-reduced-motion className={cn("relative isolate overflow-hidden bg-black", className)} {...props}>{fallback ? <div className="absolute inset-0 -z-10">{fallback}</div> : null}{children}</section>;
   }
 
   return (
-    <section ref={rootRef} aria-label={label} data-shader-field data-mode={mode} data-ready={ready || undefined} data-fallback={failed || undefined} className={cn("relative isolate overflow-hidden bg-black", className)} onPointerMove={handlePointerMove} onPointerLeave={handlePointerLeave} {...props}>
+    <section ref={rootRef} aria-label={label} data-shader-field data-experience-viewport={viewport} data-mode={mode} data-ready={ready || undefined} data-fallback={failed || undefined} className={cn("relative isolate overflow-hidden bg-black", className)} onPointerMove={handlePointerMove} onPointerLeave={handlePointerLeave} {...props}>
       <canvas ref={canvasRef} aria-hidden className={cn("absolute inset-0 -z-10 size-full transition-opacity duration-500", ready && !failed ? "opacity-100" : "opacity-0", canvasClassName)} />
       {failed ? <div className="absolute inset-0 -z-10">{fallback}</div> : null}
       {children}

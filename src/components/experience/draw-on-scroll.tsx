@@ -4,7 +4,7 @@ import * as React from "react";
 import { type MotionValue, useMotionValue, useMotionValueEvent } from "motion/react";
 
 import { cn } from "@/lib/utils";
-import { clamp01, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
+import { clamp01, useExperienceViewport, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
 import { useElementScrollProgress } from "@/components/experience/use-element-scroll-progress";
 
 export type DrawOnScrollProps = Omit<React.ComponentProps<"section">, "children"> & {
@@ -76,24 +76,27 @@ export function DrawOnScroll({
   const stageRef = React.useRef<HTMLDivElement>(null);
   const targetsRef = React.useRef<StrokeTarget[]>([]);
   const reducedMotion = usePrefersReducedMotion();
+  const viewport = useExperienceViewport();
+  const activePin = pin && viewport !== "mobile";
+  const activeStagger = stagger * (viewport === "mobile" ? .72 : viewport === "tablet" ? .86 : 1);
 
   const pinnedProgress = useElementScrollProgress(rootRef);
-  const viewportProgress = useViewportProgress(rootRef, !pin && !controlledProgress && !reducedMotion);
-  const progress = controlledProgress ?? (pin ? pinnedProgress : viewportProgress);
+  const viewportProgress = useViewportProgress(rootRef, !activePin && !controlledProgress && !reducedMotion);
+  const progress = controlledProgress ?? (activePin ? pinnedProgress : viewportProgress);
 
   const applyProgress = React.useCallback(
     (value: number) => {
       const targets = targetsRef.current;
       const count = targets.length;
       if (count === 0) return;
-      const span = 1 / (1 + (count - 1) * clamp01(stagger));
+      const span = 1 / (1 + (count - 1) * clamp01(activeStagger));
       const step = count > 1 ? (1 - span) / (count - 1) : 0;
       targets.forEach(({ element, length }, index) => {
         const local = clamp01((value - index * step) / span);
         element.style.strokeDashoffset = `${length * (1 - local)}`;
       });
     },
-    [stagger],
+    [activeStagger],
   );
 
   React.useLayoutEffect(() => {
@@ -129,7 +132,7 @@ export function DrawOnScroll({
 
   if (reducedMotion) {
     return (
-      <section ref={rootRef} aria-label={label} data-draw-on-scroll data-static className={cn("relative", className)} {...props}>
+      <section ref={rootRef} aria-label={label} data-draw-on-scroll data-experience-viewport={viewport} data-static className={cn("relative", className)} {...props}>
         <div ref={stageRef} className={stageClassName}>
           {children}
         </div>
@@ -142,12 +145,13 @@ export function DrawOnScroll({
       ref={rootRef}
       aria-label={label}
       data-draw-on-scroll
-      data-pin={pin || undefined}
+      data-experience-viewport={viewport}
+      data-pin={activePin || undefined}
       className={cn("relative", className)}
-      style={pin ? { minHeight: `${Math.max(1, scrollScreens) * 100}svh` } : undefined}
+      style={activePin ? { minHeight: `${Math.max(1, scrollScreens) * 100}svh` } : undefined}
       {...props}
     >
-      <div ref={stageRef} className={cn(pin && "sticky top-0 flex h-svh items-center justify-center overflow-hidden", stageClassName)}>
+      <div ref={stageRef} className={cn(activePin && "sticky top-0 flex h-svh items-center justify-center overflow-hidden", stageClassName)}>
         {children}
       </div>
     </section>

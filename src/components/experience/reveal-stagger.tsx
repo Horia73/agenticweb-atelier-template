@@ -3,7 +3,7 @@
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
-import { useHydrated, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
+import { useExperienceViewport, useHydrated, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
 
 export type RevealVariant = "fade" | "rise" | "blur" | "clip" | "zoom";
 
@@ -86,8 +86,13 @@ export function RevealStagger({
   const rootRef = React.useRef<HTMLDivElement>(null);
   const hydrated = useHydrated();
   const reducedMotion = usePrefersReducedMotion();
+  const viewport = useExperienceViewport();
+  const activeStaggerMs = staggerMs * (viewport === "mobile" ? 0.72 : viewport === "tablet" ? 0.86 : 1);
+  const activeDurationMs = durationMs * (viewport === "mobile" ? 0.82 : viewport === "tablet" ? 0.92 : 1);
+  const activeDistance = distance * (viewport === "mobile" ? 0.62 : viewport === "tablet" ? 0.8 : 1);
+  const activeThreshold = Math.min(threshold, viewport === "mobile" ? 0.12 : viewport === "tablet" ? 0.16 : threshold);
   const animated = hydrated && !reducedMotion;
-  const revealed = useRevealTrigger(rootRef, animated, once, threshold);
+  const revealed = useRevealTrigger(rootRef, animated, once, activeThreshold);
   const childCount = React.Children.count(children);
 
   // Stagger delays follow DOM order; items with an explicit order/delay opt out.
@@ -95,10 +100,10 @@ export function RevealStagger({
     const root = rootRef.current;
     if (!root || !animated) return;
     const items = root.querySelectorAll<HTMLElement>("[data-reveal-item]:not([data-reveal-fixed])");
-    items.forEach((item, index) => item.style.setProperty("--reveal-delay", `${index * staggerMs}ms`));
-  }, [animated, childCount, staggerMs]);
+    items.forEach((item, index) => item.style.setProperty("--reveal-delay", `${index * activeStaggerMs}ms`));
+  }, [activeStaggerMs, animated, childCount]);
 
-  const value = React.useMemo<RevealContextValue>(() => ({ staggerMs, variant }), [staggerMs, variant]);
+  const value = React.useMemo<RevealContextValue>(() => ({ staggerMs: activeStaggerMs, variant }), [activeStaggerMs, variant]);
 
   return (
     <RevealContext.Provider value={value}>
@@ -106,12 +111,13 @@ export function RevealStagger({
       <div
         ref={rootRef}
         data-reveal-stagger
+        data-experience-viewport={viewport}
         data-revealed={(revealed || !animated) || undefined}
         className={className}
         style={{
-          "--reveal-duration": `${durationMs}ms`,
+          "--reveal-duration": `${activeDurationMs}ms`,
           "--reveal-easing": easing,
-          "--reveal-distance": `${distance}px`,
+          "--reveal-distance": `${activeDistance}px`,
           ...style,
         } as React.CSSProperties}
         {...props}
@@ -196,26 +202,30 @@ export function RevealText({
   const rootRef = React.useRef<HTMLSpanElement>(null);
   const hydrated = useHydrated();
   const reducedMotion = usePrefersReducedMotion();
+  const viewport = useExperienceViewport();
+  const activeStaggerMs = staggerMs * (viewport === "mobile" ? 0.7 : viewport === "tablet" ? 0.85 : 1);
+  const activeDurationMs = durationMs * (viewport === "mobile" ? 0.82 : viewport === "tablet" ? 0.92 : 1);
+  const activeThreshold = Math.min(threshold, viewport === "mobile" ? 0.2 : viewport === "tablet" ? 0.28 : threshold);
   const animated = hydrated && !reducedMotion;
-  const revealed = useRevealTrigger(rootRef, animated, once, threshold);
+  const revealed = useRevealTrigger(rootRef, animated, once, activeThreshold);
   const units = React.useMemo(() => (by === "word" ? text.split(/\s+/) : Array.from(text)), [by, text]);
 
   if (!animated) {
     return (
-      <span ref={rootRef} data-reveal-text data-static className={className} {...props}>
+      <span ref={rootRef} data-reveal-text data-experience-viewport={viewport} data-static className={className} {...props}>
         {text}
       </span>
     );
   }
 
   return (
-    <span ref={rootRef} data-reveal-text data-revealed={revealed || undefined} aria-label={text} role="text" className={className} {...props}>
+    <span ref={rootRef} data-reveal-text data-experience-viewport={viewport} data-revealed={revealed || undefined} aria-label={text} role="text" className={cn("max-w-full", className)} {...props}>
       {units.map((unit, index) => (
         <span key={index} aria-hidden className="inline-block overflow-hidden align-bottom">
           <span
             className={cn("inline-block will-change-transform", unitClassName)}
             style={{
-              transition: `transform ${durationMs}ms ${easing} ${index * staggerMs}ms`,
+              transition: `transform ${activeDurationMs}ms ${easing} ${index * activeStaggerMs}ms`,
               transform: revealed ? "translate3d(0,0,0)" : `translate3d(0, ${distance}, 0)`,
             }}
           >

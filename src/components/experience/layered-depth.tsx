@@ -46,11 +46,13 @@ export type LayeredDepthLayer = {
   id: string;
   content: React.ReactNode;
   mobileContent?: React.ReactNode;
+  tabletContent?: React.ReactNode;
   className?: string;
   contentClassName?: string;
   depth?: number;
   timeline?: ScrollDepthKeyframe[];
   mobileTimeline?: ScrollDepthKeyframe[];
+  tabletTimeline?: ScrollDepthKeyframe[];
   pointer?: false | number | ScrollDepthPointer;
   reducedMotionFrame?: Omit<ScrollDepthKeyframe, "at">;
   transformOrigin?: React.CSSProperties["transformOrigin"];
@@ -71,6 +73,7 @@ export type LayeredDepthSceneProps = Omit<React.ComponentProps<"section">, "chil
   stageClassName?: string;
   stageStyle?: React.CSSProperties;
   mobileBreakpoint?: number;
+  tabletBreakpoint?: number;
   onProgressChange?: (progress: number) => void;
   sourceContract?: {
     sourceId: string;
@@ -190,7 +193,7 @@ function useTimelineValue<T extends TimelineValue>(
 
 type DepthLayerProps = {
   layer: LayeredDepthLayer;
-  mobile: boolean;
+  viewport: "mobile" | "tablet" | "desktop";
   pointerTravel: number;
   pointerX: MotionValue<number>;
   pointerY: MotionValue<number>;
@@ -200,16 +203,21 @@ type DepthLayerProps = {
 
 function DepthLayer({
   layer,
-  mobile,
+  viewport,
   pointerTravel,
   pointerX,
   pointerY,
   reducedMotion,
   scrollProgress,
 }: DepthLayerProps) {
+  const activeTimeline = viewport === "mobile"
+    ? layer.mobileTimeline ?? layer.tabletTimeline ?? layer.timeline
+    : viewport === "tablet"
+      ? layer.tabletTimeline ?? layer.timeline
+      : layer.timeline;
   const frames = React.useMemo(
-    () => normalizeTimeline(mobile ? layer.mobileTimeline ?? layer.timeline : layer.timeline, layer.depth ?? 0),
-    [layer.depth, layer.mobileTimeline, layer.timeline, mobile],
+    () => normalizeTimeline(activeTimeline, layer.depth ?? 0),
+    [activeTimeline, layer.depth],
   );
   const x = useTimelineValue<TimelineValue>(scrollProgress, frames, "x");
   const y = useTimelineValue<TimelineValue>(scrollProgress, frames, "y");
@@ -278,7 +286,7 @@ function DepthLayer({
     >
       <motion.div
         className={cn("absolute inset-0 will-change-transform", layer.contentClassName)}
-        style={reducedMotion || mobile
+        style={reducedMotion || viewport !== "desktop"
           ? undefined
           : {
               x: pointerOffsetX,
@@ -289,7 +297,11 @@ function DepthLayer({
               transformStyle: "preserve-3d",
             }}
       >
-        {mobile ? layer.mobileContent ?? layer.content : layer.content}
+        {viewport === "mobile"
+          ? layer.mobileContent ?? layer.tabletContent ?? layer.content
+          : viewport === "tablet"
+            ? layer.tabletContent ?? layer.content
+            : layer.content}
       </motion.div>
     </motion.div>
   );
@@ -325,7 +337,8 @@ export function LayeredDepthScene({
   scrollSpring = false,
   stageClassName,
   stageStyle,
-  mobileBreakpoint = 768,
+  mobileBreakpoint = 640,
+  tabletBreakpoint = 1025,
   onProgressChange,
   sourceContract,
   className,
@@ -340,6 +353,8 @@ export function LayeredDepthScene({
   const pointerX = useSpring(rawPointerX, pointerSpring);
   const pointerY = useSpring(rawPointerY, pointerSpring);
   const mobile = useMediaQuery(`(max-width: ${mobileBreakpoint - 0.02}px)`);
+  const tablet = useMediaQuery(`(min-width: ${mobileBreakpoint}px) and (max-width: ${tabletBreakpoint - 0.02}px)`);
+  const viewport = mobile ? "mobile" : tablet ? "tablet" : "desktop";
   const prefersReducedMotion = usePrefersReducedMotion();
   const scrollYProgress = useElementScrollProgress(rootRef);
   const smoothedProgress = useSpring(scrollYProgress, scrollSpring || DEFAULT_SCROLL_SPRING);
@@ -348,7 +363,7 @@ export function LayeredDepthScene({
   useMotionValueEvent(sceneProgress, "change", (value) => onProgressChange?.(value));
 
   const handlePointerMove = (event: React.PointerEvent<HTMLElement>) => {
-    if (!prefersReducedMotion && !mobile && event.pointerType !== "touch") {
+    if (!prefersReducedMotion && viewport === "desktop" && event.pointerType !== "touch") {
       const rect = event.currentTarget.getBoundingClientRect();
       rawPointerX.set((event.clientX - rect.left) / Math.max(rect.width, 1) - 0.5);
       rawPointerY.set((event.clientY - rect.top) / Math.max(rect.height, 1) - 0.5);
@@ -367,6 +382,7 @@ export function LayeredDepthScene({
         ref={rootRef}
         aria-label={label}
         data-depth-scene
+        data-experience-viewport={viewport}
         data-depth-source={sourceContract?.sourceId}
         data-depth-source-mode={sourceContract?.mode}
         data-depth-aligned={sourceContract?.aligned || undefined}
@@ -386,11 +402,13 @@ export function LayeredDepthScene({
       ref={rootRef}
       aria-label={label}
       data-depth-scene
+      data-experience-viewport={viewport}
       data-depth-source={sourceContract?.sourceId}
       data-depth-source-mode={sourceContract?.mode}
       data-depth-aligned={sourceContract?.aligned || undefined}
       data-depth-contact-plates={sourceContract?.contactPlates}
       data-mobile={mobile || undefined}
+      data-tablet={tablet || undefined}
       data-reduced-motion={prefersReducedMotion || undefined}
       className={cn("relative isolate", className)}
       style={{
@@ -413,9 +431,9 @@ export function LayeredDepthScene({
         <div className="absolute inset-0 [transform-style:preserve-3d]">
           {layers.map((layer) => (
             <DepthLayer
-              key={`${mobile ? "mobile" : "desktop"}-${layer.id}`}
+              key={`${viewport}-${layer.id}`}
               layer={layer}
-              mobile={mobile}
+              viewport={viewport}
               pointerTravel={pointerTravel}
               pointerX={pointerX}
               pointerY={pointerY}

@@ -4,12 +4,14 @@ import * as React from "react";
 import * as THREE from "three";
 
 import { cn } from "@/lib/utils";
-import { clamp01, damp, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
+import { clamp01, damp, useExperienceViewport, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
 import { useWebGLStage } from "@/components/experience/use-webgl-stage";
 
 export type DistortionCarouselItem = {
   id: string;
   src: string;
+  mobileSrc?: string;
+  tabletSrc?: string;
   alt: string;
 };
 
@@ -129,6 +131,12 @@ export function DistortionCarousel<T extends DistortionCarouselItem = Distortion
   const [activeIndex, setActiveIndex] = React.useState(initialIndex);
   const activeIndexRef = React.useRef(initialIndex);
   const reducedMotion = usePrefersReducedMotion();
+  const viewport = useExperienceViewport();
+  const resolveSrc = React.useCallback((item: T) => viewport === "mobile"
+    ? item.mobileSrc ?? item.tabletSrc ?? item.src
+    : viewport === "tablet"
+      ? item.tabletSrc ?? item.src
+      : item.src, [viewport]);
 
   const onActiveChangeRef = React.useRef(onActiveChange);
   React.useInsertionEffect(() => {
@@ -157,7 +165,7 @@ export function DistortionCarousel<T extends DistortionCarouselItem = Distortion
     canvasRef,
     enabled: !reducedMotion && total > 0,
     maxDpr,
-    signature: JSON.stringify([distortion, smoothing, items.map((item) => item.src)]),
+    signature: JSON.stringify([distortion, smoothing, items.map(resolveSrc), viewport]),
     create: ({ renderer, markReady, markFailed, isDisposed, requestResize }) => {
       const scene = new THREE.Scene();
       const camera = new THREE.Camera();
@@ -183,7 +191,7 @@ export function DistortionCarousel<T extends DistortionCarouselItem = Distortion
         if (index < 0 || index >= items.length || textures[index] || pending.has(index)) return;
         pending.add(index);
         loader.load(
-          items[index]!.src,
+          resolveSrc(items[index]!),
           (texture) => {
             pending.delete(index);
             if (isDisposed()) {
@@ -310,14 +318,14 @@ export function DistortionCarousel<T extends DistortionCarouselItem = Distortion
   const activeItem = items[Math.min(lastIndex, Math.max(0, activeIndex))];
 
   return (
-    <section aria-label={label} data-distortion-carousel data-ready={ready || undefined} data-fallback={staticMode || undefined} className={cn("relative isolate overflow-hidden bg-black", className)} {...props}>
+    <section aria-label={label} data-distortion-carousel data-experience-viewport={viewport} data-ready={ready || undefined} data-fallback={staticMode || undefined} className={cn("relative isolate overflow-hidden bg-black", className)} {...props}>
       {staticMode ? (
         fallback ?? (
           <ul className="flex h-full snap-x snap-mandatory gap-3 overflow-x-auto">
             {items.map((item, index) => (
               <li key={item.id} className="relative h-full w-[88%] shrink-0 snap-center overflow-hidden">
                 {/* eslint-disable-next-line @next/next/no-img-element -- registry source stays framework-neutral. */}
-                <img alt={item.alt} src={item.src} className="size-full object-cover" loading={index > 1 ? "lazy" : undefined} />
+                <img alt={item.alt} src={resolveSrc(item)} className="size-full object-cover" loading={index > 1 ? "lazy" : undefined} />
                 {renderCaption?.(item, index, index === activeIndex)}
               </li>
             ))}
@@ -352,19 +360,19 @@ export function DistortionCarousel<T extends DistortionCarouselItem = Distortion
           ) : null}
           {total > 1 ? (
             <div className="absolute inset-x-0 bottom-5 flex items-center justify-center gap-4">
-              {/* ui-primitive-allow-native: canvas-overlay arrow with bespoke styling. */}<button type="button" aria-label={previousLabel} disabled={activeIndex <= 0} onClick={() => goTo(activeIndex - 1)} className="pointer-events-auto flex size-10 cursor-pointer items-center justify-center rounded-full border border-white/25 bg-black/30 text-white backdrop-blur transition-colors hover:bg-black/55 disabled:cursor-default disabled:opacity-35">
+              {/* ui-primitive-allow-native: canvas-overlay arrow with bespoke styling. */}<button type="button" aria-label={previousLabel} disabled={activeIndex <= 0} onClick={() => goTo(activeIndex - 1)} className="pointer-events-auto flex size-11 cursor-pointer items-center justify-center rounded-full border border-white/25 bg-black/30 text-white backdrop-blur transition-colors hover:bg-black/55 disabled:cursor-default disabled:opacity-35">
                 <svg aria-hidden viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6" /></svg>
               </button>
               {showDots ? (
                 <div className="flex items-center gap-2">
                   {items.map((item, index) => (
                     <React.Fragment key={item.id}>
-                      {/* ui-primitive-allow-native: carousel dot with bespoke styling. */}<button type="button" aria-label={slideLabel(index, total)} aria-current={index === activeIndex || undefined} onClick={() => goTo(index)} className={cn("size-2 cursor-pointer rounded-full transition-all", index === activeIndex ? "w-6 bg-white" : "bg-white/40 hover:bg-white/70")} />
+                      {/* ui-primitive-allow-native: carousel dot with 44px touch target. */}<button type="button" aria-label={slideLabel(index, total)} aria-current={index === activeIndex || undefined} onClick={() => goTo(index)} className={cn("relative size-11 cursor-pointer rounded-full before:absolute before:left-1/2 before:top-1/2 before:h-2 before:-translate-x-1/2 before:-translate-y-1/2 before:rounded-full before:transition-all", index === activeIndex ? "before:w-6 before:bg-white" : "before:w-2 before:bg-white/40 hover:before:bg-white/70")} />
                     </React.Fragment>
                   ))}
                 </div>
               ) : null}
-              {/* ui-primitive-allow-native: canvas-overlay arrow with bespoke styling. */}<button type="button" aria-label={nextLabel} disabled={activeIndex >= lastIndex} onClick={() => goTo(activeIndex + 1)} className="pointer-events-auto flex size-10 cursor-pointer items-center justify-center rounded-full border border-white/25 bg-black/30 text-white backdrop-blur transition-colors hover:bg-black/55 disabled:cursor-default disabled:opacity-35">
+              {/* ui-primitive-allow-native: canvas-overlay arrow with bespoke styling. */}<button type="button" aria-label={nextLabel} disabled={activeIndex >= lastIndex} onClick={() => goTo(activeIndex + 1)} className="pointer-events-auto flex size-11 cursor-pointer items-center justify-center rounded-full border border-white/25 bg-black/30 text-white backdrop-blur transition-colors hover:bg-black/55 disabled:cursor-default disabled:opacity-35">
                 <svg aria-hidden viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
               </button>
             </div>

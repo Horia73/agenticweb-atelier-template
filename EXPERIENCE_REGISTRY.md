@@ -2,94 +2,45 @@
 
 Biblioteca conține mecanici de experiență instalabile ca sursă editabilă, nu landing pages sau teme. Site-ul clientului furnizează arhitectura, identitatea, copy-ul, asset-urile și art direction-ul; componentele rezolvă runtime-ul dificil, motion-ul și fallback-urile.
 
-## P0–P6
+## Sursa de adevăr
 
-| ID | Componentă | Rol |
+- `experience.catalog.json` definește toate mecanismele verificate și instalabile, taxonomia, rolul recomandat, stack-ul, costul, asset profile-ul și fallback-ul.
+- `creative-grammar.json` definește axele de compoziție și bugetul de intensitate; nu conține layout-uri de pagină.
+- `registry.json` livrează sursa editabilă și mini-tutorialul fiecărui item.
+- Experience Lab și registry-ul conțin aceeași listă: fiecare item instalabil are un fixture vizibil și verificabil. Nu păstrăm engine-uri ascunse sau recipe-uri fără consumator.
+
+Validatorul impune ca toate cele trei contracte și Studio template să aibă aceeași versiune și exact aceleași item-uri.
+
+## Familii
+
+| Familie | Ce organizează | Exemple |
 | --- | --- | --- |
-| `cinematic-forest-3d` | `CinematicForest3D`, `Cinematic3DScene` | P0: lume 3D real-time cu geometrie PBR, vegetație/teren/HDR coerente, cameră scroll reversibilă, ocluzie reală, loading măsurat și poster fallback |
-| `depth-camera-scene` | `DepthCameraScene` | P0: 2.5D Advanced cu PerspectiveCamera reală, stack 00–50 sau focus handoff A/B cu plane high-res decupate, plus ocluzie semantică între două pass-uri WebGL |
-| `cinematic-world-scene` | `CinematicWorldScene` | recipe P0 cu intro, rear/front narrative și catalog final controlat local |
-| `spatial-product-stage` | `SpatialProductStage` | P1: assembly/exploded pentru plate-uri alpha, primitive editabile sau noduri GLB; hover/scroll/hybrid și idle ascuns |
-| `liquid-glass` | `LiquidGlassSurface`, `LiquidGlassNav` | P2: suprafață clear/regular adaptivă și nav semantic cu active pill |
-| `shader-field` | `ShaderField` | P3: aurora, metaballs, contour și caustic WebGL reactive |
-| `media-portal` | `MediaPortal` | P4: apertură React care crește la full viewport |
-| `spatial-gallery` | `SpatialGallery` | P5: galerie cu cameră Three.js și fallback rail nativ |
-| `mesh-transition` | `MeshTransition` | P6: tranziție GPU wave/fold/liquid, scroll/hover/controlled |
+| Worlds & depth | lumi, profunzime și traversări spațiale | `layered-depth`, `portal-crossing` |
+| Product & object | inspecție, assembly și transformarea obiectului | `spatial-product-stage`, `product-orbit`, `particle-assembly` |
+| Story & scroll | structuri narative și progres măsurat | `sticky-story`, `horizontal-story-rail`, `scroll-stack` |
+| Media & collections | browsing, comparație și galerii | `spatial-gallery`, `spatial-canvas`, `distortion-carousel` |
+| Type & signals | tipografie, numere și semnale animate | `kinetic-type`, `count-up`, `split-flap` |
+| Transitions & reveals | treceri între scene, rute și stări | `media-portal`, `scene-handoff`, `route-transition` |
+| Surfaces & atmosphere | lumină, glass, fluide și particule | `liquid-glass`, `shader-field`, `ambient-particles` |
+| System & micro | feedback local și utilități de sistem | `cursor-magnetic`, `reveal-stagger`, `intro-loader` |
 
-`ScrollDepthScene` rămâne explicit **2.5D Basic**: master integrat, occlusion matte și text editabil în spatele subiectului. Nu îl numi Advanced doar fiindcă fotografia și tipografia sunt premium.
-
-## Primitive complementare
-
-| ID | Rol |
-| --- | --- |
-| `horizontal-story-rail` / `horizontal-track` | scroll vertical → track orizontal sau track cu progres extern |
-| `sticky-story` | capitole cu vizual persistent |
-| `image-sequence-scrub` | secvență reală de cadre pe canvas |
-| `mask-reveal` | reveal direcțional/radial reversibil |
-| `kinetic-type` | timeline tipografic semantic |
-| `cursor-ambient` | lens fără punct central |
-| `cursor-magnetic` | proximitate magnetică locală |
-| `before-after` | comparator accesibil |
-| `expanding-media` | cadru editorial care devine full viewport |
-| `depth-gallery` | stack focal DOM cu fallback swipe |
-
-## Direcțiile 20–30
-
-| Nr. | ID | Rol |
-| --- | --- | --- |
-| 20 | `refractive-glass` | lens WebGL care refractă textura reală, cu formă și material editabile |
-| 21 | `product-orbit` | viewer GLB/primitive cu drag, tastatură și hotspots semantice |
-| 22 | `particle-assembly` | matte raster → point cloud → obiect, controlat prin scroll/hover/progres extern |
-| 23 | `typography-depth-tunnel` | copy semantic într-un tunel CSS 3D |
-| 24 | `spatial-canvas` | plan non-liniar cu pan, zoom, tastatură și fallback rail |
-| 25 | `volumetric-light-stage` | imagine cu trei emitters procedurali, haze și lifecycle WebGL complet |
-| 26 | `slice-recompose` | o sursă high-resolution recompusă din fâșii editabile |
-| 27 | `film-strip-3d` | bandă continuă CSS 3D cu mai multe cadre vizibile |
-| 28 | `elastic-image-grid` | grid semantic cu câmp local de proximitate |
-| 29 | `fluid-surface` | suprafață de imagine cu impulsuri fluide care se disipă |
-| 30 | `scene-handoff` | tranziție continuă între două scene React live |
-
-## Direcțiile 31–40
-
-| Nr. | ID | Rol |
-| --- | --- | --- |
-| 31 | `shared-element-zoom` | morph FLIP din grid în vedere de detaliu, cu semantică de dialog |
-| 32 | `draw-on-scroll` | desenarea formelor stroked ale unui SVG condusă de scroll |
-| 33 | `marquee-velocity` | bandă infinită reactivă la viteza scroll-ului |
-| 34 | `variable-font-axis` | axe de font variabil animate din pointer sau scroll |
-| 35 | `image-trail` | trail decorativ de imagini în urma cursorului |
-| 36 | `route-transition` | continuitate între rute prin View Transitions API, cu theme wipe |
-| 37 | `distortion-carousel` | galerie GPU cu drag, momentum și distorsiune condusă de viteză |
-| 38 | `portal-crossing` | peste fotografia originală, un portal 3D cu contur neregulat texturat cu lumea următoare sosește din adânc, iar camera trece prin el |
-| 39 | `physics-playground` | motor propriu de fizică 2D pentru badge-uri care cad și se aruncă |
-| 40 | `holo-card` | card holografic cu tilt 3D, foil și glare |
-
-## Direcțiile 41–50
-
-| Nr. | ID | Rol |
-| --- | --- | --- |
-| 41 | `reveal-stagger` | coregrafie de intrare în viewport cu stagger, plus reveal mascat pe cuvinte/caractere |
-| 42 | `count-up` | statistici care numără la intrarea în viewport, cu Intl formatting și layout rezervat |
-| 43 | `hover-preview-list` | index editorial cu panou media care urmărește cursorul |
-| 44 | `text-scramble` | decodare de tip terminal cu fraze ciclate |
-| 45 | `spotlight-grid` | carduri bento iluminate de un pointer field partajat |
-| 46 | `scroll-stack` | carduri sticky care se acoperă, se scalează și se estompează la scroll |
-| 47 | `knockout-text` | secvență pinned în patru beat-uri: din negru, prin literele-ferestre, în imagine |
-| 48 | `intro-loader` | preloader o dată pe sesiune sau loading screen controlat prin `active`/`progress` |
-| 49 | `ambient-particles` | atmosferă canvas cu sprite-uri glow, benzi de adâncime, vânt coerent și edge fade |
-| 50 | `split-flap` | panou split-flap derivat din timp, cu roată de glife, stagger pe coloane și shrink-to-fit |
+Aceste familii sunt filtre de descoperire, nu bundle-uri și nu rețete de landing page. Rolurile sunt `signature`, `structure`, `support`, `micro` și `infrastructure`; rolul final depinde de brief.
 
 ## Runtime partajat
 
-Toate componentele WebGL folosesc `use-webgl-stage.ts` (renderer, DPR cap, pauză offscreen, context loss **și restore**, dispose), iar primitivele împart hook-urile din `experience-runtime.ts` (`usePrefersReducedMotion`, `useCoarsePointer`, `useFinePointer`, `useMediaQuery`, `damp`, `sortKeyframes`). Registry-ul livrează aceste fișiere automat cu fiecare item care le importă. Stringurile vizibile/aria au default-uri în engleză și sunt overridabile prin props — demo-urile din Lab le suprascriu în română.
+Toate componentele WebGL folosesc `use-webgl-stage.ts` (renderer, DPR cap adaptiv, pauză offscreen, context loss **și restore**, dispose), iar primitivele împart hook-urile din `experience-runtime.ts` (`useExperienceViewport`, `resolveExperienceValue`, `usePrefersReducedMotion`, `useCoarsePointer`, `useFinePointer`, `useMediaQuery`, `damp`, `sortKeyframes`). Registry-ul livrează aceste fișiere automat cu fiecare item care le importă. Stringurile vizibile/aria au default-uri în engleză și sunt overridabile prin props — demo-urile din Lab le suprascriu în română.
+
+Contractul comun este mobile-first: mobil sub 640 px, tabletă/iPad între 640–1024 px și desktop de la 1025 px. Capabilitatea pointerului rămâne un semnal separat, astfel încât un iPad cu trackpad poate păstra interacțiuni fine fără să primească bugetul grafic de desktop. Componentele canvas/WebGL limitează DPR la 1 / 1,25 / 1,6, iar mecanicile spațiale sau dependente de hover oferă pe touch o variantă liniară, semantică ori un rail nativ. Detaliile sunt în `docs/experience/responsive-contract.md`.
 
 ## Contract Studio
 
-1. Citește brief-ul și propune exact **două** direcții vizuale distincte.
-2. Pentru fiecare direcție, justifică maximum două mecanici wow dominante și una secundară. Nu combina efecte doar pentru demo.
-3. După alegere, instalează doar componentele necesare din registry și modifică sursa lor în proiect.
-4. Nu păstra fixture, copy, assets, palette, crop, camera, timings sau geometrie din Experience Lab.
-5. Documentează asset workflow-ul, varianta mobilă, reduced motion, byte budget și checkpoint-urile QA.
+1. Explorează intern minimum patru ipoteze din brief și prezintă exact **două** direcții bespoke distincte; nu forța o pereche safe-versus-wow.
+2. Definește ideea dominantă și compoziția înaintea mecanicilor. Fiecare direcție poate avea zero sau o mecanică signature și maximum două support într-un viewport.
+3. Cel puțin o direcție trebuie să fie fezabilă cu asset-urile și scope-ul curent. Cealaltă poate fi mai ambițioasă numai cu dependențe și fallback explicite.
+4. Rulează maximum o mecanică high-cost într-un viewport și urmează fiecare beat intens cu o secțiune semantică liniștită.
+5. După alegere, instalează doar componentele necesare din registry și modifică sursa lor în proiect.
+6. Nu păstra fixture, copy, assets, palette, crop, camera, timings sau geometrie din Experience Lab.
+7. Documentează asset workflow-ul, varianta mobilă, reduced motion, byte budget și checkpoint-urile QA.
 
 Fiecare registry item instalează mini-tutorialul din `docs/experience/`, nu fixture-ul sau asset-urile Lab.
 
@@ -102,7 +53,7 @@ npm run dev:experience
 Deschide `http://localhost:3000/experience-lab`. Hash-uri utile:
 
 ```text
-#cinematic-forest-3d
+#layered-depth
 #spatial-product-stage
 #liquid-glass
 #shader-field
@@ -119,6 +70,7 @@ Deschide `http://localhost:3000/experience-lab`. Hash-uri utile:
 #slice-recompose
 #film-strip-3d
 #elastic-image-grid
+#focus-transfer-rail
 #fluid-surface
 #scene-handoff
 #shared-element-zoom
@@ -137,21 +89,23 @@ Deschide `http://localhost:3000/experience-lab`. Hash-uri utile:
 #text-scramble
 #spotlight-grid
 #scroll-stack
+#spatial-fold
 #knockout-text
 #intro-loader
 #ambient-particles
 #split-flap
 ```
 
-Registry-ul păstrează **52 de primitive/recipes** instalabile. Experience Lab are exact **50 de direcții vizibile**: primul selector este acum `3D Cinematic Forest`, al doilea rămâne `2.5D Basic`, direcțiile 20–30 sunt engine-uri independente, 31–40 sunt mecanicile precedente, iar 41–50 acoperă primitive aplicate frecvent și momente wow. Diferența de două apare fiindcă engine-ul `depth-camera-scene` și recipe-ul `cinematic-world-scene` rămân instalabile pentru proiecte 2.5D Advanced, dar nu mai ocupă selectorul P0 din Lab.
+Registry-ul și Experience Lab au acum exact **51 de mecanisme verificate**, grupate în cele opt familii de mai sus. Numărul este derivat din catalog, iar interfața și contractele Provider îl validează la build.
 
 Rulează apoi:
 
 ```bash
 npm run typecheck
 npm run lint
+npm run experience:check
 npm run registry:build
 npm run build
 ```
 
-Verifică 390, 768 și 1440 px, mouse/trackpad, touch, tastatură, reverse-scroll, loading lent, WebGL/context loss și opțiunea de sistem Reduce motion.
+Verifică 390, 768, 1024 și 1440 px, mouse/trackpad, touch, tastatură, reverse-scroll, loading lent, WebGL/context loss și opțiunea de sistem Reduce motion.

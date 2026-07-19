@@ -4,153 +4,6 @@
   "homepage": "https://agenticweb.ro",
   "items": [
     {
-      "name": "cinematic-forest-3d",
-      "type": "registry:component",
-      "title": "Cinematic Forest 3D · P0",
-      "description": "Real-time editable 3D world with optimized PBR geometry, terrain, HDR environment, reversible scroll camera, real depth occlusion, measured loading and poster fallbacks.",
-      "dependencies": [
-        "@react-three/drei@^10.7.7",
-        "@react-three/fiber@^9.6.1",
-        "motion@^12.42.2",
-        "three@^0.185.1"
-      ],
-      "files": [
-        {
-          "path": "src/components/experience/cinematic-forest-3d.tsx",
-          "type": "registry:component",
-          "target": "components/experience/cinematic-forest-3d.tsx"
-        },
-        {
-          "path": "src/components/experience/cinematic-3d-scene.tsx",
-          "type": "registry:component",
-          "target": "components/experience/cinematic-3d-scene.tsx"
-        },
-        {
-          "path": "src/components/experience/intro-loader.tsx",
-          "type": "registry:component",
-          "target": "components/experience/intro-loader.tsx"
-        },
-        {
-          "path": "src/components/experience/experience-runtime.ts",
-          "type": "registry:lib",
-          "target": "components/experience/experience-runtime.ts"
-        },
-        {
-          "path": "src/components/experience/use-element-scroll-progress.ts",
-          "type": "registry:hook",
-          "target": "components/experience/use-element-scroll-progress.ts"
-        },
-        {
-          "path": "scripts/build-cinematic-forest-3d.mjs",
-          "type": "registry:file",
-          "target": "scripts/build-cinematic-forest-3d.mjs"
-        },
-        {
-          "path": "docs/experience/cinematic-forest-3d.md",
-          "type": "registry:file",
-          "target": "docs/experience/cinematic-forest-3d.md"
-        }
-      ]
-    },
-    {
-      "name": "depth-camera-scene",
-      "type": "registry:component",
-      "title": "Depth Camera Scene · P0",
-      "description": "Advanced 2.5D engine with a real PerspectiveCamera, registered or trimmed high-resolution planes, world focus-handoff effects, semantic DOM occlusion, reversible scroll and production fallbacks.",
-      "dependencies": [
-        "motion@^12.42.2",
-        "three@^0.185.1"
-      ],
-      "files": [
-        {
-          "path": "src/components/experience/depth-camera-scene.tsx",
-          "type": "registry:component",
-          "target": "components/experience/depth-camera-scene.tsx"
-        },
-        {
-          "path": "src/components/experience/experience-runtime.ts",
-          "type": "registry:lib",
-          "target": "components/experience/experience-runtime.ts"
-        },
-        {
-          "path": "src/components/experience/use-element-scroll-progress.ts",
-          "type": "registry:hook",
-          "target": "components/experience/use-element-scroll-progress.ts"
-        },
-        {
-          "path": "docs/experience/depth-camera-scene.md",
-          "type": "registry:file",
-          "target": "docs/experience/depth-camera-scene.md"
-        },
-        {
-          "path": "src/components/experience/use-webgl-stage.ts",
-          "type": "registry:lib",
-          "target": "components/experience/use-webgl-stage.ts"
-        }
-      ]
-    },
-    {
-      "name": "cinematic-world-scene",
-      "type": "registry:component",
-      "title": "Cinematic World Scene · P0 Recipe",
-      "description": "Optional Advanced recipe that composes DepthCameraScene with intro, rear/front narrative and a locally controlled final catalog.",
-      "dependencies": [
-        "motion@^12.42.2",
-        "three@^0.185.1",
-        "lucide-react@^1.24.0"
-      ],
-      "registryDependencies": [
-        "button"
-      ],
-      "files": [
-        {
-          "path": "src/components/experience/cinematic-world-scene.tsx",
-          "type": "registry:component",
-          "target": "components/experience/cinematic-world-scene.tsx"
-        },
-        {
-          "path": "src/components/experience/depth-camera-scene.tsx",
-          "type": "registry:component",
-          "target": "components/experience/depth-camera-scene.tsx"
-        },
-        {
-          "path": "src/components/experience/horizontal-track.tsx",
-          "type": "registry:component",
-          "target": "components/experience/horizontal-track.tsx"
-        },
-        {
-          "path": "src/components/experience/experience-runtime.ts",
-          "type": "registry:lib",
-          "target": "components/experience/experience-runtime.ts"
-        },
-        {
-          "path": "src/components/experience/use-element-scroll-progress.ts",
-          "type": "registry:hook",
-          "target": "components/experience/use-element-scroll-progress.ts"
-        },
-        {
-          "path": "docs/experience/cinematic-world-scene.md",
-          "type": "registry:file",
-          "target": "docs/experience/cinematic-world-scene.md"
-        },
-        {
-          "path": "docs/experience/depth-camera-scene.md",
-          "type": "registry:file",
-          "target": "docs/experience/depth-camera-scene.md"
-        },
-        {
-          "path": "docs/experience/horizontal-track.md",
-          "type": "registry:file",
-          "target": "docs/experience/horizontal-track.md"
-        },
-        {
-          "path": "src/components/experience/use-webgl-stage.ts",
-          "type": "registry:lib",
-          "target": "components/experience/use-webgl-stage.ts"
-        }
-      ]
-    },
-    {
       "name": "spatial-product-stage",
       "type": "registry:component",
       "title": "Spatial Product Stage · P1",
@@ -354,7 +207,7 @@
       "name": "layered-depth",
       "type": "registry:component",
       "title": "Scroll Depth Scene · Basic 2.5D",
-      "description": "Basic 2.5D engine for an integrated master, registered occlusion matte and editable React text; use DepthCameraScene for the Advanced 00–50 stack.",
+      "description": "2.5D engine for registered raster plates, an integrated master with exact occlusion mattes, editable React text and deliberate mobile/reduced-motion outcomes.",
       "dependencies": [
         "motion@^12.42.2"
       ],
@@ -990,6 +843,37 @@
       ]
     },
     {
+      "name": "focus-transfer-rail",
+      "type": "registry:component",
+      "title": "Focus Transfer Rail",
+      "description": "Pinned responsive media rail that transfers width and visual priority across two to five semantic React panels using native vertical scroll or controlled progress, with a static narrow, coarse-pointer and reduced-motion fallback.",
+      "dependencies": [
+        "motion@^12.42.2"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/focus-transfer-rail.tsx",
+          "type": "registry:component",
+          "target": "components/experience/focus-transfer-rail.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "src/components/experience/use-element-scroll-progress.ts",
+          "type": "registry:hook",
+          "target": "components/experience/use-element-scroll-progress.ts"
+        },
+        {
+          "path": "docs/experience/focus-transfer-rail.md",
+          "type": "registry:file",
+          "target": "docs/experience/focus-transfer-rail.md"
+        }
+      ]
+    },
+    {
       "name": "fluid-surface",
       "type": "registry:component",
       "title": "Fluid Surface Cursor",
@@ -1025,7 +909,7 @@
       "name": "scene-handoff",
       "type": "registry:component",
       "title": "Scene Handoff",
-      "description": "Continuous reversible transition between two live React scenes with depth, shutter and iris variants and a linear reduced-motion result.",
+      "description": "Continuous reversible transition between two live React scenes with depth, shutter, iris and organic-rise variants and a linear reduced-motion result.",
       "dependencies": [
         "motion@^12.42.2"
       ],
@@ -1234,7 +1118,7 @@
       "name": "portal-crossing",
       "type": "registry:component",
       "title": "Portal Crossing",
-      "description": "A 3D portal into another world: an irregular, depth-undulating rim tube — textured half with the origin world, half with the destination — rushes forward from far in the deep on scroll, its stencil aperture reveals the second world, and a scroll-only dolly crosses the threshold into DOM arrival content.",
+      "description": "A 3D portal into another world, born as a morph of the origin photo's own pixels: the whole portal starts camouflaged in the warped image, the aperture then dissolves toward the second world while the living, irregular rim — textured half with each world, rippling like liquid glass — morphs out of the photo in step with it, all while physically traveling from far in the deep on a scroll-only dolly that crosses the threshold into DOM arrival content.",
       "files": [
         {
           "path": "src/components/experience/portal-crossing.tsx",
@@ -1455,7 +1339,7 @@
       "name": "knockout-text",
       "type": "registry:component",
       "title": "Knockout Text",
-      "description": "Pinned four-beat knockout sequence: dark stage, type rises in, letters become transparent windows over a fixed image via SVG mask, then zoom through the letters into a full-bleed takeover; fully reversible.",
+      "description": "Pinned type traversal with no artificial aperture: solid type becomes exact transparent glyph cutouts, then a tracked central stroke and continuous destination push-in carry the camera forward without lateral mask drift; fully reversible.",
       "files": [
         {
           "path": "src/components/experience/knockout-text.tsx",
@@ -1540,6 +1424,34 @@
           "path": "docs/experience/split-flap.md",
           "type": "registry:file",
           "target": "docs/experience/split-flap.md"
+        }
+      ]
+    },
+    {
+      "name": "spatial-fold",
+      "type": "registry:component",
+      "title": "Spatial Fold",
+      "description": "Reversible CSS 3D chapter sequence: live React surfaces hinge away to reveal the next composition, with controlled perspective, directional shading and a semantic linear fallback.",
+      "files": [
+        {
+          "path": "src/components/experience/spatial-fold.tsx",
+          "type": "registry:component",
+          "target": "components/experience/spatial-fold.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "src/components/experience/use-element-scroll-progress.ts",
+          "type": "registry:lib",
+          "target": "components/experience/use-element-scroll-progress.ts"
+        },
+        {
+          "path": "docs/experience/spatial-fold.md",
+          "type": "registry:file",
+          "target": "docs/experience/spatial-fold.md"
         }
       ]
     }

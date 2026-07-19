@@ -2,6 +2,22 @@
 
 import * as React from "react";
 
+export const EXPERIENCE_BREAKPOINTS = {
+  tablet: 640,
+  desktop: 1025,
+} as const;
+
+export type ExperienceViewport = "mobile" | "tablet" | "desktop";
+
+export type ExperienceResponsiveValue<T> = T | {
+  /** Mobile-first value, also used during SSR/hydration. */
+  mobile: T;
+  /** iPad/tablet value. Falls back to `mobile` when omitted. */
+  tablet?: T;
+  /** Wide-screen value. Falls back to `tablet`, then `mobile`. */
+  desktop?: T;
+};
+
 const subscribeToHydration = () => () => undefined;
 
 export function useHydrated() {
@@ -38,6 +54,38 @@ export function useCoarsePointer() {
 /** True only when a hover-capable precise pointer is present. */
 export function useFinePointer() {
   return useMediaQuery("(hover: hover) and (pointer: fine)");
+}
+
+/**
+ * Shared mobile-first viewport contract for every experience primitive.
+ *
+ * Mobile: < 640px · tablet/iPad: 640–1024px · desktop: >= 1025px.
+ * Pointer capability remains a separate signal because an iPad can gain a
+ * trackpad without changing its layout profile.
+ */
+export function useExperienceViewport(): ExperienceViewport {
+  const tablet = useMediaQuery(`(min-width: ${EXPERIENCE_BREAKPOINTS.tablet}px)`);
+  const desktop = useMediaQuery(`(min-width: ${EXPERIENCE_BREAKPOINTS.desktop}px)`);
+  if (desktop) return "desktop";
+  if (tablet) return "tablet";
+  return "mobile";
+}
+
+export function resolveExperienceValue<T>(
+  value: ExperienceResponsiveValue<T>,
+  viewport: ExperienceViewport,
+): T {
+  if (typeof value !== "object" || value === null || !("mobile" in value)) return value;
+  if (viewport === "desktop") return value.desktop ?? value.tablet ?? value.mobile;
+  if (viewport === "tablet") return value.tablet ?? value.mobile;
+  return value.mobile;
+}
+
+/** Conservative raster/WebGL supersampling budget for each layout profile. */
+export function getExperienceDprCap(width: number) {
+  if (width < EXPERIENCE_BREAKPOINTS.tablet) return 1;
+  if (width < EXPERIENCE_BREAKPOINTS.desktop) return 1.25;
+  return 1.6;
 }
 
 export function clamp01(value: number) {

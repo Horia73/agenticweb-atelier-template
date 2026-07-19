@@ -10,6 +10,7 @@ import { useMotionValue } from "motion/react";
  */
 export function useElementScrollProgress(
   target: React.RefObject<HTMLElement | null>,
+  mode: "pinned" | "entry" = "pinned",
 ) {
   const progress = useMotionValue(0);
 
@@ -19,8 +20,10 @@ export function useElementScrollProgress(
     let frame = 0;
     const measure = () => {
       const rect = element.getBoundingClientRect();
-      const travel = Math.max(1, element.offsetHeight - window.innerHeight);
-      progress.set(Math.max(0, Math.min(1, -rect.top / travel)));
+      const value = mode === "entry"
+        ? (window.innerHeight - rect.top) / Math.max(1, element.offsetHeight)
+        : -rect.top / Math.max(1, element.offsetHeight - window.innerHeight);
+      progress.set(Math.max(0, Math.min(1, value)));
     };
     const update = () => {
       cancelAnimationFrame(frame);
@@ -40,7 +43,7 @@ export function useElementScrollProgress(
       window.removeEventListener("scroll", update);
       window.removeEventListener("resize", update);
     };
-  }, [progress, target]);
+  }, [mode, progress, target]);
 
   return progress;
 }

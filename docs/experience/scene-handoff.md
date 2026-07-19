@@ -20,7 +20,11 @@ import { SceneHandoff } from "@/components/experience/scene-handoff";
 />
 ```
 
-Choose `depth`, `shutter` or `iris`, or pass a shared `MotionValue<number>` to coordinate with a larger sequence. Endpoint scenes own all content and art direction.
+Choose `depth`, `shutter`, `iris` or `organic-rise`, or pass a shared `MotionValue<number>` to coordinate with a larger sequence. Endpoint scenes own all content and art direction.
+
+`organic-rise` lifts the destination scene from the bottom through a softly feathered, deliberately irregular edge. It is useful when the seam should feel atmospheric instead of geometric. Keep important copy in `overlay` and stage its opacity late in the transition so it appears only after the destination has visually taken over.
+
+Use `progressMode="entry"` only when the handoff must begin as soon as its section enters the viewport, for example when removing dead space between a preceding product frame and the transition. The default `pinned` mode keeps progress tied to the sticky travel range.
 
 ## Gates
 

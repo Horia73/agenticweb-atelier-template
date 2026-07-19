@@ -3,7 +3,7 @@
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
-import { damp, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
+import { damp, useExperienceViewport, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
 
 export type PhysicsPlaygroundItem = {
   id: string;
@@ -225,6 +225,10 @@ export function PhysicsPlayground({
   const engineRef = React.useRef<PlaygroundEngine | null>(null);
   const suppressClickRef = React.useRef(new Set<string>());
   const reducedMotion = usePrefersReducedMotion();
+  const viewport = useExperienceViewport();
+  const activeGravity = gravity * (viewport === "mobile" ? .8 : viewport === "tablet" ? .9 : 1);
+  const activeMaxTossSpeed = maxTossSpeed * (viewport === "mobile" ? .7 : viewport === "tablet" ? .85 : 1);
+  const activeDropStagger = dropStagger * (viewport === "mobile" ? .72 : viewport === "tablet" ? .86 : 1);
 
   React.useEffect(() => {
     itemsRef.current = items;
@@ -245,7 +249,7 @@ export function PhysicsPlayground({
     let frame = 0;
     let previous = performance.now();
     let spawnElapsed = 0;
-    let lastScheduledSpawn = -dropStagger;
+    let lastScheduledSpawn = -activeDropStagger;
     let nextSpawnIndex = 0;
     let restFrames = 0;
     let dragDepth = 0;
@@ -268,7 +272,7 @@ export function PhysicsPlayground({
         const halfWidth = element.offsetWidth / 2;
         const halfHeight = element.offsetHeight / 2;
         const radius = Math.max(6, item?.radius ?? Math.max(halfWidth, halfHeight) * 0.92);
-        const spawnAt = Math.max(spawnElapsed, lastScheduledSpawn + dropStagger);
+        const spawnAt = Math.max(spawnElapsed, lastScheduledSpawn + activeDropStagger);
         lastScheduledSpawn = spawnAt;
         bodies.set(id, {
           id,
@@ -338,8 +342,8 @@ export function PhysicsPlayground({
       const h = delta / SUBSTEPS;
       for (let step = 0; step < SUBSTEPS; step += 1) {
         for (const body of active) {
-          if (body.dragging) followPointer(body, maxTossSpeed, h);
-          else integrateBody(body, gravity, airFriction, maxTossSpeed * 1.2, h);
+          if (body.dragging) followPointer(body, activeMaxTossSpeed, h);
+          else integrateBody(body, activeGravity, airFriction, activeMaxTossSpeed * 1.2, h);
         }
         for (let i = 0; i < active.length; i += 1) {
           for (let j = i + 1; j < active.length; j += 1) {
@@ -443,9 +447,9 @@ export function PhysicsPlayground({
         let tossX = (event.clientX - reference.x) / span;
         let tossY = (event.clientY - reference.y) / span;
         const speed = Math.hypot(tossX, tossY);
-        if (speed > maxTossSpeed) {
-          tossX *= maxTossSpeed / speed;
-          tossY *= maxTossSpeed / speed;
+        if (speed > activeMaxTossSpeed) {
+          tossX *= activeMaxTossSpeed / speed;
+          tossY *= activeMaxTossSpeed / speed;
         }
         body.vx = tossX;
         body.vy = tossY;
@@ -519,7 +523,7 @@ export function PhysicsPlayground({
       bodies.clear();
       suppressClick.clear();
     };
-  }, [airFriction, dropStagger, gravity, maxTossSpeed, reducedMotion, restitution]);
+  }, [activeDropStagger, activeGravity, activeMaxTossSpeed, airFriction, reducedMotion, restitution]);
 
   const resolveItemClass = (index: number) =>
     typeof itemClassName === "function" ? itemClassName(index) : itemClassName;
@@ -529,12 +533,13 @@ export function PhysicsPlayground({
       <section
         aria-label={label}
         data-physics-playground
+        data-experience-viewport={viewport}
         data-static
         className={cn("relative flex flex-col", className)}
         {...props}
       >
         {header}
-        <div className={cn("flex min-h-0 flex-1 flex-wrap content-start items-center gap-3 overflow-hidden p-6", stageClassName)}>
+        <div className={cn("flex min-h-0 flex-1 flex-wrap content-start items-center gap-2 overflow-hidden p-4 sm:gap-3 sm:p-6", stageClassName)}>
           {items.map((item, index) => (
             <div key={item.id} data-physics-item className={resolveItemClass(index)}>
               {item.content}
@@ -550,6 +555,7 @@ export function PhysicsPlayground({
       ref={rootRef}
       aria-label={label}
       data-physics-playground
+      data-experience-viewport={viewport}
       className={cn("relative flex flex-col", className)}
       {...props}
     >

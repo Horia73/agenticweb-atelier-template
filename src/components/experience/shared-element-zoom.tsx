@@ -4,7 +4,7 @@ import * as React from "react";
 import { AnimatePresence, motion, useMotionValue, useSpring } from "motion/react";
 
 import { cn } from "@/lib/utils";
-import { useFinePointer, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
+import { useExperienceViewport, useFinePointer, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
 
 export type SharedElementZoomItem = {
   id: string;
@@ -63,6 +63,7 @@ export function SharedElementZoom<T extends SharedElementZoomItem>({
   const closeButtonRef = React.useRef<HTMLButtonElement>(null);
   const reducedMotion = usePrefersReducedMotion();
   const finePointer = useFinePointer();
+  const viewport = useExperienceViewport();
   const activeItem = items.find((item) => item.id === activeId) ?? null;
 
   const cursorX = useMotionValue(0);
@@ -123,6 +124,7 @@ export function SharedElementZoom<T extends SharedElementZoomItem>({
     <section
       aria-label={label}
       data-shared-element-zoom
+      data-experience-viewport={viewport}
       className={cn("relative", className)}
       onPointerMove={handlePointerMove}
       onPointerLeave={handlePointerLeave}
@@ -185,7 +187,7 @@ export function SharedElementZoom<T extends SharedElementZoomItem>({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className={cn("fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm sm:p-8", overlayClassName)}
+            className={cn("fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-2 backdrop-blur-sm sm:items-center sm:p-8", overlayClassName)}
             onClick={close}
           >
             <motion.div
@@ -194,7 +196,7 @@ export function SharedElementZoom<T extends SharedElementZoomItem>({
               aria-label={activeItem.label}
               layoutId={layoutIdFor(activeItem.id)}
               transition={morphTransition}
-              className={cn("relative max-h-full w-full max-w-3xl overflow-auto bg-background shadow-2xl", detailClassName)}
+              className={cn("relative max-h-[calc(100svh-.5rem)] w-full max-w-3xl overflow-auto overscroll-contain bg-background shadow-2xl sm:max-h-full", detailClassName)}
               style={{ borderRadius: MORPH_RADIUS }}
               onClick={(event) => event.stopPropagation()}
             >
@@ -203,7 +205,7 @@ export function SharedElementZoom<T extends SharedElementZoomItem>({
                 type="button"
                 aria-label={closeLabel}
                 onClick={close}
-                className="absolute right-3 top-3 z-10 flex size-9 cursor-pointer items-center justify-center rounded-full bg-black/50 text-white backdrop-blur transition-colors hover:bg-black/70 focus-visible:outline-2"
+                className="absolute right-3 top-3 z-10 flex size-11 cursor-pointer items-center justify-center rounded-full bg-black/50 text-white backdrop-blur transition-colors hover:bg-black/70 focus-visible:outline-2"
               >
                 <svg aria-hidden viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                   <path d="M6 6l12 12M18 6L6 18" />

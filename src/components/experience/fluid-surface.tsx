@@ -4,12 +4,14 @@ import * as React from "react";
 import * as THREE from "three";
 
 import { cn } from "@/lib/utils";
-import { useCoarsePointer, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
+import { useCoarsePointer, useExperienceViewport, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
 import { useWebGLStage } from "@/components/experience/use-webgl-stage";
 
 export type FluidSurfaceProps = Omit<React.ComponentProps<"section">, "children"> & {
   label: string;
   src: string;
+  mobileSrc?: string;
+  tabletSrc?: string;
   alt: string;
   strength?: number;
   radius?: number;
@@ -79,9 +81,11 @@ export function FluidSurface({
   fallback,
   label,
   maxDpr = 1.6,
+  mobileSrc,
   radius = 0.24,
   src,
   strength = 0.018,
+  tabletSrc,
   onPointerMove,
   ...props
 }: FluidSurfaceProps) {
@@ -91,14 +95,16 @@ export function FluidSurface({
   const lastPointerRef = React.useRef({ x: 0.5, y: 0.5, time: 0 });
   const reducedMotion = usePrefersReducedMotion();
   const coarsePointer = useCoarsePointer();
+  const viewport = useExperienceViewport();
   const staticMode = reducedMotion || coarsePointer;
+  const activeSrc = viewport === "mobile" ? mobileSrc ?? tabletSrc ?? src : viewport === "tablet" ? tabletSrc ?? src : src;
 
   const { ready, failed } = useWebGLStage({
     stageRef: rootRef,
     canvasRef,
     enabled: !staticMode,
     maxDpr,
-    signature: JSON.stringify([chromatic, decay, radius, src, strength]),
+    signature: JSON.stringify([activeSrc, chromatic, decay, radius, strength]),
     create: ({ renderer, markReady, markFailed, isDisposed, requestResize }) => {
       let texture: THREE.Texture | null = null;
       const scene = new THREE.Scene();
@@ -118,7 +124,7 @@ export function FluidSurface({
       scene.add(new THREE.Mesh(geometry, material));
 
       new THREE.TextureLoader().load(
-        src,
+        activeSrc,
         (loaded) => {
           if (isDisposed()) {
             loaded.dispose();
@@ -176,10 +182,10 @@ export function FluidSurface({
     }
     onPointerMove?.(event);
   };
-  const posterStyle = { backgroundImage: `url("${src.replaceAll('"', '%22')}")` };
+  const posterStyle = { backgroundImage: `url("${activeSrc.replaceAll('"', '%22')}")` };
 
   return (
-    <section ref={rootRef} aria-label={label} data-fluid-surface data-ready={ready || undefined} className={cn("relative isolate overflow-hidden bg-black", className)} onPointerMove={handlePointerMove} {...props}>
+    <section ref={rootRef} aria-label={label} data-fluid-surface data-experience-viewport={viewport} data-ready={ready || undefined} className={cn("relative isolate overflow-hidden bg-black", className)} onPointerMove={handlePointerMove} {...props}>
       <span className="sr-only">{alt}</span>
       <div aria-hidden className={cn("absolute inset-0 -z-20 bg-cover bg-center", ready && !failed && !staticMode ? "opacity-0" : "opacity-100")} style={posterStyle} />
       <canvas ref={canvasRef} aria-hidden className={cn("absolute inset-0 -z-10 size-full transition-opacity duration-500", ready && !failed && !staticMode ? "opacity-100" : "opacity-0", canvasClassName)} />

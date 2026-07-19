@@ -8,7 +8,7 @@ import {
 } from "motion/react";
 
 import { cn } from "@/lib/utils";
-import { usePrefersReducedMotion } from "@/components/experience/experience-runtime";
+import { useExperienceViewport, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
 import { useElementScrollProgress } from "@/components/experience/use-element-scroll-progress";
 import {
   type ProgressPlayback,
@@ -19,6 +19,8 @@ type MaskRevealProps = Omit<React.ComponentProps<"section">, "children"> & {
   after: React.ReactNode;
   before: React.ReactNode;
   direction?: "left" | "right" | "top" | "bottom" | "circle";
+  mobileDirection?: "left" | "right" | "top" | "bottom" | "circle";
+  tabletDirection?: "left" | "right" | "top" | "bottom" | "circle";
   label: string;
   overlay?: React.ReactNode;
   playback?: ProgressPlayback;
@@ -52,6 +54,7 @@ export function MaskReveal({
   className,
   direction = "left",
   label,
+  mobileDirection,
   overlay,
   playback = "scrub",
   progress: controlledProgress,
@@ -61,19 +64,26 @@ export function MaskReveal({
   scrollScreens = 2.5,
   stageClassName,
   style,
+  tabletDirection,
   ...props
 }: MaskRevealProps) {
   const rootRef = React.useRef<HTMLElement>(null);
   const reducedMotion = usePrefersReducedMotion();
+  const viewport = useExperienceViewport();
   const localProgress = useElementScrollProgress(rootRef);
   const sourceProgress = controlledProgress ?? localProgress;
   const progress = useCommittedProgress(sourceProgress, playback, resetKey);
-  const [from, to] = maskValues(direction);
+  const activeDirection = viewport === "mobile"
+    ? mobileDirection ?? direction
+    : viewport === "tablet"
+      ? tabletDirection ?? direction
+      : direction;
+  const [from, to] = maskValues(activeDirection);
   const clipPath = useTransform(progress, range, [from, to], { clamp: true });
 
   if (reducedMotion) {
     return (
-      <section ref={rootRef} aria-label={label} className={cn("relative isolate min-h-svh overflow-hidden", className)} style={style} {...props}>
+      <section ref={rootRef} aria-label={label} data-mask-reveal data-experience-viewport={viewport} data-static className={cn("relative isolate min-h-svh overflow-hidden", className)} style={style} {...props}>
         {reducedMotionState === "after" ? after : before}
         {overlay}
       </section>
@@ -81,7 +91,7 @@ export function MaskReveal({
   }
 
   return (
-    <section ref={rootRef} aria-label={label} data-mask-reveal data-playback={playback} className={cn("relative isolate", className)} style={{ minHeight: `${Math.max(1.5, scrollScreens) * 100}svh`, ...style }} {...props}>
+    <section ref={rootRef} aria-label={label} data-mask-reveal data-experience-viewport={viewport} data-playback={playback} className={cn("relative isolate", className)} style={{ minHeight: `${Math.max(1.5, scrollScreens) * 100}svh`, ...style }} {...props}>
       <div className={cn("sticky top-0 h-svh overflow-hidden", stageClassName)}>
         <div className="absolute inset-0">{before}</div>
         <motion.div aria-hidden className="absolute inset-0 will-change-[clip-path]" style={{ clipPath }}>

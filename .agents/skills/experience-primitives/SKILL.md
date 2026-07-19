@@ -1,6 +1,6 @@
 ---
 name: experience-primitives
-description: Select, install, customize, and verify the reusable experience mechanics in this template. Use when a Studio site needs a distinctive motion or interaction direction, when editing files under src/components/experience, when installing an item from registry.json, or when preparing 2.5D, ImageGen, or real-time 3D assets. Enforces brief-led art direction, exact asset gates, accessible fallbacks, and production QA instead of copying the Experience Lab.
+description: Select, install, customize, and verify the reusable experience mechanics in this template. Use when a Studio site needs a distinctive motion or interaction direction, when editing files under src/components/experience, when installing an item from registry.json, or when preparing 2.5D, ImageGen, raster, canvas, or WebGL assets. Enforces brief-led art direction, exact asset gates, accessible fallbacks, and production QA instead of copying the Experience Lab.
 ---
 
 # Experience Primitives
@@ -9,11 +9,11 @@ Use the registry as a behavior library, never as a website template. The result 
 
 ## Required Workflow
 
-1. Read `studio.template.json`, `EXPERIENCE_REGISTRY.md`, and `registry.json`.
-2. Confirm the selected client direction. During design exploration present exactly two coherent directions; do not select mechanics before the brief has a narrative reason for them.
-3. Pick at most one signature mechanic and up to two supporting mechanics. Prefer no special mechanic when it does not improve comprehension, emotion, or proof.
+1. Read `studio.template.json` and the versioned `creative-grammar.json`, `experience.catalog.json`, `EXPERIENCE_REGISTRY.md`, and `registry.json` it declares.
+2. Confirm the selected client direction. During design exploration create multiple internal hypotheses and present exactly the two strongest bespoke directions; never force a safe-versus-wow pair.
+3. Create the dominant idea and composition before choosing mechanics. Pick zero or one signature mechanic and up to two supporting mechanics per viewport. Prefer no special mechanic when it does not improve comprehension, emotion, or proof.
 4. Read the selected item's complete mini-tutorial in `docs/experience/` before editing or installing it.
-5. Pass the asset gate. Do not simulate missing depth assets by duplicating one photo, using approximate masks, or adding arbitrary parallax. For `layered-depth`, `depth-camera-scene` or `cinematic-world-scene`, read [references/depth-production.md](references/depth-production.md) completely. For `cinematic-forest-3d` or another real-time 3D world, read [references/cinematic-3d-production.md](references/cinematic-3d-production.md) completely.
+5. Pass the asset gate. Do not simulate missing depth assets by duplicating one photo, using approximate masks, or adding arbitrary parallax. For `layered-depth`, read [references/depth-production.md](references/depth-production.md) completely.
 6. Import the component directly from `@/components/experience/<file>`. Keep shadcn primitives in `src/components/ui` and compose them into the experience; do not rebuild Button, Dialog, form, or focus behavior inside a mechanic.
 7. Personalize the component's content, assets, crop, timing, ranges, tokens, mobile behavior, and reduced-motion result. The lab's car, Adriatic copy, colors, layout, and timings are QA fixtures and are forbidden in client output.
 8. Keep semantic content in React/HTML. Rasterize only photography, texture, rendered objects, or atmosphere. Never bake required headings or CTA labels into an image.
@@ -28,16 +28,14 @@ Reject the implementation until all relevant statements are true:
 - Desktop and mobile art direction are deliberate; mobile is not merely a squeezed desktop scene.
 - `prefers-reduced-motion`, touch/coarse pointer, keyboard, focus, and 200% zoom have usable outcomes.
 - A plain-content path still communicates the message if motion or media fails.
+- No viewport activates more than one high-cost mechanic; every intense beat releases into a quiet semantic section.
 - Full-screen media has stable dimensions, responsive delivery, and a declared byte budget.
 - No custom cursor hides the native cursor; proximity effects remain bounded to their field.
 - The neutral `[data-studio-seed]` root has been replaced before a client build is called complete.
 
 ## Mechanic-Specific Rules
 
-- `cinematic-forest-3d`: this is real-time 3D, never 2.5D. Build one coherent ecosystem from licensed geometry, PBR ground, vegetation, lighting and an environment capture; keep every root grounded and every species/light decision plausible together. Use real loading progress, a camera safety corridor, world-space occlusion for 3D copy, a poster fallback and an explicit desktop byte budget. The Lab forest is a QA fixture: Studio must replace its world, camera, copy and art direction rather than shipping it as a theme.
 - `layered-depth`: classify it as Basic 2.5D. Prefer an integrated master plus the exact full-canvas hero occlusion matte, with identical transforms and a static composite QA image.
-- `depth-camera-scene`: P0 Advanced requires either a sequentially registered 00–50 stack or an inspected focus-handoff stack (`world A`, `world B`, persistent continuity plate, dedicated trimmed high-res occluders, contact, manifest). A focus handoff may create massive perceived zoom only while the focal plane occludes a blurred world swap; never upscale one wide raster for the whole move. Require readable semantic occlusion and checkpoint QA. A desktop-only study is not a complete client delivery until its separate mobile direction exists.
-- `cinematic-world-scene`: use only when P0 also needs at least two semantic depth beats and a final local `HorizontalTrack` controller. Never copy its fixture or nest `HorizontalStoryRail` inside it.
 - `spatial-product-stage`: choose registered raster plates, meaningful editable primitives or named GLB nodes; define exact assembly, hover/scroll/hybrid driver, mobile anchor and static fallback.
 - `liquid-glass`: keep semantic links/focus and verify contrast over every live background state; customize tint, radius, blur and density.
 - `shader-field`: keep WebGL bounded, cap DPR, pause offscreen and provide a project-specific static fallback with stable text contrast.
@@ -70,6 +68,7 @@ Reject the implementation until all relevant statements are true:
 - `text-scramble`: short strings only, in mono/uppercase treatments; match `charset` to the language and finish the decode in about a second.
 - `spotlight-grid`: cards keep a visible resting border and their own contrast; the spotlight is an accent that disappears entirely on touch and reduced motion.
 - `scroll-stack`: cards must be tall enough to justify pinning, the last card never transforms, and reduced motion gets a plain list with identical order.
+- `spatial-fold`: keep 3–5 complete live React chapters, declare hinge directions deliberately, never place required interaction on a moving surface, keep the last chapter front-facing and ship the identical chapter order as a linear mobile/coarse-pointer/reduced-motion path.
 - `knockout-text`: a pinned four-beat sequence (dark → type → fill → camera through the letters); heavy tight type over a tonally coherent fill, a composed takeover endpoint at both breakpoints, and copy that survives 200% zoom via clamp().
 - `intro-loader`: once per session and under ~2.5s for the intro, tied to real document readiness with a hard cap; use `active`/`progress` only for genuinely measurable loading, never faked; repeat visitors and reduced motion skip entirely and `onComplete` still fires.
 - `ambient-particles`: purely decorative atmosphere with an enforced budget (sprite rendering, depth bands, edge fade at section borders); never attach meaning to particles and keep copy contrast intact over the layer.
@@ -82,6 +81,7 @@ Run:
 ```bash
 npm run typecheck
 npm run lint
+npm run experience:check
 npm run registry:build
 ```
 

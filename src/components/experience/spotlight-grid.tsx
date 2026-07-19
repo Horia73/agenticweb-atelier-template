@@ -3,7 +3,7 @@
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
-import { useFinePointer, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
+import { useExperienceViewport, useFinePointer, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
 
 export type SpotlightGroupProps = React.ComponentProps<"div"> & {
   children: React.ReactNode;
@@ -39,6 +39,7 @@ export function SpotlightGroup({
   const scheduledRef = React.useRef(false);
   const finePointer = useFinePointer();
   const reducedMotion = usePrefersReducedMotion();
+  const viewport = useExperienceViewport();
   const active = finePointer && !reducedMotion;
 
   const applyFrame = React.useCallback(() => {
@@ -77,6 +78,7 @@ export function SpotlightGroup({
       <div
         ref={rootRef}
         data-spotlight-group
+        data-experience-viewport={viewport}
         data-static={!active || undefined}
         className={className}
         onPointerMove={(event) => {

@@ -8,6 +8,7 @@ import {
   clamp01,
   damp,
   mix,
+  useExperienceViewport,
   useFinePointer,
   usePrefersReducedMotion,
 } from "@/components/experience/experience-runtime";
@@ -67,8 +68,12 @@ export function VariableFontAxis({
   const charRefs = React.useRef<Array<HTMLSpanElement | null>>([]);
   const reducedMotion = usePrefersReducedMotion();
   const finePointer = useFinePointer();
+  const viewport = useExperienceViewport();
+  const activeRadius = radius * (viewport === "mobile" ? 0.7 : viewport === "tablet" ? 0.84 : 1);
+  const activeScrollScreens = scrollScreens * (viewport === "mobile" ? 0.72 : viewport === "tablet" ? 0.86 : 1);
   const pointerMode = mode === "pointer" && finePointer && !reducedMotion;
   const scrollMode = mode === "scroll" && !reducedMotion;
+  const activePin = pin && viewport !== "mobile";
 
   const localProgress = useElementScrollProgress(rootRef);
   const scrollProgress = controlledProgress ?? localProgress;
@@ -119,7 +124,7 @@ export function VariableFontAxis({
       const rootLeft = root.getBoundingClientRect().left;
       chars.forEach((char, index) => {
         const distance = Math.abs(pointer.x - (rootLeft + (centers[index] ?? 0)));
-        const target = pointer.active ? clamp01(1 - distance / Math.max(1, radius)) : 0;
+        const target = pointer.active ? clamp01(1 - distance / Math.max(1, activeRadius)) : 0;
         const eased = target * target * (3 - 2 * target);
         const next = damp(values[index] ?? 0, eased, smoothing, delta);
         if (Math.abs(next - (values[index] ?? 0)) > 0.001 || Math.abs(next - eased) > 0.001) settled = false;
@@ -158,7 +163,7 @@ export function VariableFontAxis({
       root.removeEventListener("pointermove", handleMove);
       root.removeEventListener("pointerleave", handleLeave);
     };
-  }, [axesSignature, pointerMode, radius, smoothing]);
+  }, [activeRadius, axesSignature, pointerMode, smoothing]);
 
   const Tag = as;
   const restSettings = formatAxes(axes, axes.map((axis) => axis.from));
@@ -178,13 +183,14 @@ export function VariableFontAxis({
       ref={rootRef}
       aria-label={label}
       data-variable-font-axis
+      data-experience-viewport={viewport}
       data-mode={mode}
       data-static={reducedMotion || undefined}
-      className={cn("relative", pin && scrollMode && "min-h-0", className)}
-      style={pin && scrollMode ? { minHeight: `${Math.max(1, scrollScreens) * 100}svh` } : undefined}
+      className={cn("relative min-w-0", activePin && scrollMode && "min-h-0", className)}
+      style={activePin && scrollMode ? { minHeight: `${Math.max(1, activeScrollScreens) * 100}svh` } : undefined}
       {...props}
     >
-      <div className={cn(pin && scrollMode && "sticky top-0 flex h-svh items-center")}>
+      <div className={cn(activePin && scrollMode && "sticky top-0 flex h-svh items-center")}>
         {pointerMode ? (
           <>
             <span className="sr-only">{text}</span>
@@ -212,7 +218,7 @@ export function VariableFontAxis({
             </Tag>
           </>
         ) : (
-          <Tag ref={textRef as React.Ref<never>} className={cn("whitespace-pre-wrap", textClassName)} style={{ fontVariationSettings: restSettings }}>
+          <Tag ref={textRef as React.Ref<never>} className={cn("max-w-full whitespace-pre-wrap break-words", textClassName)} style={{ fontVariationSettings: restSettings }}>
             {text}
           </Tag>
         )}

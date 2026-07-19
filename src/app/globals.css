@@ -18,6 +18,22 @@
 @theme inline {
   --font-heading: var(--font-sans);
   --font-sans: var(--font-sans);
+  --font-editorial: var(--font-editorial);
+  --color-dock: var(--dock);
+  --color-dock-foreground: var(--dock-foreground);
+  --color-dock-muted: var(--dock-muted);
+  --color-dock-accent: var(--dock-accent);
+  --color-screen-panel: var(--screen-panel);
+  --color-screen-foreground: var(--screen-foreground);
+  --color-screen-muted: var(--screen-muted);
+  --color-screen-accent: var(--screen-accent);
+  --color-screen-vignette: var(--screen-vignette);
+  --color-scene: var(--scene);
+  --color-scene-foreground: var(--scene-foreground);
+  --color-scene-muted: var(--scene-muted);
+  --color-scene-raised: var(--scene-raised);
+  --color-surface-warm: var(--surface-warm);
+  --color-footer-wordmark: var(--footer-wordmark);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -83,6 +99,58 @@
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
   --radius: 0.625rem;
+  --dock: oklch(0.12 0.006 260);
+  --dock-foreground: oklch(0.985 0 0);
+  --dock-muted: oklch(0.72 0.01 250);
+  --dock-accent: oklch(0.24 0.008 260);
+  --screen-panel: oklch(0.075 0.006 260);
+  --screen-foreground: oklch(0.985 0 0);
+  --screen-muted: oklch(0.68 0.012 250);
+  --screen-accent: oklch(0.73 0.18 145);
+  --screen-vignette: oklch(0.05 0.01 250 / 0.28);
+  --scene: oklch(0.085 0.006 258);
+  --scene-foreground: oklch(0.975 0.004 90);
+  --scene-muted: oklch(0.73 0.012 250);
+  --scene-raised: oklch(0.135 0.009 258);
+  --surface-warm: oklch(0.962 0.012 83);
+  --footer-wordmark: oklch(0.19 0.008 258);
+  --scene-haze: linear-gradient(
+    180deg,
+    oklch(0.085 0.006 258 / 0.12),
+    oklch(0.085 0.006 258 / 0.88)
+  );
+  --media-shade: linear-gradient(
+    180deg,
+    oklch(0.08 0.008 258 / 0.03) 32%,
+    oklch(0.06 0.008 258 / 0.86) 100%
+  );
+  --media-vignette: linear-gradient(
+    90deg,
+    oklch(0.08 0.008 258 / 0.36),
+    transparent 45%
+  );
+  --closing-shade: linear-gradient(
+    180deg,
+    oklch(0.06 0.008 258 / 0.12),
+    oklch(0.06 0.008 258 / 0.62)
+  );
+  --footer-shade: linear-gradient(
+    90deg,
+    oklch(0.06 0.008 258 / 0.58),
+    transparent 72%
+  );
+  --footer-star-shade: linear-gradient(
+    180deg,
+    transparent 54%,
+    var(--scene) 100%
+  );
+  --footer-wordmark-shadow:
+    0 -1px 0 oklch(0.34 0.01 258 / 0.25),
+    0 20px 48px oklch(0.02 0.006 258 / 0.72);
+  --shadow-action: 0 12px 32px oklch(0.63 0.17 41 / 0.2);
+  --shadow-device:
+    0 34px 90px oklch(0.1 0.01 260 / 0.2), 0 4px 16px oklch(0.1 0.01 260 / 0.12);
+  --shadow-panel: 0 18px 34px oklch(0.05 0.01 250 / 0.32);
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -117,6 +185,16 @@
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
+  --dock: oklch(0.985 0 0);
+  --dock-foreground: oklch(0.145 0 0);
+  --dock-muted: oklch(0.44 0.01 250);
+  --dock-accent: oklch(0.91 0.006 250);
+  --scene: oklch(0.085 0.006 258);
+  --scene-foreground: oklch(0.975 0.004 90);
+  --scene-muted: oklch(0.73 0.012 250);
+  --scene-raised: oklch(0.135 0.009 258);
+  --surface-warm: oklch(0.19 0.008 258);
+  --footer-wordmark: oklch(0.22 0.008 258);
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);
@@ -136,5 +214,390 @@
   }
   html {
     @apply font-sans;
+    scroll-behavior: smooth;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   EXPERIENCE PRIMITIVES — contract responsive comun pentru toate cele 50.
+   Valorile de bază sunt mobile-first; tableta/iPad și desktopul doar extind
+   spațiul și bugetul de randare. Componentele cu geometrie proprie consumă
+   același contract și în runtime prin `experience-runtime.ts`.
+   ───────────────────────────────────────────────────────────────────────── */
+
+:root {
+  --experience-viewport: mobile;
+  --experience-gutter: 1.25rem;
+  --experience-section-gap: 4rem;
+  --experience-control-size: 2.75rem;
+  --experience-panel-radius: 1.25rem;
+}
+
+@media (min-width: 640px) and (max-width: 1024px) {
+  :root {
+    --experience-viewport: tablet;
+    --experience-gutter: clamp(2rem, 5vw, 3.5rem);
+    --experience-section-gap: 5.5rem;
+    --experience-control-size: 3rem;
+    --experience-panel-radius: 1.75rem;
+  }
+}
+
+@media (min-width: 1025px) {
+  :root {
+    --experience-viewport: desktop;
+    --experience-gutter: clamp(2.5rem, 6vw, 7rem);
+    --experience-section-gap: 7rem;
+    --experience-control-size: 2.75rem;
+    --experience-panel-radius: 2rem;
+  }
+}
+
+@layer components {
+  :where(
+    [data-ambient-particles],
+    [data-before-after],
+    [data-count-up],
+    [data-cursor-lens],
+    [data-magnetic-field],
+    [data-depth-gallery],
+    [data-distortion-carousel],
+    [data-draw-on-scroll],
+    [data-elastic-image-grid],
+    [data-expanding-media],
+    [data-film-strip-3d],
+    [data-focus-transfer-rail],
+    [data-fluid-surface],
+    [data-holo-card],
+    [data-horizontal-story],
+    [data-horizontal-track-viewport],
+    [data-hover-preview-list],
+    [data-image-sequence],
+    [data-image-trail],
+    [data-intro-loader],
+    [data-kinetic-type],
+    [data-knockout-text],
+    [data-depth-scene],
+    [data-liquid-glass],
+    [data-marquee-velocity],
+    [data-mask-reveal],
+    [data-media-portal],
+    [data-mesh-transition],
+    [data-particle-assembly],
+    [data-physics-playground],
+    [data-portal-crossing],
+    [data-product-orbit],
+    [data-refractive-glass],
+    [data-reveal-stagger],
+    [data-scene-handoff],
+    [data-scroll-stack],
+    [data-shader-field],
+    [data-shared-element-zoom],
+    [data-slice-recompose],
+    [data-spatial-canvas],
+    [data-spatial-fold],
+    [data-spatial-gallery],
+    [data-spatial-product],
+    [data-split-flap],
+    [data-spotlight-group],
+    [data-sticky-story],
+    [data-text-scramble],
+    [data-typography-depth-tunnel],
+    [data-variable-font-axis],
+    [data-volumetric-light]
+  ) {
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+
+  :where(
+    [data-before-after],
+    [data-depth-gallery],
+    [data-distortion-carousel],
+    [data-draw-on-scroll],
+    [data-expanding-media],
+    [data-film-strip-3d],
+    [data-focus-transfer-rail],
+    [data-fluid-surface],
+    [data-horizontal-story],
+    [data-image-sequence],
+    [data-knockout-text],
+    [data-depth-scene],
+    [data-mask-reveal],
+    [data-media-portal],
+    [data-mesh-transition],
+    [data-particle-assembly],
+    [data-physics-playground],
+    [data-portal-crossing],
+    [data-product-orbit],
+    [data-refractive-glass],
+    [data-scene-handoff],
+    [data-shader-field],
+    [data-shared-element-zoom],
+    [data-slice-recompose],
+    [data-spatial-canvas],
+    [data-spatial-fold],
+    [data-spatial-gallery],
+    [data-spatial-product],
+    [data-sticky-story],
+    [data-typography-depth-tunnel],
+    [data-volumetric-light]
+  ) {
+    container-type: inline-size;
+  }
+
+  :where(
+      [data-before-after],
+      [data-depth-gallery],
+      [data-distortion-carousel],
+      [data-fluid-surface],
+      [data-image-sequence],
+      [data-media-portal],
+      [data-mesh-transition],
+      [data-particle-assembly],
+      [data-portal-crossing],
+      [data-product-orbit],
+      [data-refractive-glass],
+      [data-shader-field],
+      [data-slice-recompose],
+      [data-spatial-gallery],
+      [data-spatial-product],
+      [data-volumetric-light]
+    )
+    :where(img, video, canvas, svg) {
+    max-inline-size: 100%;
+  }
+
+  :where(
+      [data-before-after],
+      [data-distortion-carousel],
+      [data-horizontal-story],
+      [data-liquid-glass],
+      [data-physics-playground],
+      [data-product-orbit],
+      [data-shared-element-zoom],
+      [data-spatial-canvas],
+      [data-spatial-gallery],
+      [data-spatial-product],
+      [data-sticky-story]
+    )
+    :where(button, a, input, select, textarea, [role="button"]) {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@media (pointer: coarse) {
+  :where(
+      [data-before-after],
+      [data-distortion-carousel],
+      [data-horizontal-story],
+      [data-liquid-glass],
+      [data-physics-playground],
+      [data-product-orbit],
+      [data-shared-element-zoom],
+      [data-spatial-canvas],
+      [data-spatial-gallery],
+      [data-spatial-product],
+      [data-sticky-story]
+    )
+    :where(button, a, select, [role="button"]) {
+    min-block-size: 2.75rem;
+  }
+
+  [data-before-after] input[type="range"] {
+    touch-action: pan-y;
+  }
+}
+
+.edge-dock {
+  isolation: isolate;
+  z-index: 40;
+  background: var(--dock);
+  border-radius: 0 0 2rem 2rem;
+  box-shadow: 0 10px 30px oklch(0.1 0.01 260 / 0.12);
+}
+
+.experience-dock {
+  isolation: isolate;
+  z-index: 40;
+  background: color-mix(in oklch, var(--dock) 94%, transparent);
+  box-shadow: 0 14px 40px oklch(0.05 0.01 258 / 0.18);
+  backdrop-filter: blur(18px) saturate(125%);
+}
+
+.organic-handoff-edge {
+  z-index: 2;
+  background: var(--scene);
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgb(0 0 0 / 0.06) 10%,
+    rgb(0 0 0 / 0.32) 23%,
+    rgb(0 0 0 / 0.72) 36%,
+    black 48%
+  );
+  box-shadow: 0 4rem 5rem 3rem var(--scene);
+  transform-origin: 50% 50%;
+  will-change: transform, opacity;
+}
+
+.bg-scene-haze {
+  background: var(--scene-haze);
+}
+
+.bg-media-shade {
+  background: var(--media-shade);
+}
+
+.bg-media-vignette {
+  background: var(--media-vignette);
+}
+
+.bg-closing-shade {
+  background: var(--closing-shade);
+}
+
+.bg-footer-shade {
+  background: var(--footer-shade);
+}
+
+.bg-footer-star-shade {
+  background: var(--footer-star-shade);
+}
+
+.live-static-stage {
+  display: block;
+}
+
+.live-motion-stage {
+  display: none;
+}
+
+.atmosphere-static-stage {
+  display: block;
+}
+
+.atmosphere-motion-stage {
+  display: none;
+}
+
+@media (min-width: 1025px) {
+  .live-static-stage {
+    display: none;
+  }
+
+  .live-motion-stage {
+    display: block;
+  }
+
+  .atmosphere-static-stage {
+    display: none;
+  }
+
+  .atmosphere-motion-stage {
+    display: block;
+  }
+}
+
+.closing-immersion {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgb(0 0 0 / 0.22) 6%,
+    black 19%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgb(0 0 0 / 0.22) 6%,
+    black 19%
+  );
+}
+
+.footer-star-transition {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgb(0 0 0 / 0.12) 8%,
+    rgb(0 0 0 / 0.7) 22%,
+    black 36%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgb(0 0 0 / 0.12) 8%,
+    rgb(0 0 0 / 0.7) 22%,
+    black 36%
+  );
+}
+
+.footer-wordmark {
+  text-shadow: var(--footer-wordmark-shadow);
+}
+
+.edge-dock::before,
+.edge-dock::after {
+  position: absolute;
+  top: 0;
+  width: 1.75rem;
+  height: 1.75rem;
+  content: "";
+  background: var(--background);
+  pointer-events: none;
+}
+
+.edge-dock::before {
+  left: 0;
+  border-radius: 0 0 100% 0;
+}
+
+.edge-dock::after {
+  right: 0;
+  border-radius: 0 0 0 100%;
+}
+
+.device-shell {
+  border: 0.6rem solid var(--screen-panel);
+  background: var(--screen-panel);
+  box-shadow: var(--shadow-device);
+}
+
+@media (max-width: 639px) {
+  .device-shell {
+    border-width: 0.35rem;
+    border-radius: 1.2rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-static-stage {
+    display: block !important;
+  }
+
+  .live-motion-stage {
+    display: none !important;
+  }
+
+  .atmosphere-static-stage {
+    display: block !important;
+  }
+
+  .atmosphere-motion-stage {
+    display: none !important;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }

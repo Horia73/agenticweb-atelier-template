@@ -8,7 +8,6 @@ import { motion, type MotionValue, useMotionValue, useReducedMotion, useSpring, 
 
 import { AmbientParticles, type AmbientParticlesPreset } from "@/components/experience/ambient-particles";
 import { BeforeAfter } from "@/components/experience/before-after";
-import { CinematicForest3D } from "@/components/experience/cinematic-forest-3d";
 import { CountUp } from "@/components/experience/count-up";
 import { HoverPreviewList } from "@/components/experience/hover-preview-list";
 import { IntroLoader } from "@/components/experience/intro-loader";
@@ -31,6 +30,7 @@ import { MarqueeVelocity } from "@/components/experience/marquee-velocity";
 import { PhysicsPlayground } from "@/components/experience/physics-playground";
 import { ElasticImageGrid, type ElasticImageGridItem } from "@/components/experience/elastic-image-grid";
 import { FilmStrip3D, type FilmStrip3DItem } from "@/components/experience/film-strip-3d";
+import { FocusTransferRail, type FocusTransferRailItem } from "@/components/experience/focus-transfer-rail";
 import { FluidSurface } from "@/components/experience/fluid-surface";
 import { HorizontalStoryRail } from "@/components/experience/horizontal-story-rail";
 import { HorizontalTrack } from "@/components/experience/horizontal-track";
@@ -50,6 +50,7 @@ import { SharedElementZoom } from "@/components/experience/shared-element-zoom";
 import { VariableFontAxis } from "@/components/experience/variable-font-axis";
 import { SliceRecompose } from "@/components/experience/slice-recompose";
 import { SpatialCanvas, type SpatialCanvasItem } from "@/components/experience/spatial-canvas";
+import { SpatialFold, type SpatialFoldChapter } from "@/components/experience/spatial-fold";
 import { SpatialGallery, type SpatialGalleryItem } from "@/components/experience/spatial-gallery";
 import { SpatialProductStage, type SpatialProductPart } from "@/components/experience/spatial-product-stage";
 import { ScrollDepthScene, type LayeredDepthLayer } from "@/components/experience/layered-depth";
@@ -63,20 +64,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { cn } from "@/lib/utils";
 import { ExperienceLabGuideSection, ExperienceLabSidebar } from "@/app/experience-lab/experience-lab-chrome";
 import { experienceLabGuides } from "@/app/experience-lab/experience-lab-guides";
+import experienceCatalog from "../../../experience.catalog.json";
 
 const ASSETS = {
-  carBackground: "/experience/depth-car-v3/background.webp",
   carPoster: "/experience/depth-car-v3/poster.webp",
   carSubject: "/experience/depth-car-v3/subject.webp",
   carSequence: "/experience/sequence-car-v2/poster.webp",
   portrait: "/experience/spatial-product-stage-v1/portrait.webp",
   respiratorAssembled: "/experience/spatial-product-stage-v1/respirator/assembled.webp",
-  respiratorMask: "/experience/spatial-product-stage-v1/respirator/mask.png",
-  respiratorComposite: "/experience/spatial-product-stage-v1/respirator/qa-composite.webp",
   worldPoster: "/experience/depth-camera-world-v2/poster.webp",
   worldMobile: "/experience/depth-camera-world-v2/mobile-poster.webp",
   emptyWorld: "/experience/depth-camera-world-v2/layers/00-sky.webp",
-  portalDestination: "/experience/portal-crossing-v1/destination.webp",
   meshCar: "/experience/mesh-transition-v1/car-2x.webp",
   meshWorld: "/experience/mesh-transition-v1/world-2x.webp",
   galaxyMask: "/experience/particle-galaxy-v1/mask.png",
@@ -144,17 +142,6 @@ const depthGalleryItems: DepthGalleryItem[] = [
 ];
 
 const sequenceFrames = Array.from({ length: 36 }, (_, index) => `/experience/sequence-car-v2/frames/frame-${String(index + 1).padStart(3, "0")}.webp`);
-
-function CinematicForestDemo() {
-  return (
-    <div className="bg-[#07100b]">
-      <CinematicForest3D />
-      <section className="grid min-h-[65svh] place-items-center bg-[#e7e3da] px-5 text-center text-black">
-        <div><p className="text-xs uppercase tracking-[0.2em] opacity-50">Normal flow</p><p className="mt-4 text-[clamp(3rem,7vw,7rem)] font-semibold leading-[0.84] tracking-[-0.07em]">Scena se termină.<br />Pagina continuă.</p></div>
-      </section>
-    </div>
-  );
-}
 
 function BasicDepthDemo() {
   return <ScrollDepthScene label="2.5D Basic cu mașină și occlusion matte" layers={carLayers} pointerTravel={0} scrollScreens={3.2} sourceContract={{ sourceId: "adriatic-road-v3", mode: "integrated-occlusion", aligned: true, contactPlates: 1 }} stageClassName="bg-black" reducedMotionFallback={<div className="relative h-svh"><SceneImage src={ASSETS.carPoster} className="object-cover" /></div>} overlay={<div className="flex h-full flex-col justify-between p-6 pb-10 pt-24 text-xs uppercase tracking-[0.2em] text-white"><span>Basic / registered master + subject matte</span><span className="flex items-center gap-2"><ArrowDown className="size-4" /> scroll controls depth</span></div>} />;
@@ -403,6 +390,17 @@ function ElasticGridDemo() {
   return <ElasticImageGrid label="Grid elastic influențat de proximitatea cursorului" items={elasticItems} radius={460} maxTravel={38} maxScale={0.065} maxTilt={4} minItemWidth={230} className="min-h-svh bg-[#ece9e1] px-5 pb-12 pt-24 text-black sm:px-[5vw] sm:pt-28" gridClassName="mx-auto max-w-7xl" header={<div className="mx-auto mb-8 flex max-w-7xl items-end justify-between gap-6"><div><p className="text-xs uppercase tracking-[.2em] opacity-45">28 / Elastic image grid</p><h1 className="mt-3 text-[clamp(3.5rem,7vw,7rem)] font-semibold leading-[.78] tracking-[-.08em]">Proximitatea schimbă ierarhia.</h1></div><p className="hidden max-w-xs text-sm opacity-55 lg:block">Fiecare tile este conținut React; câmpul doar adaugă mișcare controlată.</p></div>} />;
 }
 
+const focusTransferItems: FocusTransferRailItem[] = [
+  { id: "world", label: "World", content: <div className="relative h-full"><SceneImage src={ASSETS.worldPoster} className="object-cover" /><div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/10" /><div className="absolute inset-x-0 bottom-0 p-6 text-white"><span className="text-xs uppercase tracking-[.2em] text-white/55">01 / World</span><p className="mt-2 text-4xl font-semibold tracking-[-.06em]">Threshold</p></div></div> },
+  { id: "human", label: "Human", content: <div className="relative h-full"><SceneImage src={ASSETS.portrait} className="object-cover object-[68%_center]" /><div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/10" /><div className="absolute inset-x-0 bottom-0 p-6 text-white"><span className="text-xs uppercase tracking-[.2em] text-white/55">02 / Human</span><p className="mt-2 text-4xl font-semibold tracking-[-.06em]">Interface</p></div></div> },
+  { id: "motion", label: "Motion", content: <div className="relative h-full"><SceneImage src={ASSETS.carPoster} className="object-cover" /><div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/10" /><div className="absolute inset-x-0 bottom-0 p-6 text-white"><span className="text-xs uppercase tracking-[.2em] text-white/55">03 / Motion</span><p className="mt-2 text-4xl font-semibold tracking-[-.06em]">Velocity</p></div></div> },
+];
+
+function FocusTransferRailDemo() {
+  const header = <div className="mx-auto w-full max-w-7xl"><p className="text-xs uppercase tracking-[.2em] text-white/45">51 / Focus transfer rail</p><h1 className="mt-3 max-w-[12ch] text-[clamp(3.2rem,6.5vw,6.5rem)] font-semibold leading-[.82] tracking-[-.075em]">Prioritatea trece dintr-un cadru în altul.</h1></div>;
+  return <FocusTransferRail label="Transfer de focus între trei cadre" items={focusTransferItems} activeRatio={2.45} scrollScreensPerStep={0.85} className="bg-[#08090b] text-white" staticClassName="px-5 pb-12 pt-24 sm:px-[5vw] sm:pt-28" stageClassName="px-5 pb-8 pt-24 sm:px-[5vw] sm:pt-28" header={header} trackClassName="mx-auto mt-8 w-full max-w-7xl flex-1 gap-3" staticTrackClassName="mx-auto mt-8 w-full max-w-7xl sm:grid-cols-3" itemClassName="rounded-[1.5rem] bg-[#15181d]" staticItemClassName="min-h-[26rem]" />;
+}
+
 function FluidSurfaceDemo() {
   return (
     <FluidSurface label="Suprafață fluidă reactivă" src={ASSETS.worldPoster} alt="Portal mineral distorsionat de unde fluide" strength={0.011} radius={0.22} decay={1.3} chromatic={0.0009} className="h-svh text-white">
@@ -494,7 +492,7 @@ function VariableFontAxisDemo() {
 
 function ImageTrailDemo() {
   return (
-    <ImageTrail label="Trail de imagini după cursor" images={[ASSETS.worldPoster, ASSETS.portrait, ASSETS.carPoster, ASSETS.emptyWorld]} size={190} threshold={110} lifeMs={1100} className="min-h-svh bg-[#0a0b0d] text-white" fallback={<div className="grid h-full grid-cols-2 gap-3 p-5 opacity-35 sm:grid-cols-4">{[ASSETS.worldPoster, ASSETS.portrait, ASSETS.carPoster, ASSETS.emptyWorld].map((src) => <div key={src} className="relative overflow-hidden rounded-xl"><SceneImage src={src} sizes="45vw" className="object-cover" /></div>)}</div>}>
+    <ImageTrail label="Trail de imagini după cursor" images={[ASSETS.worldPoster, ASSETS.portrait, ASSETS.carPoster, ASSETS.emptyWorld]} size={190} threshold={110} lifeMs={1100} className="min-h-svh bg-[#0a0b0d] text-white" fallback={<div className="grid h-full grid-cols-2 content-center gap-3 p-5 opacity-35 sm:grid-cols-4">{[ASSETS.worldPoster, ASSETS.portrait, ASSETS.carPoster, ASSETS.emptyWorld].map((src) => <div key={src} className="relative aspect-[4/5] overflow-hidden rounded-xl"><SceneImage src={src} sizes="45vw" className="object-cover" /></div>)}</div>}>
       <div className="pointer-events-none relative z-10 flex min-h-svh flex-col justify-between px-5 pb-10 pt-24 sm:px-[6vw] sm:pb-[7vh] sm:pt-28">
         <div className="flex justify-between text-xs uppercase tracking-[.2em] text-white/48"><span>35 / Image trail</span><span className="hidden sm:block">WAAPI pool · decorative only</span></div>
         <div><h1 className="max-w-[8ch] text-[clamp(4rem,9vw,9rem)] font-semibold leading-[.78] tracking-[-.085em]">Gestul lasă urme.</h1><p className="mt-6 max-w-sm text-sm leading-relaxed text-white/55">Mișcă întâi cursorul prin secțiune: cardurile apar la prag de distanță și se sting singure. Conținutul real rămâne în flow.</p></div>
@@ -560,7 +558,7 @@ function PortalCrossingDemo() {
     <PortalCrossing
       label="Portal 3D către altă lume"
       origin={{ src: ASSETS.emptyWorld, alt: "Orizont mineral pustiu" }}
-      destination={{ src: ASSETS.portalDestination, alt: "Luminiș de pădure luxuriantă" }}
+      destination={{ src: ASSETS.carPoster, alt: "Drum de coastă luminat la apus" }}
       className="text-white"
       overlay={(progress) => <PortalCrossingHint progress={progress} />}
       arrival={
@@ -664,7 +662,7 @@ function RevealStaggerDemo() {
 
 function CountUpDemo() {
   const stats = [
-    { id: "directions", value: 50, suffix: "+", label: "Direcții de experiență instalabile" },
+    { id: "directions", value: experienceCatalog.visibleDirections, suffix: "", label: "Mecanisme verificate în Experience Lab" },
     { id: "uptime", value: 99.98, suffix: "%", options: { minimumFractionDigits: 2 }, label: "Disponibilitate măsurată în producție" },
     { id: "delivery", value: 12, suffix: " zile", label: "De la brief la primul preview" },
     { id: "projects", value: 1840, suffix: "", options: { useGrouping: true }, label: "Componente livrate în site-uri reale" },
@@ -804,17 +802,24 @@ function KnockoutTextDemo() {
       <KnockoutText
         label="Secvență knockout: din negru, prin litere, în imagine"
         as="h1"
-        text="ATELIER"
+        text="PORTAL"
         src={ASSETS.worldPoster}
         mobileSrc={ASSETS.worldMobile}
         scrollScreens={3.6}
-        maxScale={19}
-        origin="50% 46%"
-        textClassName="px-4 text-center text-[clamp(3.6rem,16.5vw,18rem)] font-bold leading-none tracking-[-.05em] text-white"
+        maxScale={210}
+        mobileMaxScale={200}
+        tabletMaxScale={210}
+        imageMaxScale={1.5}
+        mobileImageMaxScale={1.55}
+        tabletImageMaxScale={1.52}
+        focusIndex={2}
+        passageX={0.15}
+        passageY={0.5}
+        textClassName="px-4 text-center text-[clamp(3.6rem,16.5cqw,18rem)] font-bold leading-none tracking-[-.05em] text-white"
         className="text-white"
         overlay={
           <div className="pointer-events-none absolute inset-0 flex flex-col justify-between px-5 pb-8 pt-24 sm:px-[6vw] sm:pt-28">
-            <div className="flex justify-between text-xs uppercase tracking-[.2em] text-white/45 mix-blend-difference"><span>47 / Knockout text</span><span className="hidden sm:block">negru → text → zoom → imagine</span></div>
+            <div className="flex justify-between text-xs uppercase tracking-[.2em] text-white/45 mix-blend-difference"><span>47 / Knockout text</span><span className="hidden sm:block">text solid → litere decupate → R transparent → traversare</span></div>
             <p className="flex items-center gap-2 text-xs uppercase tracking-[.2em] text-white/50 mix-blend-difference"><ArrowDown className="size-4" /> scroll conduce cele patru beat-uri</p>
           </div>
         }
@@ -897,8 +902,89 @@ function SplitFlapDemo() {
   );
 }
 
+const spatialFoldChapters: SpatialFoldChapter[] = [
+  {
+    id: "premise",
+    label: "Premisa",
+    accessibleText: "Premisa: schimbă perspectiva, nu doar suprafața.",
+    hinge: "left",
+    content: (
+      <div className="relative flex min-h-svh flex-col justify-between overflow-hidden bg-[#08090b] px-5 pb-10 pt-24 text-white sm:px-[6vw] sm:pb-[7vh] sm:pt-28">
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_49.9%,rgba(255,255,255,.1)_50%,transparent_50.1%),linear-gradient(0deg,transparent_49.9%,rgba(255,255,255,.08)_50%,transparent_50.1%)] bg-[size:12.5vw_12.5vw] opacity-35" />
+        <div className="relative flex justify-between text-xs uppercase tracking-[.2em] text-white/45"><span>01 / Spatial fold</span><span className="hidden sm:block">live React surfaces · CSS 3D</span></div>
+        <div className="relative">
+          <p className="max-w-[8ch] text-[clamp(3rem,11vw,11rem)] font-semibold leading-[.74] tracking-[-.09em]">SCHIMBĂ PERSPECTIVA.</p>
+          <p className="mt-7 max-w-sm text-sm leading-relaxed text-white/52">Nu trecem la următorul slide. Îndoim chiar suprafața pe care stă povestea.</p>
+        </div>
+      </div>
+    ),
+  },
+  {
+    id: "world",
+    label: "Lumea",
+    accessibleText: "Lumea: planul se deschide și dezvăluie profunzimea unei scene minerale.",
+    hinge: "bottom",
+    content: (
+      <div className="relative flex min-h-svh flex-col justify-between overflow-hidden bg-black px-5 pb-10 pt-24 text-white sm:px-[6vw] sm:pb-[7vh] sm:pt-28">
+        <SceneImage src={ASSETS.worldPoster} alt="Portal de obsidian într-un peisaj mineral" priority className="object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/78" />
+        <div className="relative flex justify-between text-xs uppercase tracking-[.2em] text-white/62"><span>01 / Din plan</span><span className="hidden sm:block">hinge / bottom</span></div>
+        <div className="relative">
+          <p className="max-w-[7ch] text-[clamp(4rem,10vw,10rem)] font-semibold leading-[.76] tracking-[-.085em]">ÎNTR-O LUME.</p>
+          <p className="mt-6 max-w-sm text-sm leading-relaxed text-white/65">Următorul capitol exista deja în spate. Pliul îi dă distanță, lumină și sens.</p>
+        </div>
+      </div>
+    ),
+  },
+  {
+    id: "interface",
+    label: "Interfața",
+    accessibleText: "Interfața: aceeași mecanică poate plia text, fotografie și orice alt conținut React.",
+    hinge: "right",
+    content: (
+      <div className="grid min-h-svh bg-[#d7ff43] text-black lg:grid-cols-[.88fr_1.12fr]">
+        <div className="flex flex-col justify-between px-5 pb-10 pt-24 sm:px-[6vw] sm:pb-[7vh] sm:pt-28">
+          <div className="flex justify-between text-xs uppercase tracking-[.2em] opacity-45"><span>02 / Conținut viu</span><span>hinge / right</span></div>
+          <div><p className="max-w-[6ch] text-[clamp(4rem,8vw,8rem)] font-semibold leading-[.76] tracking-[-.085em]">ORICE DEVINE SUPRAFAȚĂ.</p><p className="mt-6 max-w-sm text-sm leading-relaxed opacity-60">Text, fotografie, produs sau interfață — fără să le transformăm într-un video.</p></div>
+        </div>
+        <div className="relative min-h-[58svh] overflow-hidden lg:min-h-svh"><SceneImage src={ASSETS.portrait} alt="Portret editorial cu un produs wearable" className="object-cover object-[68%_center] grayscale" /><div className="absolute inset-0 bg-[#d7ff43]/10 mix-blend-color" /></div>
+      </div>
+    ),
+  },
+  {
+    id: "release",
+    label: "Concluzia",
+    accessibleText: "Concluzia: o singură mecanică spațială, urmată de o secțiune calmă și complet lizibilă.",
+    content: (
+      <div className="flex min-h-svh flex-col justify-between bg-[#ece9e1] px-5 pb-10 pt-24 text-black sm:px-[6vw] sm:pb-[7vh] sm:pt-28">
+        <div className="flex justify-between text-xs uppercase tracking-[.2em] opacity-45"><span>03 / Release</span><span className="hidden sm:block">quiet semantic endpoint</span></div>
+        <div className="grid items-end gap-8 lg:grid-cols-[1fr_.42fr]"><p className="max-w-[9ch] text-[clamp(4rem,10vw,10rem)] font-semibold leading-[.76] tracking-[-.085em]">PLIUL SE TERMINĂ. IDEEA RĂMÂNE.</p><p className="max-w-sm text-sm leading-relaxed opacity-60 lg:pb-4">Patru compoziții React, zero asset-uri obligatorii și un fallback vertical care păstrează exact aceeași poveste.</p></div>
+      </div>
+    ),
+  },
+];
+
+function SpatialFoldDemo() {
+  return (
+    <SpatialFold
+      label="Poveste editorială pliată în spațiu"
+      chapters={spatialFoldChapters}
+      perspective={1450}
+      maxFold={92}
+      depth={110}
+      scrollScreensPerChapter={1.2}
+      className="bg-[#08090b]"
+      overlay={(progress) => (
+        <div className="pointer-events-none flex h-full flex-col justify-end px-5 pb-5 sm:px-[6vw] sm:pb-7">
+          <div className="h-px overflow-hidden bg-white/20 mix-blend-difference"><motion.div className="h-full origin-left bg-white" style={{ scaleX: progress }} /></div>
+        </div>
+      )}
+    />
+  );
+}
+
 const demos = [
-  ["cinematic-forest-3d", "P0 · 3D Cinematic Forest", CinematicForestDemo],
+  ["spatial-fold", "01 · Spatial fold", SpatialFoldDemo],
   ["layered-depth", "Basic · 2.5D car", BasicDepthDemo],
   ["spatial-product-stage", "P1 · Spatial product assembly", SpatialProductDemo],
   ["liquid-glass", "P2 · Liquid glass + nav", LiquidGlassDemo],
@@ -948,15 +1034,33 @@ const demos = [
   ["intro-loader", "48 · Intro loader", IntroLoaderDemo],
   ["ambient-particles", "49 · Ambient particles", AmbientParticlesDemo],
   ["split-flap", "50 · Split-flap board", SplitFlapDemo],
+  ["focus-transfer-rail", "51 · Focus transfer rail", FocusTransferRailDemo],
 ] as const;
 
 type DemoId = (typeof demos)[number][0];
 
+const familyLabels = new Map(experienceCatalog.families.map((family) => [family.id, family.label]));
+const catalogById = new Map(experienceCatalog.items.map((item) => [item.id, item]));
+const labEntries = demos.map(([id, title]) => {
+  const item = catalogById.get(id);
+  if (!item) throw new Error(`Experience Lab demo ${id} is missing from experience.catalog.json.`);
+  return {
+    id,
+    title,
+    family: item.family,
+    familyLabel: familyLabels.get(item.family) ?? item.family,
+    role: item.recommendedRole,
+    stack: item.stack,
+    performanceCost: item.performanceCost,
+  };
+});
+
 export function ExperienceLab() {
-  const [selected, setSelected] = React.useState<DemoId>("cinematic-forest-3d");
+  const [selected, setSelected] = React.useState<DemoId>("layered-depth");
   React.useEffect(() => {
     const sync = () => {
-      const id = window.location.hash.slice(1) as DemoId;
+      const hashId = window.location.hash.slice(1);
+      const id = hashId as DemoId;
       if (!demos.some(([candidate]) => candidate === id)) return;
       setSelected(id);
       window.scrollTo({ top: 0, behavior: "instant" });
@@ -967,8 +1071,8 @@ export function ExperienceLab() {
   }, []);
   const select = (id: DemoId) => { setSelected(id); window.history.replaceState(null, "", `#${id}`); window.scrollTo({ top: 0, behavior: "instant" }); };
   const activeIndex = demos.findIndex(([id]) => id === selected);
-  const ActiveDemo = demos[activeIndex]?.[2] ?? CinematicForestDemo;
+  const ActiveDemo = demos[activeIndex]?.[2] ?? BasicDepthDemo;
   const activeEntry = demos[activeIndex] ?? demos[0];
   const activeGuide = experienceLabGuides[selected];
-  return <main className="min-h-dvh overflow-clip bg-background text-foreground"><ExperienceLabSidebar activeIndex={activeIndex} entries={demos.map(([id, title]) => [id, title] as const)} selected={selected} onSelect={(id) => select(id as DemoId)} /><div className="lg:pl-[22rem]"><ActiveDemo />{activeEntry && activeGuide ? <ExperienceLabGuideSection guide={activeGuide} index={activeIndex} title={activeEntry[1]} total={demos.length} /> : null}</div></main>;
+  return <main className="min-h-dvh overflow-clip bg-background text-foreground"><ExperienceLabSidebar activeIndex={activeIndex} entries={labEntries} selected={selected} onSelect={(id) => select(id as DemoId)} /><div className="lg:pl-[22rem]"><ActiveDemo />{activeEntry && activeGuide ? <ExperienceLabGuideSection guide={activeGuide} index={activeIndex} title={activeEntry[1]} total={demos.length} /> : null}</div></main>;
 }

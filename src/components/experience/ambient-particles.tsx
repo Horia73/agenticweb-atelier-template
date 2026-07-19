@@ -3,7 +3,7 @@
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
-import { clamp01, damp, useFinePointer, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
+import { clamp01, damp, getExperienceDprCap, useExperienceViewport, useFinePointer, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
 
 export type AmbientParticlesPreset = "dust" | "snow" | "embers" | "fireflies";
 
@@ -129,6 +129,7 @@ export function AmbientParticles({
 }: AmbientParticlesProps) {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const reducedMotion = usePrefersReducedMotion();
+  const viewport = useExperienceViewport();
   const finePointer = useFinePointer();
   const pointerActive = pointerInfluence > 0 && finePointer;
   const colorsKey = colors?.join("|") ?? "";
@@ -178,12 +179,13 @@ export function AmbientParticles({
       const previousHeight = height;
       width = Math.max(1, rect.width);
       height = Math.max(1, rect.height);
-      dpr = Math.min(1.75, window.devicePixelRatio || 1);
+      dpr = Math.min(getExperienceDprCap(width), window.devicePixelRatio || 1);
       canvas.width = Math.round(width * dpr);
       canvas.height = Math.round(height * dpr);
       canvas.style.width = `${width}px`;
       canvas.style.height = `${height}px`;
-      const target = Math.min(maxCount, Math.max(8, Math.round(((width * height) / 100_000) * density)));
+      const responsiveMax = viewport === "mobile" ? Math.min(maxCount, 64) : viewport === "tablet" ? Math.min(maxCount, 110) : maxCount;
+      const target = Math.min(responsiveMax, Math.max(8, Math.round(((width * height) / 100_000) * density)));
       if (particles.length === 0) {
         particles = Array.from({ length: target }, (_, index) => spawn(index));
         return;
@@ -299,12 +301,12 @@ export function AmbientParticles({
     };
     // Array props are keyed by signature strings so identity churn cannot restart the field.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [colorsKey, density, edgeFade, maxCount, pointerActive, pointerInfluence, preset, reducedMotion, sizeKey, speed]);
+  }, [colorsKey, density, edgeFade, maxCount, pointerActive, pointerInfluence, preset, reducedMotion, sizeKey, speed, viewport]);
 
   if (reducedMotion) return null;
 
   return (
-    <div aria-hidden data-ambient-particles className={cn("pointer-events-none absolute inset-0 overflow-hidden", className)} style={{ opacity, mixBlendMode: blend, ...style }} {...props}>
+    <div aria-hidden data-ambient-particles data-experience-viewport={viewport} className={cn("pointer-events-none absolute inset-0 overflow-hidden", className)} style={{ opacity, mixBlendMode: blend, ...style }} {...props}>
       <canvas ref={canvasRef} className="absolute inset-0" />
     </div>
   );

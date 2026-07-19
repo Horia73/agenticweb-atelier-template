@@ -52,7 +52,7 @@ Când obiectul trebuie să rămână perfect fotografic, iar efectul cerut este 
 
 Decupajul este invizibil cât timp nu există text, deoarece reproduce aceiași pixeli peste master. Obiectul nu este recompus pe un alt asfalt și nu poate „pluti”; matte-ul doar reacoperă textul acolo unde obiectul trebuie să fie în față. Acesta este modul preferat pentru demo-ul `integrated master + text behind`.
 
-Acesta este **2.5D Basic** chiar dacă art direction-ul este foarte premium: master integrat, tipografie mare în spatele produsului, occlusion matte și cel mult un foreground separat pentru splash/reflexie. Nu cere automat stack-ul complet 00–50.
+Acesta este **2.5D** chiar dacă art direction-ul este foarte premium: master integrat, tipografie mare în spatele produsului, occlusion matte și cel mult un foreground separat pentru splash/reflexie. Nu cere automat un stack complet de plate-uri.
 
 ### Stack complet, când există parallax real
 
@@ -70,9 +70,7 @@ Toate fișierele rămân full-canvas și înregistrate; prefixele fixează ordin
 
 Nu genera aceste plate-uri independent. Generează/aprobă întâi masterul compozit, apoi segmentează sky/landscape/midground după depth și extrage fiecare obiect imediat după editarea lui. Pentru un obiect opac izolat, un fundal chroma plat + eliminare locală poate produce alpha; umbrele, sticla, părul, reflexiile și contactul se extrag din master sau printr-un tool de matting dedicat, nu din chroma aproximativ.
 
-Acesta este **2.5D Advanced** numai când brief-ul cere mai multe beat-uri în aceeași lume: foreground care se desparte, negative space narativ, panoramă, refocus și un catalog final. Dacă acel catalog intră în același stage, folosește `HorizontalTrack` cu progress derivat din timeline; nu monta `HorizontalStoryRail` și încă o secțiune sticky în interiorul scenei.
-
-Pentru această compoziție completă folosește recipe-ul instalabil `CinematicWorldScene` și citește `docs/experience/cinematic-world-scene.md`. `LayeredDepthScene` rămâne engine-ul behavior-only; recipe-ul adaugă numai contractul multi-beat, intrarea reversibilă a catalogului și controller-ul lui local.
+Folosește stack-ul complet numai când brief-ul cere mai multe adâncimi reale în aceeași lume. `ScrollDepthScene` rămâne engine-ul behavior-only; compune beat-urile proiectului direct din straturi React și raster. Dacă povestea are și un catalog, montează-l ca secțiune separată cu `HorizontalTrack` sau `HorizontalStoryRail`, fără sticky-uri imbricate.
 
 ## Exemplu minimal
 

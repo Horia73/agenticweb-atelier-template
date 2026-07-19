@@ -5,14 +5,14 @@ import { type MotionValue, useMotionValue } from "motion/react";
 import * as THREE from "three";
 
 import { cn } from "@/lib/utils";
-import { damp, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
+import { damp, useExperienceViewport, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
 import { useElementScrollProgress } from "@/components/experience/use-element-scroll-progress";
 import { useWebGLStage } from "@/components/experience/use-webgl-stage";
 
 export type MeshTransitionProps = Omit<React.ComponentProps<"section">, "children"> & {
   label: string;
-  from: { src: string; alt: string };
-  to: { src: string; alt: string };
+  from: { src: string; mobileSrc?: string; tabletSrc?: string; alt: string };
+  to: { src: string; mobileSrc?: string; tabletSrc?: string; alt: string };
   mode?: "wave" | "fold" | "liquid";
   trigger?: "scroll" | "hover" | "controlled";
   progress?: MotionValue<number>;
@@ -165,6 +165,10 @@ export function MeshTransition({
     sourceRef.current = source;
   });
   const prefersReducedMotion = usePrefersReducedMotion();
+  const viewport = useExperienceViewport();
+  const fromSrc = viewport === "mobile" ? from.mobileSrc ?? from.tabletSrc ?? from.src : viewport === "tablet" ? from.tabletSrc ?? from.src : from.src;
+  const toSrc = viewport === "mobile" ? to.mobileSrc ?? to.tabletSrc ?? to.src : viewport === "tablet" ? to.tabletSrc ?? to.src : to.src;
+  const activeIntensity = intensity * (viewport === "mobile" ? .78 : viewport === "tablet" ? .9 : 1);
   const resolvedAnnouncement = announcement ?? `${from.alt}. Transitions to: ${to.alt}.`;
 
   const { ready, failed } = useWebGLStage({
@@ -173,7 +177,7 @@ export function MeshTransition({
     enabled: !prefersReducedMotion,
     maxDpr,
     antialias: true,
-    signature: JSON.stringify([from.src, intensity, mode, to.src]),
+    signature: JSON.stringify([activeIntensity, fromSrc, mode, toSrc, viewport]),
     create: ({ renderer, markReady, markFailed, isDisposed, requestResize }) => {
       let smoothed = sourceRef.current.get();
       const scene = new THREE.Scene();
@@ -189,14 +193,15 @@ export function MeshTransition({
         uPointer: { value: new THREE.Vector2(0.5, 0.5) },
         uProgress: { value: smoothed },
         uMode: { value: mode === "wave" ? 0 : mode === "fold" ? 1 : 2 },
-        uIntensity: { value: intensity },
+        uIntensity: { value: activeIntensity },
       };
-      const geometry = new THREE.PlaneGeometry(2, 2, 80, 80);
+      const segments = viewport === "mobile" ? 44 : viewport === "tablet" ? 62 : 80;
+      const geometry = new THREE.PlaneGeometry(2, 2, segments, segments);
       const material = new THREE.ShaderMaterial({ vertexShader: VERTEX_SHADER, fragmentShader: FRAGMENT_SHADER, uniforms, side: THREE.DoubleSide });
       const mesh = new THREE.Mesh(geometry, material);
       scene.add(mesh);
 
-      Promise.all([loader.loadAsync(from.src), loader.loadAsync(to.src)])
+      Promise.all([loader.loadAsync(fromSrc), loader.loadAsync(toSrc)])
         .then(([fromTexture, toTexture]) => {
           if (isDisposed()) {
             fromTexture.dispose();
@@ -275,20 +280,20 @@ export function MeshTransition({
   };
 
   if (prefersReducedMotion) {
-    return <section ref={rootRef} aria-label={label} data-mesh-transition data-reduced-motion className={cn("relative min-h-svh overflow-hidden bg-black", className)} {...props}>{fallback ?? (
+    return <section ref={rootRef} aria-label={label} data-mesh-transition data-experience-viewport={viewport} data-reduced-motion className={cn("relative min-h-svh overflow-hidden bg-black", className)} {...props}>{fallback ?? (
       // eslint-disable-next-line @next/next/no-img-element -- registry source stays framework-neutral.
-      <img alt={to.alt} src={to.src} className="absolute inset-0 size-full object-cover" />
+      <img alt={to.alt} src={toSrc} className="absolute inset-0 size-full object-cover" />
     )}</section>;
   }
   const scrollDriven = trigger !== "hover";
   return (
-    <section ref={rootRef} aria-label={label} data-mesh-transition data-mode={mode} data-trigger={trigger} data-ready={ready || undefined} data-fallback={failed || undefined} className={cn("relative isolate", className)} style={{ minHeight: scrollDriven ? `${Math.max(1, scrollScreens) * 100}svh` : "100svh" }} onPointerEnter={() => hoverProgress.set(1)} onPointerMove={handlePointerMove} onPointerLeave={handlePointerLeave} {...props}>
+    <section ref={rootRef} aria-label={label} data-mesh-transition data-experience-viewport={viewport} data-mode={mode} data-trigger={trigger} data-ready={ready || undefined} data-fallback={failed || undefined} className={cn("relative isolate", className)} style={{ minHeight: scrollDriven ? `${Math.max(1, scrollScreens) * 100}svh` : "100svh" }} onPointerEnter={() => hoverProgress.set(1)} onPointerMove={handlePointerMove} onPointerLeave={handlePointerLeave} {...props}>
       <span className="sr-only">{resolvedAnnouncement}</span>
       <div ref={stageRef} className={cn(scrollDriven ? "sticky top-0" : "relative", "h-svh overflow-hidden bg-black", stageClassName)}>
         <canvas ref={canvasRef} aria-hidden className={cn("absolute inset-0 size-full transition-opacity duration-500", ready && !failed ? "opacity-100" : "opacity-0")} />
         {failed ? <div className="absolute inset-0">{fallback ?? (
           // eslint-disable-next-line @next/next/no-img-element -- registry source stays framework-neutral.
-          <img alt={to.alt} src={to.src} className="size-full object-cover" />
+          <img alt={to.alt} src={toSrc} className="size-full object-cover" />
         )}</div> : null}
         <div className="pointer-events-none absolute inset-0">{renderOverlay(overlay, visibleProgress)}</div>
       </div>

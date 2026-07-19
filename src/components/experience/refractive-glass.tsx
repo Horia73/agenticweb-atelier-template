@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import {
   damp,
   useCoarsePointer,
-  useMediaQuery,
+  useExperienceViewport,
   usePrefersReducedMotion,
 } from "@/components/experience/experience-runtime";
 import { useWebGLStage } from "@/components/experience/use-webgl-stage";
@@ -16,11 +16,14 @@ export type RefractiveGlassProps = Omit<React.ComponentProps<"section">, "childr
   label: string;
   src: string;
   mobileSrc?: string;
+  tabletSrc?: string;
   alt: string;
   children?: React.ReactNode;
   fallback?: React.ReactNode;
   shape?: "circle" | "rounded";
   lensSize?: number;
+  mobileLensSize?: number;
+  tabletLensSize?: number;
   lensAspect?: number;
   radius?: number;
   refraction?: number;
@@ -102,12 +105,15 @@ export function RefractiveGlass({
   lensSize = 360,
   magnification = 1.045,
   maxDpr = 1.75,
+  mobileLensSize,
   mobileSrc,
   pointerFollow = true,
   radius = 0.09,
   refraction = 0.018,
   shape = "rounded",
   src,
+  tabletLensSize,
+  tabletSrc,
   onPointerLeave,
   onPointerMove,
   ...props
@@ -118,16 +124,25 @@ export function RefractiveGlass({
   const targetRef = React.useRef({ ...POINTER_REST });
   const reducedMotion = usePrefersReducedMotion();
   const coarsePointer = useCoarsePointer();
-  const mobile = useMediaQuery("(max-width: 767.98px)");
+  const viewport = useExperienceViewport();
   const staticMode = reducedMotion || coarsePointer;
-  const resolvedSrc = mobile && mobileSrc ? mobileSrc : src;
+  const resolvedSrc = viewport === "mobile"
+    ? mobileSrc ?? tabletSrc ?? src
+    : viewport === "tablet"
+      ? tabletSrc ?? src
+      : src;
+  const resolvedLensSize = viewport === "mobile"
+    ? mobileLensSize ?? Math.min(lensSize, 280)
+    : viewport === "tablet"
+      ? tabletLensSize ?? Math.min(lensSize, 340)
+      : lensSize;
 
   const { ready, failed } = useWebGLStage({
     stageRef: rootRef,
     canvasRef,
     enabled: !staticMode,
     maxDpr,
-    signature: JSON.stringify([aberration, lensAspect, lensSize, magnification, radius, refraction, resolvedSrc, shape]),
+    signature: JSON.stringify([aberration, lensAspect, resolvedLensSize, magnification, radius, refraction, resolvedSrc, shape]),
     create: ({ renderer, markReady, markFailed, isDisposed, requestResize }) => {
       let texture: THREE.Texture | null = null;
       const scene = new THREE.Scene();
@@ -172,7 +187,7 @@ export function RefractiveGlass({
       return {
         onResize: (width, height) => {
           uniforms.uResolution.value.set(width, height);
-          const normalizedWidth = lensSize / height;
+          const normalizedWidth = resolvedLensSize / height;
           uniforms.uLens.value.set(normalizedWidth * 0.5, (normalizedWidth / Math.max(0.25, lensAspect)) * 0.5);
           renderer.render(scene, camera);
         },
@@ -208,10 +223,10 @@ export function RefractiveGlass({
   const posterStyle = { backgroundImage: `url("${resolvedSrc.replaceAll('"', '%22')}")` };
 
   return (
-    <section ref={rootRef} aria-label={label} data-refractive-glass data-ready={ready || undefined} data-fallback={failed || staticMode || undefined} className={cn("relative isolate overflow-hidden bg-black", className)} onPointerMove={handlePointerMove} onPointerLeave={handlePointerLeave} {...props}>
+    <section ref={rootRef} aria-label={label} data-refractive-glass data-experience-viewport={viewport} data-ready={ready || undefined} data-fallback={failed || staticMode || undefined} className={cn("relative isolate overflow-hidden bg-black", className)} onPointerMove={handlePointerMove} onPointerLeave={handlePointerLeave} {...props}>
       <span className="sr-only">{alt}</span>
       <div aria-hidden className={cn("absolute inset-0 -z-20 bg-cover bg-center", ready && !failed && !staticMode ? "opacity-0" : "opacity-100")} style={posterStyle} />
-      {staticMode && !fallback ? <div aria-hidden className="absolute right-[8%] top-1/2 -z-10 h-[32%] w-[42%] -translate-y-1/2 rounded-[2.5rem] border border-white/25 bg-white/[.06] shadow-[inset_0_1px_0_rgba(255,255,255,.35),0_30px_80px_rgba(0,0,0,.25)] backdrop-blur-[3px]" /> : null}
+      {staticMode && !fallback ? <div aria-hidden className="absolute inset-x-[8%] bottom-[8%] -z-10 h-[24%] rounded-[1.5rem] border border-white/25 bg-white/[.06] shadow-[inset_0_1px_0_rgba(255,255,255,.35),0_30px_80px_rgba(0,0,0,.25)] backdrop-blur-[3px] sm:inset-x-auto sm:bottom-auto sm:right-[8%] sm:top-1/2 sm:h-[32%] sm:w-[42%] sm:-translate-y-1/2 sm:rounded-[2.5rem]" /> : null}
       <canvas ref={canvasRef} aria-hidden className={cn("absolute inset-0 -z-10 size-full transition-opacity duration-500", ready && !failed && !staticMode ? "opacity-100" : "opacity-0", canvasClassName)} />
       {(failed || staticMode) && fallback ? <div className="absolute inset-0 -z-10">{fallback}</div> : null}
       {children}

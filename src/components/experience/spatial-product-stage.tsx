@@ -12,7 +12,7 @@ import {
   clamp01,
   damp,
   mix,
-  useMediaQuery,
+  useExperienceViewport,
   usePrefersReducedMotion,
 } from "@/components/experience/experience-runtime";
 import { useElementScrollProgress } from "@/components/experience/use-element-scroll-progress";
@@ -104,6 +104,7 @@ export type SpatialProductStageProps = Omit<React.ComponentProps<"section">, "ch
   cameraPosition?: Vector3Tuple;
   groupPosition?: Vector3Tuple;
   mobileGroupPosition?: Vector3Tuple;
+  tabletGroupPosition?: Vector3Tuple;
   /**
    * Viewport-fraction anchor ([0,0] top-left → [1,1] bottom-right) the group's origin
    * projects to at every aspect ratio. When set, it overrides the x/y of
@@ -112,6 +113,7 @@ export type SpatialProductStageProps = Omit<React.ComponentProps<"section">, "ch
    */
   groupAnchor?: [number, number];
   mobileGroupAnchor?: [number, number];
+  tabletGroupAnchor?: [number, number];
   /**
    * Anchors the group to a point of the cover-fit `visual` image instead of the
    * viewport: the component replays the CSS object-cover crop for the current
@@ -121,7 +123,10 @@ export type SpatialProductStageProps = Omit<React.ComponentProps<"section">, "ch
    */
   imageAnchor?: SpatialProductImageAnchor;
   mobileImageAnchor?: SpatialProductImageAnchor;
+  tabletImageAnchor?: SpatialProductImageAnchor;
   groupScale?: number;
+  mobileGroupScale?: number;
+  tabletGroupScale?: number;
   hoverAnchor?: [number, number];
   hoverRadius?: number;
   assembledLabel?: string;
@@ -306,6 +311,7 @@ export function SpatialProductStage({
   hoverRadius = 0.32,
   imageAnchor,
   mobileGroupAnchor,
+  mobileGroupScale,
   mobileImageAnchor,
   idleVisibility = "exploded",
   label,
@@ -325,6 +331,10 @@ export function SpatialProductStage({
   smoothing = 12,
   stageClassName,
   style,
+  tabletGroupAnchor,
+  tabletGroupPosition,
+  tabletGroupScale,
+  tabletImageAnchor,
   visual,
   ...props
 }: SpatialProductStageProps) {
@@ -341,7 +351,27 @@ export function SpatialProductStage({
   });
   const scrollProgress = useElementScrollProgress(rootRef);
   const prefersReducedMotion = usePrefersReducedMotion();
-  const mobile = useMediaQuery("(max-width: 767.98px)");
+  const viewport = useExperienceViewport();
+  const resolvedGroupPosition = viewport === "mobile"
+    ? mobileGroupPosition
+    : viewport === "tablet"
+      ? tabletGroupPosition ?? groupPosition
+      : groupPosition;
+  const resolvedGroupAnchor = viewport === "mobile"
+    ? mobileGroupAnchor ?? tabletGroupAnchor ?? groupAnchor
+    : viewport === "tablet"
+      ? tabletGroupAnchor ?? groupAnchor
+      : groupAnchor;
+  const resolvedImageAnchor = viewport === "mobile"
+    ? mobileImageAnchor ?? tabletImageAnchor ?? imageAnchor
+    : viewport === "tablet"
+      ? tabletImageAnchor ?? imageAnchor
+      : imageAnchor;
+  const resolvedGroupScale = viewport === "mobile"
+    ? mobileGroupScale ?? tabletGroupScale ?? groupScale * (resolvedImageAnchor ? 1 : .82)
+    : viewport === "tablet"
+      ? tabletGroupScale ?? groupScale * (resolvedImageAnchor ? 1 : .92)
+      : groupScale;
   const [assembled, setAssembled] = React.useState(false);
 
   const { ready, failed } = useWebGLStage({
@@ -354,15 +384,12 @@ export function SpatialProductStage({
     signature: JSON.stringify([
       cameraPosition,
       environment,
-      groupAnchor ?? null,
-      groupPosition,
-      groupScale,
+      resolvedGroupAnchor ?? null,
+      resolvedGroupPosition,
+      resolvedGroupScale,
       idleVisibility,
-      imageAnchor ?? null,
-      mobile,
-      mobileGroupAnchor ?? null,
-      mobileGroupPosition,
-      mobileImageAnchor ?? null,
+      resolvedImageAnchor ?? null,
+      viewport,
       mode,
       modelParts,
       modelSrc ?? null,
@@ -389,14 +416,14 @@ export function SpatialProductStage({
         scene.environment = environmentTexture;
       }
       const product = new THREE.Group();
-      const position = mobile ? mobileGroupPosition : groupPosition;
-      const viewportAnchor = mobile ? mobileGroupAnchor ?? groupAnchor : groupAnchor;
-      const activeImageAnchor = mobile ? mobileImageAnchor ?? imageAnchor : imageAnchor;
+      const position = resolvedGroupPosition;
+      const viewportAnchor = resolvedGroupAnchor;
+      const activeImageAnchor = resolvedImageAnchor;
       // Project the anchor onto the group's depth plane so the product keeps its
       // screen (or image) spot at every aspect ratio; image anchors also track
       // the cover-crop zoom so the product scales with the pictured subject.
       const placeProduct = () => {
-        const baseScale = groupScale * (mobile && !activeImageAnchor ? 0.86 : 1);
+        const baseScale = resolvedGroupScale;
         const resolved = activeImageAnchor
           ? projectImageAnchor(activeImageAnchor, camera.aspect)
           : viewportAnchor
@@ -552,10 +579,10 @@ export function SpatialProductStage({
       targetPointerRef.current.x = normalizedX - 0.5;
       targetPointerRef.current.y = normalizedY - 0.5;
       const aspect = rect.width / Math.max(1, rect.height);
-      const activeImageAnchor = mobile ? mobileImageAnchor ?? imageAnchor : imageAnchor;
+      const activeImageAnchor = resolvedImageAnchor;
       const resolvedHoverAnchor = hoverAnchor
         ?? (activeImageAnchor ? projectImageAnchor(activeImageAnchor, aspect).fraction : undefined)
-        ?? (mobile ? mobileGroupAnchor ?? groupAnchor : groupAnchor)
+        ?? resolvedGroupAnchor
         ?? DEFAULT_HOVER_ANCHOR;
       const distance = Math.hypot(
         (normalizedX - resolvedHoverAnchor[0]) * Math.min(1.35, aspect),
@@ -572,7 +599,7 @@ export function SpatialProductStage({
   };
 
   if (prefersReducedMotion) {
-    return <section ref={rootRef} aria-label={label} data-spatial-product data-reduced-motion className={cn("relative min-h-svh overflow-hidden", className)} style={style} {...props}>{fallback ?? visual}{overlay ? <div className="pointer-events-none absolute inset-0">{overlay}</div> : null}</section>;
+    return <section ref={rootRef} aria-label={label} data-spatial-product data-experience-viewport={viewport} data-reduced-motion className={cn("relative min-h-svh overflow-hidden", className)} style={style} {...props}>{fallback ?? visual}{overlay ? <div className="pointer-events-none absolute inset-0">{overlay}</div> : null}</section>;
   }
 
   const scrollDriven = mode !== "hover";
@@ -581,6 +608,7 @@ export function SpatialProductStage({
       ref={rootRef}
       aria-label={label}
       data-spatial-product
+      data-experience-viewport={viewport}
       data-mode={mode}
       data-ready={ready || undefined}
       data-fallback={failed || undefined}
@@ -596,7 +624,7 @@ export function SpatialProductStage({
         <canvas ref={canvasRef} aria-hidden className={cn("pointer-events-none absolute inset-0 z-10 size-full transition-opacity duration-500", ready && !failed ? "opacity-100" : "opacity-0")} />
         <div className="pointer-events-none absolute inset-0 z-20">{overlay}</div>
         {showControl ? (
-          <Button type="button" variant="outline" size="sm" className="absolute bottom-5 right-5 z-30 rounded-full border-white/20 bg-black/35 text-white backdrop-blur-xl hover:bg-black/55 hover:text-white" aria-pressed={assembled} onClick={setLock}>
+          <Button type="button" variant="outline" size="sm" className="absolute inset-x-4 bottom-4 z-30 min-h-11 rounded-full border-white/20 bg-black/35 text-white backdrop-blur-xl hover:bg-black/55 hover:text-white sm:inset-x-auto sm:bottom-5 sm:right-5" aria-pressed={assembled} onClick={setLock}>
             {assembled ? <Boxes aria-hidden /> : <Combine aria-hidden />}
             {assembled ? explodedLabel : assembledLabel}
           </Button>

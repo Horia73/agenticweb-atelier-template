@@ -4,11 +4,14 @@ import * as React from "react";
 import { motion, type MotionValue, useMotionValue, useReducedMotion, useTransform } from "motion/react";
 
 import { cn } from "@/lib/utils";
+import { useExperienceViewport } from "@/components/experience/experience-runtime";
 import { useElementScrollProgress } from "@/components/experience/use-element-scroll-progress";
 
 export type SliceRecomposeProps = Omit<React.ComponentProps<"section">, "children"> & {
   label: string;
   src: string;
+  mobileSrc?: string;
+  tabletSrc?: string;
   alt: string;
   axis?: "vertical" | "horizontal";
   slices?: number;
@@ -49,6 +52,7 @@ export function SliceRecompose({
   className,
   fallback,
   label,
+  mobileSrc,
   progress: controlledProgress,
   rotation = 8,
   scatter = 180,
@@ -57,6 +61,7 @@ export function SliceRecompose({
   src,
   stageClassName,
   stagger = .24,
+  tabletSrc,
   trigger = "scroll",
   onPointerEnter,
   onPointerLeave,
@@ -67,9 +72,13 @@ export function SliceRecompose({
   const localProgress = useElementScrollProgress(rootRef);
   const progress = controlledProgress ?? (trigger === "hover" ? hoverProgress : localProgress);
   const reducedMotion = useReducedMotion();
-  const count = Math.max(2, Math.min(24, Math.round(slices)));
+  const viewport = useExperienceViewport();
+  const activeSrc = viewport === "mobile" ? mobileSrc ?? tabletSrc ?? src : viewport === "tablet" ? tabletSrc ?? src : src;
+  const count = Math.max(2, Math.min(viewport === "mobile" ? 8 : viewport === "tablet" ? 14 : 24, Math.round(slices)));
+  const activeScatter = scatter * (viewport === "mobile" ? .58 : viewport === "tablet" ? .78 : 1);
+  const activeRotation = rotation * (viewport === "mobile" ? .62 : viewport === "tablet" ? .82 : 1);
   const handlePointerEnter = (event: React.PointerEvent<HTMLElement>) => { if (trigger === "hover") hoverProgress.set(1); onPointerEnter?.(event); };
   const handlePointerLeave = (event: React.PointerEvent<HTMLElement>) => { if (trigger === "hover") hoverProgress.set(0); onPointerLeave?.(event); };
-  const content = <div className={cn(trigger === "scroll" ? "sticky top-0 h-svh" : "relative h-full", "overflow-hidden", stageClassName)}><span className="sr-only">{alt}</span>{reducedMotion ? <div aria-hidden className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url("${src.replaceAll('"', '%22')}")` }} /> : Array.from({ length: count }, (_, index) => <Slice key={index} axis={axis} count={count} index={index} progress={progress} rotation={rotation} scatter={scatter} src={src} stagger={stagger} />)}{reducedMotion && fallback ? <div className="absolute inset-0">{fallback}</div> : null}<div className="relative h-full">{children}</div></div>;
-  return <section ref={rootRef} aria-label={label} data-slice-recompose data-axis={axis} className={cn("relative", trigger !== "scroll" && "h-svh", className)} style={trigger === "scroll" ? { minHeight: `${Math.max(1, scrollScreens) * 100}svh` } : undefined} onPointerEnter={handlePointerEnter} onPointerLeave={handlePointerLeave} {...props}>{content}</section>;
+  const content = <div className={cn(trigger === "scroll" ? "sticky top-0 h-svh" : "relative h-full", "overflow-hidden", stageClassName)}><span className="sr-only">{alt}</span>{reducedMotion ? <div aria-hidden className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url("${activeSrc.replaceAll('"', '%22')}")` }} /> : Array.from({ length: count }, (_, index) => <Slice key={index} axis={axis} count={count} index={index} progress={progress} rotation={activeRotation} scatter={activeScatter} src={activeSrc} stagger={stagger} />)}{reducedMotion && fallback ? <div className="absolute inset-0">{fallback}</div> : null}<div className="relative h-full">{children}</div></div>;
+  return <section ref={rootRef} aria-label={label} data-slice-recompose data-experience-viewport={viewport} data-axis={axis} className={cn("relative", trigger !== "scroll" && "h-svh", className)} style={trigger === "scroll" ? { minHeight: `${Math.max(1, scrollScreens) * 100}svh` } : undefined} onPointerEnter={handlePointerEnter} onPointerLeave={handlePointerLeave} {...props}>{content}</section>;
 }

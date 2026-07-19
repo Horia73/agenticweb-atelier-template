@@ -3,7 +3,7 @@
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
-import { usePrefersReducedMotion } from "@/components/experience/experience-runtime";
+import { useExperienceViewport, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
 
 export type CountUpProps = Omit<React.ComponentProps<"span">, "children" | "prefix"> & {
   /** Target value. Changing it after the first reveal animates to the new value. */
@@ -53,6 +53,9 @@ export function CountUp({
   const frameRef = React.useRef(0);
   const [armed, setArmed] = React.useState(false);
   const reducedMotion = usePrefersReducedMotion();
+  const viewport = useExperienceViewport();
+  const activeDurationMs = durationMs * (viewport === "mobile" ? 0.8 : viewport === "tablet" ? 0.9 : 1);
+  const visibilityThreshold = viewport === "mobile" ? 0.3 : viewport === "tablet" ? 0.45 : 0.6;
 
   const formatter = React.useMemo(() => new Intl.NumberFormat(locale, formatOptions), [locale, formatOptions]);
   const format = React.useCallback((current: number) => `${prefix}${formatter.format(current)}${suffix}`, [formatter, prefix, suffix]);
@@ -71,11 +74,11 @@ export function CountUp({
           displayedRef.current = from;
         }
       },
-      { threshold: 0.6 },
+      { threshold: visibilityThreshold },
     );
     observer.observe(element);
     return () => observer.disconnect();
-  }, [from, once, reducedMotion]);
+  }, [from, once, reducedMotion, visibilityThreshold]);
 
   React.useEffect(() => {
     const live = liveRef.current;
@@ -93,7 +96,7 @@ export function CountUp({
     const decimals = formatOptions?.maximumFractionDigits ?? (Number.isInteger(value) && Number.isInteger(start) ? 0 : 2);
     const startedAt = performance.now() + delayMs;
     const tick = (now: number) => {
-      const t = Math.min(1, Math.max(0, (now - startedAt) / durationMs));
+      const t = Math.min(1, Math.max(0, (now - startedAt) / activeDurationMs));
       const current = start + (value - start) * easing(t);
       const rounded = Number(current.toFixed(decimals));
       displayedRef.current = rounded;
@@ -102,18 +105,18 @@ export function CountUp({
     };
     frameRef.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frameRef.current);
-  }, [armed, delayMs, durationMs, easing, format, formatOptions, from, reducedMotion, value]);
+  }, [activeDurationMs, armed, delayMs, easing, format, formatOptions, from, reducedMotion, value]);
 
   if (reducedMotion) {
     return (
-      <span data-count-up data-static className={className} {...props}>
+      <span data-count-up data-experience-viewport={viewport} data-static className={className} {...props}>
         {finalText}
       </span>
     );
   }
 
   return (
-    <span ref={rootRef} data-count-up aria-label={finalText} role="text" className={cn("relative inline-block", className)} {...props}>
+    <span ref={rootRef} data-count-up data-experience-viewport={viewport} aria-label={finalText} role="text" className={cn("relative inline-block max-w-full", className)} {...props}>
       <span aria-hidden className="invisible">{finalText}</span>
       {/* Server markup shows the final value so the stat reads without JS; hydration rewinds it to `from` before the viewport trigger. */}
       <span ref={liveRef} aria-hidden className="absolute inset-0">

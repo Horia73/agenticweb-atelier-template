@@ -4,7 +4,7 @@ import * as React from "react";
 import { motion, type MotionValue, useMotionValue, useReducedMotion, useSpring, useTransform } from "motion/react";
 
 import { cn } from "@/lib/utils";
-import { useMediaQuery } from "@/components/experience/experience-runtime";
+import { useCoarsePointer, useExperienceViewport } from "@/components/experience/experience-runtime";
 import { useElementScrollProgress } from "@/components/experience/use-element-scroll-progress";
 
 export type TypographyDepthTunnelItem = {
@@ -63,12 +63,13 @@ export function TypographyDepthTunnel({
   const rawProgress = controlledProgress ?? localProgress ?? fallbackProgress;
   const progress = useSpring(rawProgress, { stiffness: smoothing, damping: 28, mass: .42 });
   const reducedMotion = useReducedMotion();
-  const narrow = useMediaQuery("(max-width: 639.98px)");
-  if (reducedMotion || narrow) {
-    return <section ref={rootRef} aria-label={label} data-typography-depth-tunnel data-static className={cn("grid min-h-svh content-center gap-8 overflow-hidden px-5 py-28", className, stageClassName)} {...props}>{items.map((item) => <div key={item.id} className={cn("text-balance", item.className)}>{item.content}</div>)}{footer}</section>;
+  const viewport = useExperienceViewport();
+  const coarsePointer = useCoarsePointer();
+  if (reducedMotion || coarsePointer || viewport !== "desktop") {
+    return <section ref={rootRef} aria-label={label} data-typography-depth-tunnel data-experience-viewport={viewport} data-static className={cn("grid min-h-svh content-center gap-8 overflow-hidden px-5 py-20 sm:grid-cols-2 sm:gap-10 sm:px-8 sm:py-24", className, stageClassName)} {...props}>{items.map((item) => <div key={item.id} className={cn("min-w-0 text-balance", item.className)}>{item.content}</div>)}{footer}</section>;
   }
   return (
-    <section ref={rootRef} aria-label={label} data-typography-depth-tunnel className={cn("relative", className)} style={{ minHeight: `${Math.max(1, scrollScreens) * 100}svh` }} {...props}>
+    <section ref={rootRef} aria-label={label} data-typography-depth-tunnel data-experience-viewport={viewport} className={cn("relative", className)} style={{ minHeight: `${Math.max(1, scrollScreens) * 100}svh` }} {...props}>
       <ol className="sr-only">{items.map((item) => <li key={item.id}>{item.accessibleText}</li>)}</ol>
       <div className={cn("sticky top-0 h-svh overflow-hidden", stageClassName)} style={{ perspective: `${perspective}px`, perspectiveOrigin: "50% 50%" }}>
         <div className="absolute inset-0" style={{ transformStyle: "preserve-3d" }}>{items.map((item, index) => <TunnelLayer key={item.id} depth={depth} index={index} item={item} progress={progress} total={items.length} />)}</div>

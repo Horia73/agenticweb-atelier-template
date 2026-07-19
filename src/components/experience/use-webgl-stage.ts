@@ -3,7 +3,10 @@
 import * as React from "react";
 import * as THREE from "three";
 
-import { supportsWebGL } from "@/components/experience/experience-runtime";
+import {
+  getExperienceDprCap,
+  supportsWebGL,
+} from "@/components/experience/experience-runtime";
 
 export type WebGLStageContext = {
   renderer: THREE.WebGLRenderer;
@@ -94,14 +97,23 @@ export function useWebGLStage({
 
     const renderer = new THREE.WebGLRenderer({ canvas, antialias, alpha, stencil, powerPreference: "high-performance" });
     renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, maxDpr));
+    renderer.setPixelRatio(Math.min(
+      window.devicePixelRatio || 1,
+      maxDpr,
+      getExperienceDprCap(stage.clientWidth),
+    ));
 
     let handle: WebGLStageHandle = {};
     const resize = () => {
       const width = Math.max(1, stage.clientWidth);
       const height = Math.max(1, stage.clientHeight);
       const extraCap = handle.getDpr?.(width, height) ?? Number.POSITIVE_INFINITY;
-      renderer.setPixelRatio(Math.max(0.5, Math.min(window.devicePixelRatio || 1, maxDpr, extraCap)));
+      renderer.setPixelRatio(Math.max(0.5, Math.min(
+        window.devicePixelRatio || 1,
+        maxDpr,
+        extraCap,
+        getExperienceDprCap(width),
+      )));
       renderer.setSize(width, height, false);
       handle.onResize?.(width, height);
     };

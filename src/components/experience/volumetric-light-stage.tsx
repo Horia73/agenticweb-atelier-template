@@ -4,7 +4,7 @@ import * as React from "react";
 import * as THREE from "three";
 
 import { cn } from "@/lib/utils";
-import { damp, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
+import { damp, useExperienceViewport, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
 import { useWebGLStage } from "@/components/experience/use-webgl-stage";
 
 export type VolumetricLightBeam = {
@@ -18,6 +18,8 @@ export type VolumetricLightBeam = {
 export type VolumetricLightStageProps = Omit<React.ComponentProps<"section">, "children"> & {
   label: string;
   src: string;
+  mobileSrc?: string;
+  tabletSrc?: string;
   alt: string;
   beams?: VolumetricLightBeam[];
   density?: number;
@@ -105,9 +107,11 @@ export function VolumetricLightStage({
   haze = 0.55,
   label,
   maxDpr = 1.6,
+  mobileSrc,
   pointerStrength = 0.35,
   speed = 1,
   src,
+  tabletSrc,
   onPointerLeave,
   onPointerMove,
   ...props
@@ -118,6 +122,9 @@ export function VolumetricLightStage({
   const targetRef = React.useRef({ x: 0.5, y: 0.5 });
   const warnedBeamOverflowRef = React.useRef(false);
   const staticMode = usePrefersReducedMotion();
+  const viewport = useExperienceViewport();
+  const activeSrc = viewport === "mobile" ? mobileSrc ?? tabletSrc ?? src : viewport === "tablet" ? tabletSrc ?? src : src;
+  const activeSpeed = speed * (viewport === "mobile" ? .72 : viewport === "tablet" ? .86 : 1);
 
   React.useEffect(() => {
     if (process.env.NODE_ENV !== "production" && beams.length > 3 && !warnedBeamOverflowRef.current) {
@@ -133,7 +140,7 @@ export function VolumetricLightStage({
     canvasRef,
     enabled: !staticMode,
     maxDpr,
-    signature: JSON.stringify([beams, density, haze, speed, src]),
+    signature: JSON.stringify([activeSpeed, activeSrc, beams, density, haze]),
     create: ({ renderer, markReady, markFailed, isDisposed, requestResize }) => {
       let elapsed = 0;
       let texture: THREE.Texture | null = null;
@@ -156,7 +163,7 @@ export function VolumetricLightStage({
       scene.add(new THREE.Mesh(geometry, material));
 
       new THREE.TextureLoader().load(
-        src,
+        activeSrc,
         (loaded) => {
           if (isDisposed()) {
             loaded.dispose();
@@ -180,7 +187,7 @@ export function VolumetricLightStage({
           renderer.render(scene, camera);
         },
         onFrame: (delta) => {
-          elapsed += delta * speed;
+          elapsed += delta * activeSpeed;
           pointerRef.current.x = damp(pointerRef.current.x, targetRef.current.x, 6, delta);
           pointerRef.current.y = damp(pointerRef.current.y, targetRef.current.y, 6, delta);
           uniforms.uTime.value = elapsed;
@@ -209,10 +216,10 @@ export function VolumetricLightStage({
     targetRef.current = { x: 0.5, y: 0.5 };
     onPointerLeave?.(event);
   };
-  const posterStyle = { backgroundImage: `url("${src.replaceAll('"', '%22')}")` };
+  const posterStyle = { backgroundImage: `url("${activeSrc.replaceAll('"', '%22')}")` };
 
   return (
-    <section ref={rootRef} aria-label={label} data-volumetric-light data-ready={ready || undefined} className={cn("relative isolate overflow-hidden bg-black", className)} onPointerMove={handlePointerMove} onPointerLeave={handlePointerLeave} {...props}>
+    <section ref={rootRef} aria-label={label} data-volumetric-light data-experience-viewport={viewport} data-ready={ready || undefined} className={cn("relative isolate overflow-hidden bg-black", className)} onPointerMove={handlePointerMove} onPointerLeave={handlePointerLeave} {...props}>
       <span className="sr-only">{alt}</span>
       <div aria-hidden className={cn("absolute inset-0 -z-20 bg-cover bg-center", ready && !failed && !staticMode ? "opacity-0" : "opacity-100")} style={posterStyle} />
       <canvas ref={canvasRef} aria-hidden className={cn("absolute inset-0 -z-10 size-full transition-opacity duration-500", ready && !failed && !staticMode ? "opacity-100" : "opacity-0", canvasClassName)} />

@@ -5,7 +5,7 @@ import { ArrowDown } from "lucide-react";
 import * as THREE from "three";
 
 import { cn } from "@/lib/utils";
-import { clamp01, damp, mix, useMediaQuery, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
+import { clamp01, damp, mix, useCoarsePointer, useExperienceViewport, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
 import { useElementScrollProgress } from "@/components/experience/use-element-scroll-progress";
 import { useWebGLStage } from "@/components/experience/use-webgl-stage";
 
@@ -13,6 +13,7 @@ export type SpatialGalleryItem = {
   id: string;
   src: string;
   mobileSrc?: string;
+  tabletSrc?: string;
   alt: string;
   eyebrow?: React.ReactNode;
   title: React.ReactNode;
@@ -64,13 +65,13 @@ function sampleGalleryPath(value: number, count: number, curve: number) {
   return { x: mix(from.x, to.x, eased), y: mix(from.y, to.y, eased) };
 }
 
-function GalleryFallback({ items }: { items: SpatialGalleryItem[] }) {
+function GalleryFallback({ items, viewport }: { items: SpatialGalleryItem[]; viewport: "mobile" | "tablet" | "desktop" }) {
   return (
-    <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 py-20 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 py-16 [scrollbar-width:none] sm:gap-6 sm:px-8 sm:py-20 [&::-webkit-scrollbar]:hidden">
       {items.map((item) => (
-        <article key={item.id} className="w-[86vw] shrink-0 snap-center overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 text-white">
+        <article key={item.id} className="w-[86vw] shrink-0 snap-center overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/5 text-white sm:w-[min(68vw,34rem)] sm:rounded-[2rem]">
           {/* eslint-disable-next-line @next/next/no-img-element -- registry source stays framework-neutral. */}
-          <img alt={item.alt} src={item.mobileSrc ?? item.src} className="aspect-[4/5] w-full object-cover" loading="lazy" />
+          <img alt={item.alt} src={viewport === "mobile" ? item.mobileSrc ?? item.tabletSrc ?? item.src : item.tabletSrc ?? item.src} className="aspect-[4/5] w-full object-cover sm:aspect-[5/4]" loading="lazy" />
           <div className="p-6">
             {item.eyebrow ? <p className="text-xs uppercase tracking-[0.2em] text-white/50">{item.eyebrow}</p> : null}
             <h3 className="mt-3 text-4xl font-semibold tracking-[-0.05em]">{item.title}</h3>
@@ -104,7 +105,9 @@ export function SpatialGallery({
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const scrollProgress = useElementScrollProgress(rootRef);
   const prefersReducedMotion = usePrefersReducedMotion();
-  const mobile = useMediaQuery("(max-width: 767.98px)");
+  const coarsePointer = useCoarsePointer();
+  const viewport = useExperienceViewport();
+  const nativeFallback = prefersReducedMotion || coarsePointer || viewport !== "desktop";
   const [activeIndex, setActiveIndex] = React.useState(0);
   const onActiveChangeRef = React.useRef(onActiveChange);
   React.useInsertionEffect(() => {
@@ -114,7 +117,7 @@ export function SpatialGallery({
   const { ready, failed } = useWebGLStage({
     stageRef,
     canvasRef,
-    enabled: !prefersReducedMotion && !mobile && items.length > 0,
+    enabled: !nativeFallback && items.length > 0,
     maxDpr,
     antialias: true,
     signature: JSON.stringify([
@@ -237,16 +240,16 @@ export function SpatialGallery({
     },
   });
 
-  if (prefersReducedMotion || mobile) {
-    return <section ref={rootRef} aria-label={label} data-spatial-gallery data-native-fallback className={cn("min-h-svh", className)} style={{ backgroundColor: background }} {...props}><GalleryFallback items={items} /></section>;
+  if (nativeFallback) {
+    return <section ref={rootRef} aria-label={label} data-spatial-gallery data-experience-viewport={viewport} data-native-fallback className={cn("min-h-svh", className)} style={{ backgroundColor: background }} {...props}><GalleryFallback items={items} viewport={viewport} /></section>;
   }
 
   const activeItem = items[activeIndex];
   return (
-    <section ref={rootRef} aria-label={label} data-spatial-gallery data-ready={ready || undefined} data-fallback={failed || undefined} className={cn("relative isolate", className)} style={{ backgroundColor: background, minHeight: `${Math.max(1, scrollScreens) * 100}svh` }} {...props}>
+    <section ref={rootRef} aria-label={label} data-spatial-gallery data-experience-viewport={viewport} data-ready={ready || undefined} data-fallback={failed || undefined} className={cn("relative isolate", className)} style={{ backgroundColor: background, minHeight: `${Math.max(1, scrollScreens) * 100}svh` }} {...props}>
       <div ref={stageRef} className={cn("sticky top-0 h-svh overflow-hidden", stageClassName)}>
         <canvas ref={canvasRef} aria-hidden className={cn("absolute inset-0 size-full transition-opacity duration-500", ready && !failed ? "opacity-100" : "opacity-0")} />
-        {failed ? <GalleryFallback items={items} /> : null}
+        {failed ? <GalleryFallback items={items} viewport={viewport} /> : null}
         {activeItem ? (
           <div className="pointer-events-none absolute inset-0 flex items-end p-5 pb-8 text-white sm:p-10">
             <div key={activeItem.id} className="max-w-md animate-in fade-in slide-in-from-bottom-4 duration-500">

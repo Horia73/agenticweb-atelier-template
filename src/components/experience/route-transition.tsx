@@ -85,16 +85,17 @@ export type ThemeWipeOptions = {
  * Applies a state change (e.g. toggling the dark class) behind a circular wipe
  * that grows from `origin`. Falls back to applying the change directly.
  */
-export function startThemeWipe(apply: () => void, { durationMs = 480, easing = "cubic-bezier(0.4, 0, 0.2, 1)", origin }: ThemeWipeOptions = {}) {
+export function startThemeWipe(apply: () => void, { durationMs, easing = "cubic-bezier(0.4, 0, 0.2, 1)", origin }: ThemeWipeOptions = {}) {
   const transition = withViewTransition(apply);
   if (!transition) return;
   void transition.ready.then(() => {
     const x = origin?.x ?? window.innerWidth / 2;
     const y = origin?.y ?? window.innerHeight / 2;
+    const responsiveDuration = durationMs ?? (window.innerWidth < 640 ? 260 : window.innerWidth < 1025 ? 360 : 480);
     const radius = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y));
     document.documentElement.animate(
       { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] },
-      { duration: durationMs, easing, pseudoElement: "::view-transition-new(root)" },
+      { duration: responsiveDuration, easing, pseudoElement: "::view-transition-new(root)" },
     );
   });
 }

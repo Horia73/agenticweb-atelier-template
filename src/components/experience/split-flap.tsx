@@ -3,7 +3,7 @@
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
-import { usePrefersReducedMotion } from "@/components/experience/experience-runtime";
+import { useExperienceViewport, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
 
 export type SplitFlapTextProps = Omit<React.ComponentProps<"span">, "children"> & {
   /** Board content. Changing it flips the board to the new text. */
@@ -91,9 +91,13 @@ export function SplitFlapText({
   const [run, setRun] = React.useState<FlapRun | null>(null);
   const [now, setNow] = React.useState(0);
   const reducedMotion = usePrefersReducedMotion();
+  const viewport = useExperienceViewport();
+  const activeStepMs = stepMs * (viewport === "mobile" ? 0.78 : viewport === "tablet" ? 0.9 : 1);
+  const activeStaggerMs = staggerMs * (viewport === "mobile" ? 0.68 : viewport === "tablet" ? 0.84 : 1);
+  const activeMaxSteps = Math.min(maxSteps, viewport === "mobile" ? 6 : viewport === "tablet" ? 8 : maxSteps);
   // Spaced past the flap animation (duration + half-step delay) so a flip
   // never cuts the previous one mid-swing.
-  const flipPeriod = stepMs * 1.6;
+  const flipPeriod = activeStepMs * 1.6;
 
   const target = React.useMemo(() => {
     const padded = padTo ? text.padEnd(padTo, " ").slice(0, padTo) : text;
@@ -119,14 +123,14 @@ export function SplitFlapText({
           if (!fromBlank && previousRun) {
             const sequence = previousRun.sequences[column];
             fromIndex = sequence
-              ? sequence[columnTick(previousRun, column, startedAt, staggerMs, flipPeriod)] ?? toIndex
+              ? sequence[columnTick(previousRun, column, startedAt, activeStaggerMs, flipPeriod)] ?? toIndex
               : toIndex;
           } else {
-            fromIndex = (toIndex - Math.min(maxSteps, 3 + (column % 5)) + charset.length) % charset.length;
+            fromIndex = (toIndex - Math.min(activeMaxSteps, 3 + (column % 5)) + charset.length) % charset.length;
           }
           // Walk forward around the wheel, capped so long distances stay snappy.
           const distance = (toIndex - fromIndex + charset.length) % charset.length;
-          const steps = distance === 0 ? 0 : Math.min(distance, maxSteps);
+          const steps = distance === 0 ? 0 : Math.min(distance, activeMaxSteps);
           const path = Array.from({ length: steps }, (_, step) => (toIndex - (steps - 1 - step) + charset.length) % charset.length);
           return [fromIndex, ...path];
         });
@@ -134,7 +138,7 @@ export function SplitFlapText({
       });
       setNow(startedAt);
     },
-    [charset.length, flipPeriod, indexOf, maxSteps, staggerMs],
+    [activeMaxSteps, activeStaggerMs, charset.length, flipPeriod, indexOf],
   );
 
   // The clock: while any column has flips left, keep sampling. Deriving the
@@ -145,16 +149,16 @@ export function SplitFlapText({
     const loop = () => {
       const time = performance.now();
       setNow(time);
-      const settleBuffer = stepMs * 2;
+      const settleBuffer = activeStepMs * 2;
       const pending = run.sequences.some((sequence, column) => {
-        const total = run.startedAt + column * staggerMs + columnJitter(column) + Math.max(0, sequence.length - 1) * flipPeriod + settleBuffer;
+        const total = run.startedAt + column * activeStaggerMs + columnJitter(column) + Math.max(0, sequence.length - 1) * flipPeriod + settleBuffer;
         return time < total;
       });
       if (pending) frame = requestAnimationFrame(loop);
     };
     frame = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(frame);
-  }, [flipPeriod, reducedMotion, run, staggerMs, stepMs]);
+  }, [activeStaggerMs, activeStepMs, flipPeriod, reducedMotion, run]);
 
   React.useEffect(() => {
     const element = rootRef.current;
@@ -167,13 +171,13 @@ export function SplitFlapText({
         animateTo(target, true);
         if (once) observer.disconnect();
       },
-      { threshold: 0.4 },
+      { threshold: viewport === "mobile" ? 0.25 : viewport === "tablet" ? 0.32 : 0.4 },
     );
     observer.observe(element);
     return () => observer.disconnect();
     // The reveal fires once from the observer; text changes are handled below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [animateTo, once, reducedMotion]);
+  }, [animateTo, once, reducedMotion, viewport]);
 
   // Text changes animate from the characters currently on the board.
   React.useEffect(() => {
@@ -205,19 +209,19 @@ export function SplitFlapText({
 
   if (reducedMotion) {
     return (
-      <span ref={rootRef} data-split-flap data-static className={className} {...props}>
+      <span ref={rootRef} data-split-flap data-experience-viewport={viewport} data-static className={className} {...props}>
         {padTo ? text.padEnd(padTo, " ").slice(0, padTo) : text}
       </span>
     );
   }
 
   return (
-    <span ref={rootRef} data-split-flap aria-label={text} role="text" className={cn("inline-flex max-w-full", className)} style={{ "--sf-step": `${stepMs}ms` } as React.CSSProperties} {...props}>
+    <span ref={rootRef} data-split-flap data-experience-viewport={viewport} aria-label={text} role="text" className={cn("inline-flex max-w-full overflow-hidden", className)} style={{ "--sf-step": `${activeStepMs}ms` } as React.CSSProperties} {...props}>
       <style href="split-flap" precedence="medium">{splitFlapCss}</style>
       <span ref={boardRef} aria-hidden className="sf-board">
         {target.map((char, column) => {
           const sequence = run?.sequences[column];
-          const tick = run && sequence ? columnTick(run, column, now, staggerMs, flipPeriod) : 0;
+          const tick = run && sequence ? columnTick(run, column, now, activeStaggerMs, flipPeriod) : 0;
           const currentChar = sequence ? charset[sequence[tick] ?? 0] ?? " " : char;
           const previousChar = sequence && tick > 0 ? charset[sequence[tick - 1] ?? 0] ?? " " : currentChar;
           const flipped = Boolean(sequence && tick > 0);
