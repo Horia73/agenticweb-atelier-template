@@ -569,6 +569,319 @@
           "target": "docs/experience/cursor-magnetic.md"
         }
       ]
+    },
+    {
+      "name": "refractive-glass",
+      "type": "registry:component",
+      "title": "True Refractive Glass",
+      "description": "Image-aware WebGL lens with editable geometry, refraction, magnification and chromatic edge, plus static touch and reduced-motion behavior.",
+      "dependencies": [
+        "motion@^12.42.2",
+        "three@^0.185.1"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/refractive-glass.tsx",
+          "type": "registry:component",
+          "target": "components/experience/refractive-glass.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "docs/experience/refractive-glass.md",
+          "type": "registry:file",
+          "target": "docs/experience/refractive-glass.md"
+        }
+      ]
+    },
+    {
+      "name": "product-orbit",
+      "type": "registry:component",
+      "title": "GLB Product Orbit",
+      "description": "GLB-ready Three.js product viewer with drag and keyboard rotation, physical materials, projected semantic hotspots and production fallbacks.",
+      "dependencies": [
+        "motion@^12.42.2",
+        "three@^0.185.1"
+      ],
+      "registryDependencies": [
+        "button"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/product-orbit.tsx",
+          "type": "registry:component",
+          "target": "components/experience/product-orbit.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "docs/experience/product-orbit.md",
+          "type": "registry:file",
+          "target": "docs/experience/product-orbit.md"
+        }
+      ]
+    },
+    {
+      "name": "particle-assembly",
+      "type": "registry:component",
+      "title": "Particle Assembly",
+      "description": "Image-matte point cloud that morphs between an editable scattered state and a recognizable target using scroll, hover or controlled progress.",
+      "dependencies": [
+        "motion@^12.42.2",
+        "three@^0.185.1"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/particle-assembly.tsx",
+          "type": "registry:component",
+          "target": "components/experience/particle-assembly.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "src/components/experience/use-element-scroll-progress.ts",
+          "type": "registry:hook",
+          "target": "components/experience/use-element-scroll-progress.ts"
+        },
+        {
+          "path": "docs/experience/particle-assembly.md",
+          "type": "registry:file",
+          "target": "docs/experience/particle-assembly.md"
+        }
+      ]
+    },
+    {
+      "name": "typography-depth-tunnel",
+      "type": "registry:component",
+      "title": "Typography Depth Tunnel",
+      "description": "Semantic CSS 3D typography sequence with scroll or controlled progress and a linear narrow-screen and reduced-motion result.",
+      "dependencies": [
+        "motion@^12.42.2"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/typography-depth-tunnel.tsx",
+          "type": "registry:component",
+          "target": "components/experience/typography-depth-tunnel.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "src/components/experience/use-element-scroll-progress.ts",
+          "type": "registry:hook",
+          "target": "components/experience/use-element-scroll-progress.ts"
+        },
+        {
+          "path": "docs/experience/typography-depth-tunnel.md",
+          "type": "registry:file",
+          "target": "docs/experience/typography-depth-tunnel.md"
+        }
+      ]
+    },
+    {
+      "name": "spatial-canvas",
+      "type": "registry:component",
+      "title": "Infinite Spatial Canvas",
+      "description": "Semantic pan-and-zoom world for non-linear archives with drag, keyboard and explicit controls while preserving native page-wheel behavior.",
+      "dependencies": [
+        "lucide-react@^1.24.0",
+        "motion@^12.42.2"
+      ],
+      "registryDependencies": [
+        "button"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/spatial-canvas.tsx",
+          "type": "registry:component",
+          "target": "components/experience/spatial-canvas.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "docs/experience/spatial-canvas.md",
+          "type": "registry:file",
+          "target": "docs/experience/spatial-canvas.md"
+        }
+      ]
+    },
+    {
+      "name": "volumetric-light-stage",
+      "type": "registry:component",
+      "title": "Volumetric Light Stage",
+      "description": "Image-backed procedural light shafts and haze with three editable emitters, bounded pointer influence and a production WebGL lifecycle.",
+      "dependencies": [
+        "motion@^12.42.2",
+        "three@^0.185.1"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/volumetric-light-stage.tsx",
+          "type": "registry:component",
+          "target": "components/experience/volumetric-light-stage.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "docs/experience/volumetric-light-stage.md",
+          "type": "registry:file",
+          "target": "docs/experience/volumetric-light-stage.md"
+        }
+      ]
+    },
+    {
+      "name": "slice-recompose",
+      "type": "registry:component",
+      "title": "Slice & Recompose",
+      "description": "High-resolution source rebuilt from editable image strips with scroll, hover or external progress and a fully assembled reduced-motion state.",
+      "dependencies": [
+        "motion@^12.42.2"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/slice-recompose.tsx",
+          "type": "registry:component",
+          "target": "components/experience/slice-recompose.tsx"
+        },
+        {
+          "path": "src/components/experience/use-element-scroll-progress.ts",
+          "type": "registry:hook",
+          "target": "components/experience/use-element-scroll-progress.ts"
+        },
+        {
+          "path": "docs/experience/slice-recompose.md",
+          "type": "registry:file",
+          "target": "docs/experience/slice-recompose.md"
+        }
+      ]
+    },
+    {
+      "name": "film-strip-3d",
+      "type": "registry:component",
+      "title": "3D Film Strip",
+      "description": "Continuous CSS 3D film strip with several visible frames, one scroll-driven focus point and a native mobile/reduced-motion rail.",
+      "dependencies": [
+        "motion@^12.42.2"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/film-strip-3d.tsx",
+          "type": "registry:component",
+          "target": "components/experience/film-strip-3d.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "src/components/experience/use-element-scroll-progress.ts",
+          "type": "registry:hook",
+          "target": "components/experience/use-element-scroll-progress.ts"
+        },
+        {
+          "path": "docs/experience/film-strip-3d.md",
+          "type": "registry:file",
+          "target": "docs/experience/film-strip-3d.md"
+        }
+      ]
+    },
+    {
+      "name": "elastic-image-grid",
+      "type": "registry:component",
+      "title": "Elastic Image Grid",
+      "description": "Semantic responsive grid with a bounded fine-pointer spring field and static coarse-pointer and reduced-motion behavior.",
+      "dependencies": [
+        "motion@^12.42.2"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/elastic-image-grid.tsx",
+          "type": "registry:component",
+          "target": "components/experience/elastic-image-grid.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "docs/experience/elastic-image-grid.md",
+          "type": "registry:file",
+          "target": "docs/experience/elastic-image-grid.md"
+        }
+      ]
+    },
+    {
+      "name": "fluid-surface",
+      "type": "registry:component",
+      "title": "Fluid Surface Cursor",
+      "description": "Image-aware WebGL surface with dissipating pointer impulses, native cursor preservation, DPR cap, offscreen pause and static fallbacks.",
+      "dependencies": [
+        "motion@^12.42.2",
+        "three@^0.185.1"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/fluid-surface.tsx",
+          "type": "registry:component",
+          "target": "components/experience/fluid-surface.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "docs/experience/fluid-surface.md",
+          "type": "registry:file",
+          "target": "docs/experience/fluid-surface.md"
+        }
+      ]
+    },
+    {
+      "name": "scene-handoff",
+      "type": "registry:component",
+      "title": "Scene Handoff",
+      "description": "Continuous reversible transition between two live React scenes with depth, shutter and iris variants and a linear reduced-motion result.",
+      "dependencies": [
+        "motion@^12.42.2"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/scene-handoff.tsx",
+          "type": "registry:component",
+          "target": "components/experience/scene-handoff.tsx"
+        },
+        {
+          "path": "src/components/experience/use-element-scroll-progress.ts",
+          "type": "registry:hook",
+          "target": "components/experience/use-element-scroll-progress.ts"
+        },
+        {
+          "path": "docs/experience/scene-handoff.md",
+          "type": "registry:file",
+          "target": "docs/experience/scene-handoff.md"
+        }
+      ]
     }
   ]
 }

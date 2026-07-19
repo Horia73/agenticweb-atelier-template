@@ -32,6 +32,22 @@ Biblioteca conține mecanici de experiență instalabile ca sursă editabilă, n
 | `expanding-media` | cadru editorial care devine full viewport |
 | `depth-gallery` | stack focal DOM cu fallback swipe |
 
+## Direcțiile 20–30
+
+| Nr. | ID | Rol |
+| --- | --- | --- |
+| 20 | `refractive-glass` | lens WebGL care refractă textura reală, cu formă și material editabile |
+| 21 | `product-orbit` | viewer GLB/primitive cu drag, tastatură și hotspots semantice |
+| 22 | `particle-assembly` | matte raster → point cloud → obiect, controlat prin scroll/hover/progres extern |
+| 23 | `typography-depth-tunnel` | copy semantic într-un tunel CSS 3D |
+| 24 | `spatial-canvas` | plan non-liniar cu pan, zoom, tastatură și fallback rail |
+| 25 | `volumetric-light-stage` | imagine cu trei emitters procedurali, haze și lifecycle WebGL complet |
+| 26 | `slice-recompose` | o sursă high-resolution recompusă din fâșii editabile |
+| 27 | `film-strip-3d` | bandă continuă CSS 3D cu mai multe cadre vizibile |
+| 28 | `elastic-image-grid` | grid semantic cu câmp local de proximitate |
+| 29 | `fluid-surface` | suprafață de imagine cu impulsuri fluide care se disipă |
+| 30 | `scene-handoff` | tranziție continuă între două scene React live |
+
 ## Contract Studio
 
 1. Citește brief-ul și propune exact **două** direcții vizuale distincte.
@@ -59,9 +75,20 @@ Deschide `http://localhost:3000/experience-lab`. Hash-uri utile:
 #spatial-gallery
 #mesh-transition
 #depth-gallery
+#refractive-glass
+#product-orbit
+#particle-assembly
+#typography-depth-tunnel
+#spatial-canvas
+#volumetric-light-stage
+#slice-recompose
+#film-strip-3d
+#elastic-image-grid
+#fluid-surface
+#scene-handoff
 ```
 
-Registry-ul păstrează cele **20 de primitive/recipes** instalabile. Experience Lab are **19 direcții vizibile**: demo-ul standalone duplicat pentru `DepthCameraScene` a fost eliminat, iar engine-ul rămâne demonstrat în `2.5D Advanced`; `DepthGallery` este ultima direcție din selector.
+Registry-ul păstrează **31 de primitive/recipes** instalabile. Experience Lab are exact **30 de direcții vizibile**: primul selector rămâne rezervat pentru reconstrucția separată `2.5D Advanced` de la zero, iar direcțiile 20–30 sunt engine-uri independente. Diferența de unu apare fiindcă Advanced compune două pachete instalabile (`depth-camera-scene` și recipe-ul `cinematic-world-scene`) într-un singur demo.
 
 Rulează apoi:
 

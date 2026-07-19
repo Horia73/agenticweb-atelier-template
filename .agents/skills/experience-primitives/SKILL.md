@@ -51,6 +51,17 @@ Reject the implementation until all relevant statements are true:
 - `before-after`: require registered images and preserve the native range input even when replacing the handle icon.
 - `depth-gallery`: build a clear focus sequence of 3–6 frames, not a random parallax grid. Keep a deterministic stack: the current frame lifts away to reveal the next frame below; never swap z-order or overlap two captions mid-transition.
 - `cursor-magnetic`: tune radius and strength per important target; keep the native cursor and a static touch/reduced-motion state.
+- `refractive-glass`: use one image-aware lens for a narrative reason, preserve the native cursor, keep refraction restrained and provide the correct mobile crop/static result.
+- `product-orbit`: ship an optimized GLB and poster, map semantic hotspots in model coordinates, preserve page-wheel behavior and verify drag plus keyboard rotation.
+- `particle-assembly`: require a clean transparent/high-contrast target, cap particle count, and make the complete object available when motion or WebGL is unavailable.
+- `typography-depth-tunnel`: keep every phrase semantic, short and independently art-directed; narrow/reduced output must become a normal readable sequence.
+- `spatial-canvas`: use only for intentionally non-linear content; give keyboard and explicit controls equal capability and never consume ordinary page-wheel input.
+- `volumetric-light-stage`: start from a strong clean image, tune each emitter to the composition and test copy contrast across the full light cycle.
+- `slice-recompose`: use one high-resolution registered source and verify that the assembled endpoint has no seams, gaps or crop mismatch.
+- `film-strip-3d`: use 3–7 frames when simultaneous context matters, keep several frames deliberately visible and ship the native snap fallback.
+- `elastic-image-grid`: keep travel bounded, preserve layout and the native cursor, and disable deformation on coarse pointer and reduced motion.
+- `fluid-surface`: bound the effect to one image, keep the native cursor, avoid required actions in heavily distorted areas and provide a static touch state.
+- `scene-handoff`: both live React endpoints must be complete compositions; maintain one clean seam, exact endpoints, natural reverse and a linear reduced-motion result.
 
 ## Verification
 

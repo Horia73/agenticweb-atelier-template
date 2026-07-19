@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Image from "next/image";
-import { ArrowDown, ArrowLeftRight, MoveHorizontal, Scan } from "lucide-react";
+import { ArrowDown, MoveHorizontal, Scan } from "lucide-react";
 import { motion, type MotionValue, useMotionValue, useReducedMotion, useSpring, useTransform } from "motion/react";
 
 import { BeforeAfter } from "@/components/experience/before-after";
@@ -12,6 +12,9 @@ import { MagneticField, MagneticTarget } from "@/components/experience/cursor-ma
 import type { DepthCameraLayer } from "@/components/experience/depth-camera-scene";
 import { DepthGallery, type DepthGalleryItem } from "@/components/experience/depth-gallery";
 import { ExpandingMedia } from "@/components/experience/expanding-media";
+import { ElasticImageGrid, type ElasticImageGridItem } from "@/components/experience/elastic-image-grid";
+import { FilmStrip3D, type FilmStrip3DItem } from "@/components/experience/film-strip-3d";
+import { FluidSurface } from "@/components/experience/fluid-surface";
 import { HorizontalStoryRail } from "@/components/experience/horizontal-story-rail";
 import { HorizontalTrack } from "@/components/experience/horizontal-track";
 import { ImageSequenceScrub } from "@/components/experience/image-sequence-scrub";
@@ -20,15 +23,25 @@ import { LiquidGlassNav, LiquidGlassSurface } from "@/components/experience/liqu
 import { MaskReveal } from "@/components/experience/mask-reveal";
 import { MediaPortal } from "@/components/experience/media-portal";
 import { MeshTransition } from "@/components/experience/mesh-transition";
+import { ParticleAssembly } from "@/components/experience/particle-assembly";
+import { ProductOrbit } from "@/components/experience/product-orbit";
+import { RefractiveGlass } from "@/components/experience/refractive-glass";
+import { SceneHandoff } from "@/components/experience/scene-handoff";
 import { ShaderField } from "@/components/experience/shader-field";
+import { SliceRecompose } from "@/components/experience/slice-recompose";
+import { SpatialCanvas, type SpatialCanvasItem } from "@/components/experience/spatial-canvas";
 import { SpatialGallery, type SpatialGalleryItem } from "@/components/experience/spatial-gallery";
 import { SpatialProductStage, type SpatialProductPart } from "@/components/experience/spatial-product-stage";
 import { ScrollDepthScene, type LayeredDepthLayer } from "@/components/experience/layered-depth";
 import { StickyStory, type StickyStoryChapter } from "@/components/experience/sticky-story";
+import { TypographyDepthTunnel, type TypographyDepthTunnelItem } from "@/components/experience/typography-depth-tunnel";
+import { VolumetricLightStage } from "@/components/experience/volumetric-light-stage";
 import { useMediaQuery } from "@/components/experience/experience-runtime";
 import { Button } from "@/components/ui/button";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { cn } from "@/lib/utils";
+import { ExperienceLabGuideSection, ExperienceLabSidebar } from "@/app/experience-lab/experience-lab-chrome";
+import { experienceLabGuides } from "@/app/experience-lab/experience-lab-guides";
 
 const ASSETS = {
   carBackground: "/experience/depth-car-v3/background.webp",
@@ -37,6 +50,8 @@ const ASSETS = {
   carSequence: "/experience/sequence-car-v2/poster.webp",
   portrait: "/experience/spatial-product-stage-v1/portrait.webp",
   respiratorAssembled: "/experience/spatial-product-stage-v1/respirator/assembled.webp",
+  respiratorMask: "/experience/spatial-product-stage-v1/respirator/mask.png",
+  respiratorComposite: "/experience/spatial-product-stage-v1/respirator/qa-composite.webp",
   worldPoster: "/experience/depth-camera-world-v2/poster.webp",
   worldMobile: "/experience/depth-camera-world-v2/mobile-poster.webp",
   emptyWorld: "/experience/depth-camera-world-v2/layers/00-sky.webp",
@@ -63,19 +78,19 @@ const WORLD = {
   edgeMobile: "/experience/depth-camera-world-v2/layers-mobile/50-edge-frame.webp",
 } as const;
 
-function SceneImage({ alt = "", className, priority = false, sizes = "100vw", src }: { alt?: string; className?: string; priority?: boolean; sizes?: string; src: string }) {
+function SceneImage({ alt = "", className, priority = false, sizes = "(min-width: 1024px) calc(100vw - 22rem), 100vw", src }: { alt?: string; className?: string; priority?: boolean; sizes?: string; src: string }) {
   return <Image alt={alt} src={src} fill priority={priority} loading={priority ? "eager" : undefined} sizes={sizes} className={className} />;
 }
 
 const worldLayers: DepthCameraLayer[] = [
-  { id: "00-sky", src: WORLD.sky, mobileSrc: WORLD.skyMobile, plane: "back", depth: -2.4 },
+  { id: "00-sky", src: WORLD.sky, mobileSrc: WORLD.skyMobile, plane: "back", depth: -2.4, opaque: true },
   { id: "10-landscape", src: WORLD.landscape, mobileSrc: WORLD.landscapeMobile, plane: "back", depth: -1.6 },
   { id: "20-midground", src: WORLD.midground, mobileSrc: WORLD.midgroundMobile, plane: "back", depth: -0.8 },
   { id: "29-contact-reflection", src: WORLD.reflection, mobileSrc: WORLD.reflectionMobile, plane: "front", depth: -0.08, opacity: 0.9 },
   { id: "30-hero", src: WORLD.hero, mobileSrc: WORLD.heroMobile, plane: "front", depth: 0, timeline: [{ at: 0 }, { at: 1, x: 0.055, y: -0.015 }] },
   { id: "40-foreground-left", src: WORLD.left, mobileSrc: WORLD.leftMobile, plane: "front", depth: 0.75, timeline: [{ at: 0 }, { at: 1, x: -0.16, y: -0.035 }] },
   { id: "41-foreground-right", src: WORLD.right, mobileSrc: WORLD.rightMobile, plane: "front", depth: 0.9, timeline: [{ at: 0 }, { at: 1, x: 0.18, y: -0.04 }] },
-  { id: "50-edge-frame", src: WORLD.edge, mobileSrc: WORLD.edgeMobile, plane: "front", depth: 1.05, opacity: 0.76 },
+  { id: "50-edge-frame", src: WORLD.edge, mobileSrc: WORLD.edgeMobile, plane: "front", depth: 1.05, opacity: 0.76, dropOnLowPower: true },
 ];
 
 const carLayers: LayeredDepthLayer[] = [
@@ -147,6 +162,9 @@ function AdvancedDemo() {
     <div className="bg-[#080c0f]">
       <CinematicWorldScene
         label="DepthCameraScene Advanced cu cameră Three.js și ocluzie semantică"
+        catalogRegionLabel="Catalog de cadre"
+        previousFrameLabel="Cadrul anterior"
+        nextFrameLabel="Cadrul următor"
         layers={worldLayers}
         poster={ASSETS.worldPoster}
         mobilePoster={ASSETS.worldMobile}
@@ -309,6 +327,130 @@ function DepthGalleryDemo() {
   return <DepthGallery label="Galerie focus în straturi suprapuse" items={depthGalleryItems} scrollScreens={4.5} stackOffset={6.5} stageClassName="bg-[#0a0c10]" />;
 }
 
+function RefractiveGlassDemo() {
+  return (
+    <RefractiveGlass label="Sticlă refractivă GPU peste peisaj" src={ASSETS.worldPoster} mobileSrc={ASSETS.worldMobile} alt="Portal de obsidian într-un peisaj mineral" lensSize={420} lensAspect={1.55} refraction={0.022} aberration={0.0045} magnification={1.065} className="h-svh text-white">
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,.62),transparent_52%,rgba(0,0,0,.14))]" />
+      <div className="relative flex h-full flex-col justify-between px-5 pb-10 pt-24 sm:px-[6vw] sm:pb-[7vh] sm:pt-28">
+        <div className="flex justify-between text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-white/62"><span>20 / True refraction</span><span>WebGL lens · native cursor</span></div>
+        <div className="max-w-4xl"><p className="max-w-[9ch] text-[clamp(4.2rem,10vw,10rem)] font-semibold leading-[0.76] tracking-[-0.085em]">Materia schimbă perspectiva.</p><p className="mt-6 max-w-md text-sm leading-relaxed text-white/62">Lens-ul citește textura reală din spate: displacement, magnification, chromatic edge și formă complet editabilă.</p></div>
+      </div>
+    </RefractiveGlass>
+  );
+}
+
+function ProductOrbitDemo() {
+  return (
+    <ProductOrbit
+      label="Produs 3D rotativ cu hotspots"
+      description="Trage orizontal sau folosește săgețile pentru a roti obiectul."
+      primitive="bottle"
+      color="#d9e5eb"
+      transmission={0.34}
+      roughness={0.12}
+      autoRotate={0.09}
+      modelScale={0.74}
+      mobileModelScale={0.52}
+      hotspots={[
+        { id: "shell", label: "Carcasă din sticlă", marker: "01", position: [0, .55, .8], content: <><p className="font-semibold">Carcasă din sticlă</p><p className="mt-1 text-white/62">Transmission, roughness și clearcoat sunt editabile sau vin direct din GLB.</p></> },
+        { id: "core", label: "Nucleu mineral", marker: "02", position: [0, -.32, .8], content: <><p className="font-semibold">Nucleu mineral</p><p className="mt-1 text-white/62">Hotspot-ul este ancorat în coordonatele produsului și dispare când ajunge pe spate.</p></> },
+      ]}
+      className="h-svh bg-[radial-gradient(circle_at_52%_42%,#25303b_0%,#0b0e12_42%,#040506_78%)] text-white"
+      fallback={<div className="absolute inset-0 grid place-items-center"><div className="relative size-[min(72vw,34rem)]"><SceneImage src={ASSETS.respiratorComposite} className="object-contain" /></div></div>}
+    >
+      <div className="pointer-events-none relative z-10 flex h-full flex-col justify-between px-5 pb-10 pt-24 sm:px-[6vw] sm:pb-[7vh] sm:pt-28"><div className="flex items-start justify-between gap-5"><div><p className="text-xs uppercase tracking-[.22em] text-white/50">21 / GLB product orbit</p><h1 className="mt-4 max-w-[7ch] text-[clamp(2.75rem,8vw,8rem)] font-semibold leading-[.78] tracking-[-.08em] [text-shadow:0_2px_24px_rgb(0_0_0/.55)]">Ține produsul în mână.</h1></div><p className="mt-2 hidden max-w-xs text-right text-xs uppercase leading-relaxed tracking-[.16em] text-white/42 sm:block">drag · arrows · hotspots<br />GLB or editable primitive</p></div><p className="max-w-sm text-sm leading-relaxed text-white/55">Fixture-ul folosește o geometrie generică. Agentul o înlocuiește cu GLB-ul clientului, fără să schimbe engine-ul.</p></div>
+    </ProductOrbit>
+  );
+}
+
+function ParticleAssemblyDemo() {
+  return (
+    <ParticleAssembly label="Respirator construit din particule" src={ASSETS.respiratorMask} colorSrc={ASSETS.respiratorComposite} sampling="light" sourceColorMix={0.9} alt="Respirator tehnic care se construiește din particule" trigger="scroll" scrollScreens={3.1} particleCount={7600} pointSize={8} scatter={4.8} color="#73ecff" smoothing={6} className="bg-[#050607] text-white" stageClassName="bg-[radial-gradient(circle_at_50%_50%,#172127_0%,#080b0e_42%,#030405_76%)]">
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,.58),transparent_46%)]" />
+      <div className="relative flex h-full flex-col justify-between px-5 pb-10 pt-24 sm:px-[6vw] sm:pb-[7vh] sm:pt-28"><div className="flex justify-between text-xs uppercase tracking-[.2em] text-white/48"><span>22 / Particle assembly</span><span>scroll → respirator</span></div><div><h1 className="max-w-[7ch] text-[clamp(4rem,9vw,9rem)] font-semibold leading-[.76] tracking-[-.085em]">Semnalul devine protecție.</h1><p className="mt-6 max-w-sm text-sm leading-relaxed text-white/55">Mask-ul definește forma, iar al doilea asset furnizează culorile produsului. Ambele se pot înlocui fără schimbarea engine-ului.</p></div></div>
+    </ParticleAssembly>
+  );
+}
+
+const tunnelItems: TypographyDepthTunnelItem[] = [
+  { id: "enter", accessibleText: "Intră în idee", align: "start", content: <p className="max-w-[6ch] text-[clamp(5rem,14vw,14rem)] font-semibold leading-[.68] tracking-[-.095em]">INTRĂ ÎN IDEE.</p> },
+  { id: "scale", accessibleText: "Distanța devine scară", align: "end", content: <p className="max-w-[7ch] text-right text-[clamp(4.5rem,12vw,12rem)] font-semibold leading-[.7] tracking-[-.09em] text-[#d7ff43]">DISTANȚA DEVINE SCARĂ.</p> },
+  { id: "focus", accessibleText: "Focusul devine ritm", align: "start", content: <p className="max-w-[7ch] text-[clamp(4.5rem,12vw,12rem)] font-semibold leading-[.7] tracking-[-.09em]">FOCUSUL DEVINE RITM.</p> },
+  { id: "exit", accessibleText: "Ieși cu o concluzie", align: "center", content: <p className="max-w-[8ch] text-center text-[clamp(4.5rem,12vw,12rem)] font-semibold leading-[.7] tracking-[-.09em]">IEȘI CU O CONCLUZIE.</p> },
+];
+
+function TypographyTunnelDemo() {
+  return <TypographyDepthTunnel label="Tunel tipografic 3D" items={tunnelItems} scrollScreens={4.8} depth={1100} className="bg-[#080808] px-5 text-white sm:px-[6vw]" stageClassName="bg-[radial-gradient(circle_at_50%_50%,#1d2224_0%,#090a0b_44%,#030303_82%)]" footer={<div className="flex justify-between px-5 pb-8 text-[.65rem] uppercase tracking-[.2em] text-white/38 sm:px-[6vw]"><span>23 / Typography depth tunnel</span><span>semantic DOM · CSS 3D</span></div>} />;
+}
+
+const spatialCanvasItems: SpatialCanvasItem[] = [
+  { id: "world", x: -420, y: -230, width: 560, label: "World study", content: <div className="relative aspect-[16/10]"><SceneImage src={ASSETS.worldPoster} sizes="(max-width: 1023px) 75vw, 40vw" className="object-cover" /><span className="absolute bottom-5 left-5 text-xs uppercase tracking-[.2em] text-white">01 / World</span></div> },
+  { id: "signal", x: 360, y: -310, width: 330, label: "Signal card", content: <div className="flex aspect-square flex-col justify-between bg-[#d7ff43] p-7 text-black"><span className="text-xs uppercase tracking-[.2em]">02 / Signal</span><p className="text-5xl font-semibold leading-[.82] tracking-[-.07em]">Move through the archive.</p></div> },
+  { id: "human", x: 520, y: 240, width: 430, label: "Human study", content: <div className="relative aspect-[4/5]"><SceneImage src={ASSETS.portrait} sizes="(max-width: 1023px) 60vw, 32vw" className="object-cover object-[68%_center]" /><span className="absolute bottom-5 left-5 text-xs uppercase tracking-[.2em] text-white">03 / Human</span></div> },
+  { id: "motion", x: -260, y: 360, width: 470, label: "Motion study", content: <div className="relative aspect-[16/10]"><SceneImage src={ASSETS.carPoster} sizes="(max-width: 1023px) 65vw, 35vw" className="object-cover" /><span className="absolute bottom-5 left-5 text-xs uppercase tracking-[.2em] text-white">04 / Motion</span></div> },
+  { id: "note", x: 40, y: 20, width: 250, label: "Central note", content: <div className="flex aspect-square items-end bg-white p-6 text-black"><p className="text-3xl font-semibold leading-[.9] tracking-[-.06em]">The canvas is layout, not a carousel.</p></div> },
+];
+
+function SpatialCanvasDemo() {
+  return <SpatialCanvas label="Canvas spațial explorabil" items={spatialCanvasItems} worldSize={[2100, 1450]} initialView={{ x: 0, y: 25, zoom: .82 }} minZoom={.55} maxZoom={1.5} className="bg-[#0a0d10] text-white" stageClassName="pt-16" />;
+}
+
+function VolumetricLightDemo() {
+  return (
+    <VolumetricLightStage label="Peisaj iluminat volumetric" src={ASSETS.emptyWorld} alt="Peisaj mineral iluminat de fascicule atmosferice" density={0.86} haze={0.7} speed={0.7} beams={[{ x: .2, width: .13, angle: .2, color: "#ffd09a", intensity: 1.1 }, { x: .57, width: .18, angle: -.08, color: "#80dfff", intensity: .9 }, { x: .88, width: .1, angle: -.25, color: "#d6b2ff", intensity: .72 }]} className="h-svh text-white">
+      <div className="absolute inset-0 bg-gradient-to-t from-black/72 via-transparent to-black/20" />
+      <div className="relative flex h-full flex-col justify-between px-5 pb-10 pt-24 sm:px-[6vw] sm:pb-[7vh] sm:pt-28"><div className="flex justify-between text-xs uppercase tracking-[.2em] text-white/52"><span>25 / Volumetric light stage</span><span>3 editable emitters</span></div><div><h1 className="max-w-[8ch] text-[clamp(4rem,10vw,10rem)] font-semibold leading-[.75] tracking-[-.085em]">Lumina scrie spațiul.</h1><p className="mt-6 max-w-sm text-sm leading-relaxed text-white/58">Fundalul, fiecare sursă, lățimea, unghiul, densitatea și haze-ul sunt parte din contract.</p></div></div>
+    </VolumetricLightStage>
+  );
+}
+
+function SliceRecomposeDemo() {
+  return (
+    <SliceRecompose label="Portret recompus din fâșii" src={ASSETS.portrait} alt="Portret editorial recompus din fâșii verticale" axis="vertical" slices={11} scatter={240} rotation={9} stagger={0.3} trigger="scroll" scrollScreens={3} className="bg-[#e8edf0] text-[#0b1015]" stageClassName="bg-[#dbe3e8]">
+      <div className="absolute inset-0 bg-gradient-to-r from-[#e8edf0]/94 via-transparent to-transparent" />
+      <div className="relative flex h-full items-end px-5 pb-10 pt-24 sm:px-[6vw] sm:pb-[7vh]"><div><p className="text-xs uppercase tracking-[.2em] opacity-48">26 / Slice &amp; recompose</p><h1 className="mt-4 max-w-[7ch] text-[clamp(4rem,9vw,9rem)] font-semibold leading-[.76] tracking-[-.085em]">Fragmentele găsesc forma.</h1><p className="mt-6 max-w-sm text-sm leading-relaxed opacity-60">Numărul fâșiilor, axa, stagger-ul și dispersia pot urma identitatea fiecărui proiect.</p></div></div>
+    </SliceRecompose>
+  );
+}
+
+const filmItems: FilmStrip3DItem[] = [
+  { id: "origin", label: "Origin", content: <div className="relative h-full"><SceneImage src={ASSETS.emptyWorld} className="object-cover" /><div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent p-6 pt-24 text-white"><span className="text-xs uppercase tracking-[.2em]">01 / Origin</span><p className="mt-2 text-4xl font-semibold tracking-[-.06em]">Silence</p></div></div> },
+  { id: "matter", label: "Matter", content: <div className="relative h-full"><SceneImage src={ASSETS.worldPoster} className="object-cover" /><div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent p-6 pt-24 text-white"><span className="text-xs uppercase tracking-[.2em]">02 / Matter</span><p className="mt-2 text-4xl font-semibold tracking-[-.06em]">Threshold</p></div></div> },
+  { id: "human", label: "Human", content: <div className="relative h-full"><SceneImage src={ASSETS.portrait} className="object-cover object-[67%_center]" /><div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent p-6 pt-24 text-white"><span className="text-xs uppercase tracking-[.2em]">03 / Human</span><p className="mt-2 text-4xl font-semibold tracking-[-.06em]">Interface</p></div></div> },
+  { id: "motion", label: "Motion", content: <div className="relative h-full"><SceneImage src={ASSETS.carPoster} className="object-cover" /><div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent p-6 pt-24 text-white"><span className="text-xs uppercase tracking-[.2em]">04 / Motion</span><p className="mt-2 text-4xl font-semibold tracking-[-.06em]">Velocity</p></div></div> },
+  { id: "return", label: "Return", content: <div className="relative h-full"><SceneImage src={ASSETS.worldPoster} className="object-cover grayscale" /><div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent p-6 pt-24 text-white"><span className="text-xs uppercase tracking-[.2em]">05 / Return</span><p className="mt-2 text-4xl font-semibold tracking-[-.06em]">Memory</p></div></div> },
+];
+
+function FilmStripDemo() {
+  return <FilmStrip3D label="Bandă de film 3D" items={filmItems} scrollScreens={4.5} spacing={460} curve={215} className="bg-[#08090b] text-white" stageClassName="bg-[radial-gradient(circle_at_50%_50%,#202329_0%,#0b0c0f_48%,#050506_82%)]" overlay={<div className="flex h-full flex-col justify-between px-5 pb-8 pt-24 text-xs uppercase tracking-[.2em] text-white/46 sm:px-[6vw]"><span>27 / 3D film strip</span><span>vertical scroll · continuous curve</span></div>} />;
+}
+
+const elasticItems: ElasticImageGridItem[] = [
+  { id: "world", label: "World", content: <div className="relative aspect-[4/5]"><SceneImage src={ASSETS.worldPoster} className="object-cover" /><span className="absolute bottom-5 left-5 text-xs uppercase tracking-[.2em] text-white">World / 01</span></div> },
+  { id: "human", label: "Human", content: <div className="relative aspect-[4/5]"><SceneImage src={ASSETS.portrait} className="object-cover object-[68%_center]" /><span className="absolute bottom-5 left-5 text-xs uppercase tracking-[.2em] text-white">Human / 02</span></div> },
+  { id: "motion", label: "Motion", content: <div className="relative aspect-[4/5]"><SceneImage src={ASSETS.carPoster} className="object-cover" /><span className="absolute bottom-5 left-5 text-xs uppercase tracking-[.2em] text-white">Motion / 03</span></div> },
+  { id: "signal", label: "Signal", content: <div className="flex aspect-[4/5] flex-col justify-between bg-[#d7ff43] p-7 text-black"><span className="text-xs uppercase tracking-[.2em]">Signal / 04</span><p className="text-5xl font-semibold leading-[.82] tracking-[-.07em]">A grid that listens.</p></div> },
+];
+
+function ElasticGridDemo() {
+  return <ElasticImageGrid label="Grid elastic influențat de proximitatea cursorului" items={elasticItems} radius={460} maxTravel={38} maxScale={0.065} maxTilt={4} minItemWidth={230} className="min-h-svh bg-[#ece9e1] px-5 pb-12 pt-24 text-black sm:px-[5vw] sm:pt-28" gridClassName="mx-auto max-w-7xl" header={<div className="mx-auto mb-8 flex max-w-7xl items-end justify-between gap-6"><div><p className="text-xs uppercase tracking-[.2em] opacity-45">28 / Elastic image grid</p><h1 className="mt-3 text-[clamp(3.5rem,7vw,7rem)] font-semibold leading-[.78] tracking-[-.08em]">Proximitatea schimbă ierarhia.</h1></div><p className="hidden max-w-xs text-sm opacity-55 lg:block">Fiecare tile este conținut React; câmpul doar adaugă mișcare controlată.</p></div>} />;
+}
+
+function FluidSurfaceDemo() {
+  return (
+    <FluidSurface label="Suprafață fluidă reactivă" src={ASSETS.worldPoster} alt="Portal mineral distorsionat de unde fluide" strength={0.017} radius={0.25} decay={0.95} chromatic={0.0012} className="h-svh text-white">
+      <div className="absolute inset-0 bg-gradient-to-r from-black/64 via-transparent to-black/12" />
+      <div className="relative flex h-full flex-col justify-between px-5 pb-10 pt-24 sm:px-[6vw] sm:pb-[7vh] sm:pt-28"><div className="flex justify-between text-xs uppercase tracking-[.2em] text-white/52"><span>29 / Fluid surface</span><span>move through the image</span></div><div><h1 className="max-w-[7ch] text-[clamp(4rem,9vw,9rem)] font-semibold leading-[.76] tracking-[-.085em]">Imaginea ține minte gestul.</h1><p className="mt-6 max-w-sm text-sm leading-relaxed text-white/58">Impulsurile se sting natural; cursorul nativ rămâne vizibil, iar pe touch scena devine statică.</p></div></div>
+    </FluidSurface>
+  );
+}
+
+function SceneHandoffDemo() {
+  const from = <div className="relative h-full bg-black text-white"><SceneImage src={ASSETS.carPoster} className="object-cover" /><div className="absolute inset-0 bg-gradient-to-t from-black/78 via-transparent to-black/12" /><div className="absolute bottom-[8vh] left-5 sm:left-[6vw]"><p className="text-xs uppercase tracking-[.2em] text-white/55">Scene A / Motion</p><p className="mt-3 text-[clamp(4rem,9vw,9rem)] font-semibold leading-[.76] tracking-[-.085em]">VELOCITY</p></div></div>;
+  const to = <div className="relative h-full bg-black text-white"><SceneImage src={ASSETS.worldPoster} className="object-cover" /><div className="absolute inset-0 bg-gradient-to-t from-black/74 via-transparent to-black/15" /><div className="absolute bottom-[8vh] right-5 text-right sm:right-[6vw]"><p className="text-xs uppercase tracking-[.2em] text-white/55">Scene B / World</p><p className="mt-3 text-[clamp(4rem,9vw,9rem)] font-semibold leading-[.76] tracking-[-.085em]">THRESHOLD</p></div></div>;
+  return <SceneHandoff label="Predare continuă între două scene" from={from} to={to} fromLabel="Velocity" toLabel="Threshold" variant="depth" scrollScreens={3.2} className="bg-black" overlay={<div className="flex h-full justify-between px-5 pt-24 text-xs uppercase tracking-[.2em] text-white mix-blend-difference sm:px-[6vw] sm:pt-28"><span>30 / Scene handoff</span><span className="hidden sm:block">two live React scenes · one timeline</span></div>} />;
+}
+
 const demos = [
   ["depth-camera-scene", "P0 · 2.5D Advanced / Three.js", AdvancedDemo],
   ["layered-depth", "Basic · 2.5D car", BasicDepthDemo],
@@ -329,6 +471,17 @@ const demos = [
   ["expanding-media", "Expanding media", ExpandingDemo],
   ["cursor-magnetic", "Magnetic cursor", MagneticDemo],
   ["depth-gallery", "Depth gallery stack", DepthGalleryDemo],
+  ["refractive-glass", "20 · True refractive glass", RefractiveGlassDemo],
+  ["product-orbit", "21 · GLB product orbit", ProductOrbitDemo],
+  ["particle-assembly", "22 · Particle assembly", ParticleAssemblyDemo],
+  ["typography-depth-tunnel", "23 · Typography depth tunnel", TypographyTunnelDemo],
+  ["spatial-canvas", "24 · Infinite spatial canvas", SpatialCanvasDemo],
+  ["volumetric-light-stage", "25 · Volumetric light stage", VolumetricLightDemo],
+  ["slice-recompose", "26 · Slice & recompose", SliceRecomposeDemo],
+  ["film-strip-3d", "27 · 3D film strip", FilmStripDemo],
+  ["elastic-image-grid", "28 · Elastic image grid", ElasticGridDemo],
+  ["fluid-surface", "29 · Fluid surface cursor", FluidSurfaceDemo],
+  ["scene-handoff", "30 · Scene handoff", SceneHandoffDemo],
 ] as const;
 
 type DemoId = (typeof demos)[number][0];
@@ -349,5 +502,7 @@ export function ExperienceLab() {
   const select = (id: DemoId) => { setSelected(id); window.history.replaceState(null, "", `#${id}`); window.scrollTo({ top: 0, behavior: "instant" }); };
   const activeIndex = demos.findIndex(([id]) => id === selected);
   const ActiveDemo = demos[activeIndex]?.[2] ?? AdvancedDemo;
-  return <main className="min-h-dvh overflow-clip bg-background text-foreground"><nav aria-label="Experience component explorer" className="fixed inset-x-3 top-3 z-50 flex items-center gap-2 rounded-2xl border border-border/70 bg-background/90 p-2 shadow-lg backdrop-blur-xl sm:inset-x-6"><label htmlFor="experience-demo" className="sr-only">Componentă testată</label><NativeSelect id="experience-demo" value={selected} onChange={(event) => select(event.currentTarget.value as DemoId)} className="min-w-0 flex-1">{demos.map(([id, title]) => <NativeSelectOption key={id} value={id}>{title}</NativeSelectOption>)}</NativeSelect><span className="hidden text-xs tabular-nums text-muted-foreground sm:inline">{String(activeIndex + 1).padStart(2, "0")} / {demos.length}</span><Button type="button" variant="outline" size="icon" aria-label="Componenta anterioară" className="rounded-xl" onClick={() => select(demos[(activeIndex - 1 + demos.length) % demos.length]![0])}>←</Button><Button type="button" variant="outline" size="icon" aria-label="Componenta următoare" className="rounded-xl" onClick={() => select(demos[(activeIndex + 1) % demos.length]![0])}>→</Button><ArrowLeftRight className="hidden size-4 text-muted-foreground lg:block" aria-hidden /></nav><ActiveDemo /></main>;
+  const activeEntry = demos[activeIndex] ?? demos[0];
+  const activeGuide = experienceLabGuides[selected];
+  return <main className="min-h-dvh overflow-clip bg-background text-foreground"><ExperienceLabSidebar activeIndex={activeIndex} entries={demos.map(([id, title]) => [id, title] as const)} selected={selected} onSelect={(id) => select(id as DemoId)} /><div className="lg:pl-[22rem]"><ActiveDemo />{activeEntry && activeGuide ? <ExperienceLabGuideSection guide={activeGuide} index={activeIndex} title={activeEntry[1]} /> : null}</div></main>;
 }
