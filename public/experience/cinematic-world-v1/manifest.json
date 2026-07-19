@@ -1,0 +1,94 @@
+{
+  "id": "cinematic-mineral-world-v1",
+  "mode": "designed-layers",
+  "dimensions": {
+    "width": 1672,
+    "height": 941,
+    "aspectRatio": 1.77683
+  },
+  "registeredCamera": true,
+  "source": {
+    "master": "source/master.png",
+    "cleanPlate": "source/clean-plate.png"
+  },
+  "generation": {
+    "mode": "Codex built-in ImageGen",
+    "masterPrompt": "Use case: stylized-concept\nAsset type: master image for a production 2.5D cinematic website scene\nPrimary request: create one coherent, photorealistic cinematic mineral-valley world designed for later depth-layer separation\nScene/backdrop: a vast remote volcanic valley at blue-gold dawn, a calm shallow reflective lagoon across the lower half, a simple clean gradient sky, distant layered mountains with a clearly readable silhouette, light atmospheric haze\nSubject: one original sculptural dark-stone and black-glass pavilion standing on a low island slightly right of center, with a warm narrow doorway glow; two massive near-camera basalt formations frame the lower left and lower right edges like an open portal, visibly separate from the pavilion and from each other; a few subtle edge reeds and mist close to camera\nStyle/medium: premium photorealistic architectural campaign photography, restrained editorial art direction, realistic rock, water, reflections and atmosphere\nComposition/framing: wide 16:9 landscape master, eye-level cinematic camera, strong stable horizon, generous 12\u201315% overscan, clear negative space left of the pavilion for future semantic HTML copy, distinct far/background/midground/hero/foreground planes, no critical object touching the outer crop except the intended foreground edge formations\nLighting/mood: calm dawn side light from the left, physically consistent reflections and contact, quiet monumental mood, controlled contrast\nColor palette: charcoal basalt, graphite glass, muted blue-gray water, warm sand and pale amber dawn\nConstraints: one camera and one coherent perspective; foreground-left and foreground-right must have clean readable silhouettes and remain separate; pavilion must be grounded; no people; no animals; no vehicles; no text; no typography; no logo; no watermark; no interface elements\nAvoid: fantasy castle, sci-fi spaceship, neon cyberpunk, generic gradient artwork, heavy fog hiding edges, motion blur, floating objects, duplicated structures, extreme depth of field, cluttered sky",
+    "cleanPlateEditPrompt": "Edit this exact source image into a clean background plate for 2.5D compositing. Preserve the exact camera, horizon, perspective, sky gradient, distant mountain silhouettes, dawn lighting, color grade, lagoon geometry, and 16:9 framing. Remove the central dark architectural pavilion completely, including its doorway glow and its reflection in the water. Remove both near-camera black basalt edge formations on the far left and far right, including their close grasses and reflections. Reconstruct the hidden terrain and lagoon naturally and photorealistically, with continuous shorelines, physically consistent water reflections, subtle mist, and no visible seams or object remnants. Keep the scene empty and calm. Do not add any new structure, object, person, animal, text, logo, watermark, or interface. Output a seamless photorealistic clean plate registered as closely as possible to the source image.",
+    "generatedSourcePaths": {
+      "master": "/Users/horia/.codex/generated_images/019f742b-b598-77f0-82d1-49684ad6a038/exec-cd31d8eb-1cc1-4997-b610-1980739eed19.png",
+      "cleanPlate": "/Users/horia/.codex/generated_images/019f742b-b598-77f0-82d1-49684ad6a038/exec-6cfcaeb8-71fb-41ac-8f01-12b3ad2d791b.png"
+    }
+  },
+  "poster": "poster.webp",
+  "mobilePoster": "mobile-poster.webp",
+  "layers": [
+    {
+      "id": "00-sky",
+      "src": "layers/00-sky.webp",
+      "mobileSrc": "layers-mobile/00-sky.webp",
+      "role": "opaque atmospheric bleed"
+    },
+    {
+      "id": "10-landscape",
+      "src": "layers/10-landscape.webp",
+      "mobileSrc": "layers-mobile/10-landscape.webp",
+      "role": "far mountain plane"
+    },
+    {
+      "id": "20-midground",
+      "src": "layers/20-midground.webp",
+      "mobileSrc": "layers-mobile/20-midground.webp",
+      "role": "shore and lagoon plane"
+    },
+    {
+      "id": "29-contact-reflection",
+      "src": "layers/29-contact-reflection.webp",
+      "mobileSrc": "layers-mobile/29-contact-reflection.webp",
+      "role": "registered hero reflection"
+    },
+    {
+      "id": "30-hero",
+      "src": "layers/30-hero.webp",
+      "mobileSrc": "layers-mobile/30-hero.webp",
+      "role": "registered pavilion hero"
+    },
+    {
+      "id": "40-foreground-left",
+      "src": "layers/40-foreground-left.webp",
+      "mobileSrc": "layers-mobile/40-foreground-left.webp",
+      "role": "near left occluder"
+    },
+    {
+      "id": "41-foreground-right",
+      "src": "layers/41-foreground-right.webp",
+      "mobileSrc": "layers-mobile/41-foreground-right.webp",
+      "role": "near right occluder"
+    },
+    {
+      "id": "50-edge-frame",
+      "src": "layers/50-edge-frame.webp",
+      "mobileSrc": "layers-mobile/50-edge-frame.webp",
+      "role": "vignette and edge integration"
+    }
+  ],
+  "extraction": {
+    "method": "registered clean-plate difference, constrained regions, proportional alpha and edge unmatting",
+    "fullCanvas": true,
+    "hiddenAreaBleed": true,
+    "chromaKey": false,
+    "alphaEncoding": "lossless WebP"
+  },
+  "deliveryBytes": {
+    "desktop": 4701698,
+    "mobile": 1152694
+  },
+  "qa": {
+    "staticComposite": "qa/static-composite.webp",
+    "alphaChecks": [
+      "qa/30-hero-alpha-check.webp",
+      "qa/40-foreground-left-alpha-check.webp",
+      "qa/41-foreground-right-alpha-check.webp"
+    ]
+  }
+}

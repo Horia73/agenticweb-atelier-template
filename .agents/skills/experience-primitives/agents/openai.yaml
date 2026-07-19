@@ -1,0 +1,4 @@
+interface:
+  display_name: "Experience Primitives"
+  short_description: "Select and customize production-ready experience mechanics"
+  default_prompt: "Use the project experience registry to select, install, personalize, and verify the right experience primitive for this brief."

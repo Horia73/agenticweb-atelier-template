@@ -1,0 +1,18 @@
+{
+  "sourceId": "adriatic-road-background-first-v3",
+  "mode": "segmented-still",
+  "registeredSize": [1672, 941],
+  "imageGeneration": {
+    "workflow": "background-first",
+    "background": "source/background-master.png",
+    "withObjectEdit": "source/with-object-master.png"
+  },
+  "plates": [
+    { "role": "background", "file": "background.webp", "opaque": true },
+    { "role": "contact-shadow", "file": "contact-shadow.webp", "alpha": true, "anchor": [0.52, 0.78] },
+    { "role": "subject", "file": "subject.webp", "alpha": true, "anchor": [0.52, 0.78] }
+  ],
+  "poster": "poster.webp",
+  "registrationLock": [0, 0.1],
+  "notes": "The clean road was generated first. The exact background was then edited to insert one grounded car. Subject and contact were extracted at full canvas size."
+}

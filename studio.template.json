@@ -1,0 +1,37 @@
+{
+  "framework": "nextjs-app-router",
+  "paths": {
+    "appRoot": "src/app",
+    "publicAssets": "public",
+    "tokenAdapter": "src/app/globals.css",
+    "contentAdapter": "src/content.ts"
+  },
+  "ui": {
+    "primitiveFoundation": "shadcn",
+    "designMode": "hybrid",
+    "config": "components.json",
+    "components": "src/components/ui",
+    "skill": ".agents/skills/shadcn/SKILL.md",
+    "enforcementScript": "check:ui"
+  },
+  "experience": {
+    "catalogVersion": "2.0.0",
+    "registry": "registry.json",
+    "components": "src/components/experience",
+    "skill": ".agents/skills/experience-primitives/SKILL.md",
+    "labRoute": "/experience-lab",
+    "labEnv": "EXPERIENCE_LAB=1"
+  },
+  "scripts": {
+    "dev": "dev:preview",
+    "build": "build",
+    "typecheck": "typecheck",
+    "lint": "lint",
+    "test": null,
+    "accessibility": null,
+    "performance": null
+  },
+  "preview": {
+    "distDirEnv": "NEXT_DIST_DIR"
+  }
+}

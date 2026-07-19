@@ -1,0 +1,574 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "agenticweb-experience",
+  "homepage": "https://agenticweb.ro",
+  "items": [
+    {
+      "name": "depth-camera-scene",
+      "type": "registry:component",
+      "title": "Depth Camera Scene · P0",
+      "description": "Advanced 2.5D engine with a real PerspectiveCamera, registered raster plates, two WebGL passes, semantic DOM occlusion, reversible scroll and production fallbacks.",
+      "dependencies": [
+        "motion@^12.42.2",
+        "three@^0.185.1"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/depth-camera-scene.tsx",
+          "type": "registry:component",
+          "target": "components/experience/depth-camera-scene.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "src/components/experience/use-element-scroll-progress.ts",
+          "type": "registry:hook",
+          "target": "components/experience/use-element-scroll-progress.ts"
+        },
+        {
+          "path": "docs/experience/depth-camera-scene.md",
+          "type": "registry:file",
+          "target": "docs/experience/depth-camera-scene.md"
+        }
+      ]
+    },
+    {
+      "name": "cinematic-world-scene",
+      "type": "registry:component",
+      "title": "Cinematic World Scene · P0 Recipe",
+      "description": "Optional Advanced recipe that composes DepthCameraScene with intro, rear/front narrative and a locally controlled final catalog.",
+      "dependencies": [
+        "motion@^12.42.2",
+        "three@^0.185.1",
+        "lucide-react@^1.24.0"
+      ],
+      "registryDependencies": [
+        "button"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/cinematic-world-scene.tsx",
+          "type": "registry:component",
+          "target": "components/experience/cinematic-world-scene.tsx"
+        },
+        {
+          "path": "src/components/experience/depth-camera-scene.tsx",
+          "type": "registry:component",
+          "target": "components/experience/depth-camera-scene.tsx"
+        },
+        {
+          "path": "src/components/experience/horizontal-track.tsx",
+          "type": "registry:component",
+          "target": "components/experience/horizontal-track.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "src/components/experience/use-element-scroll-progress.ts",
+          "type": "registry:hook",
+          "target": "components/experience/use-element-scroll-progress.ts"
+        },
+        {
+          "path": "docs/experience/cinematic-world-scene.md",
+          "type": "registry:file",
+          "target": "docs/experience/cinematic-world-scene.md"
+        },
+        {
+          "path": "docs/experience/depth-camera-scene.md",
+          "type": "registry:file",
+          "target": "docs/experience/depth-camera-scene.md"
+        },
+        {
+          "path": "docs/experience/horizontal-track.md",
+          "type": "registry:file",
+          "target": "docs/experience/horizontal-track.md"
+        }
+      ]
+    },
+    {
+      "name": "spatial-product-stage",
+      "type": "registry:component",
+      "title": "Spatial Product Stage · P1",
+      "description": "Assembly and exploded-view stage for registered alpha plates, editable Three.js primitives or named GLB nodes, driven by hover, scroll or both.",
+      "dependencies": [
+        "motion@^12.42.2",
+        "three@^0.185.1",
+        "lucide-react@^1.24.0"
+      ],
+      "registryDependencies": [
+        "button"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/spatial-product-stage.tsx",
+          "type": "registry:component",
+          "target": "components/experience/spatial-product-stage.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "src/components/experience/use-element-scroll-progress.ts",
+          "type": "registry:hook",
+          "target": "components/experience/use-element-scroll-progress.ts"
+        },
+        {
+          "path": "docs/experience/spatial-product-stage.md",
+          "type": "registry:file",
+          "target": "docs/experience/spatial-product-stage.md"
+        }
+      ]
+    },
+    {
+      "name": "liquid-glass",
+      "type": "registry:component",
+      "title": "Liquid Glass Surface + Nav · P2",
+      "description": "Content-agnostic glass surface and semantic morphing navigation dock with bounded pointer light and reduced-motion behavior.",
+      "dependencies": [
+        "motion@^12.42.2"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/liquid-glass.tsx",
+          "type": "registry:component",
+          "target": "components/experience/liquid-glass.tsx"
+        },
+        {
+          "path": "docs/experience/liquid-glass.md",
+          "type": "registry:file",
+          "target": "docs/experience/liquid-glass.md"
+        }
+      ]
+    },
+    {
+      "name": "shader-field",
+      "type": "registry:component",
+      "title": "Shader Field · P3",
+      "description": "Bounded reactive WebGL field with aurora, metaballs and contour modes, DPR caps, offscreen pause and context-loss fallback.",
+      "dependencies": [
+        "motion@^12.42.2",
+        "three@^0.185.1"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/shader-field.tsx",
+          "type": "registry:component",
+          "target": "components/experience/shader-field.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "docs/experience/shader-field.md",
+          "type": "registry:file",
+          "target": "docs/experience/shader-field.md"
+        }
+      ]
+    },
+    {
+      "name": "media-portal",
+      "type": "registry:component",
+      "title": "Media Portal · P4",
+      "description": "Behavior-only aperture that promotes any React media to a full-viewport beat through reversible scroll, hover or controlled progress.",
+      "dependencies": [
+        "motion@^12.42.2"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/media-portal.tsx",
+          "type": "registry:component",
+          "target": "components/experience/media-portal.tsx"
+        },
+        {
+          "path": "src/components/experience/use-element-scroll-progress.ts",
+          "type": "registry:hook",
+          "target": "components/experience/use-element-scroll-progress.ts"
+        },
+        {
+          "path": "docs/experience/media-portal.md",
+          "type": "registry:file",
+          "target": "docs/experience/media-portal.md"
+        }
+      ]
+    },
+    {
+      "name": "spatial-gallery",
+      "type": "registry:component",
+      "title": "Spatial Gallery · P5",
+      "description": "A real-camera image tunnel driven by native vertical scroll with a native snap rail on mobile and reduced motion.",
+      "dependencies": [
+        "motion@^12.42.2",
+        "three@^0.185.1",
+        "lucide-react@^1.24.0"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/spatial-gallery.tsx",
+          "type": "registry:component",
+          "target": "components/experience/spatial-gallery.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "src/components/experience/use-element-scroll-progress.ts",
+          "type": "registry:hook",
+          "target": "components/experience/use-element-scroll-progress.ts"
+        },
+        {
+          "path": "docs/experience/spatial-gallery.md",
+          "type": "registry:file",
+          "target": "docs/experience/spatial-gallery.md"
+        }
+      ]
+    },
+    {
+      "name": "mesh-transition",
+      "type": "registry:component",
+      "title": "Mesh Transition · P6",
+      "description": "GPU image-to-image wave, fold or liquid transition with a clean moving seam, overscan and reversible scroll, hover or controlled playback.",
+      "dependencies": [
+        "motion@^12.42.2",
+        "three@^0.185.1"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/mesh-transition.tsx",
+          "type": "registry:component",
+          "target": "components/experience/mesh-transition.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "src/components/experience/use-element-scroll-progress.ts",
+          "type": "registry:hook",
+          "target": "components/experience/use-element-scroll-progress.ts"
+        },
+        {
+          "path": "docs/experience/mesh-transition.md",
+          "type": "registry:file",
+          "target": "docs/experience/mesh-transition.md"
+        }
+      ]
+    },
+    {
+      "name": "layered-depth",
+      "type": "registry:component",
+      "title": "Scroll Depth Scene · Basic 2.5D",
+      "description": "Basic 2.5D engine for an integrated master, registered occlusion matte and editable React text; use DepthCameraScene for the Advanced 00–50 stack.",
+      "dependencies": [
+        "motion@^12.42.2"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/layered-depth.tsx",
+          "type": "registry:component",
+          "target": "components/experience/layered-depth.tsx"
+        },
+        {
+          "path": "src/components/experience/use-element-scroll-progress.ts",
+          "type": "registry:hook",
+          "target": "components/experience/use-element-scroll-progress.ts"
+        },
+        {
+          "path": "docs/experience/scroll-depth-scene.md",
+          "type": "registry:file",
+          "target": "docs/experience/scroll-depth-scene.md"
+        }
+      ]
+    },
+    {
+      "name": "cursor-ambient",
+      "type": "registry:component",
+      "title": "Cursor Lens",
+      "description": "Fine-pointer lens that reveals a second visual state without a central cursor dot and falls back safely on touch or reduced motion.",
+      "dependencies": [
+        "motion@^12.42.2"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/cursor-ambient.tsx",
+          "type": "registry:component",
+          "target": "components/experience/cursor-ambient.tsx"
+        },
+        {
+          "path": "docs/experience/cursor-lens.md",
+          "type": "registry:file",
+          "target": "docs/experience/cursor-lens.md"
+        }
+      ]
+    },
+    {
+      "name": "sticky-story",
+      "type": "registry:component",
+      "title": "Sticky Story",
+      "description": "Responsive chapter narrative with a persistent visual and reduced-motion-safe transitions.",
+      "files": [
+        {
+          "path": "src/components/experience/sticky-story.tsx",
+          "type": "registry:component",
+          "target": "components/experience/sticky-story.tsx"
+        },
+        {
+          "path": "docs/experience/sticky-story.md",
+          "type": "registry:file",
+          "target": "docs/experience/sticky-story.md"
+        }
+      ]
+    },
+    {
+      "name": "horizontal-story-rail",
+      "type": "registry:component",
+      "title": "Horizontal Story Rail",
+      "description": "Pinned horizontal narrative driven by native vertical page scroll, with a measured track and reduced-motion list fallback.",
+      "dependencies": [
+        "motion@^12.42.2"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/horizontal-story-rail.tsx",
+          "type": "registry:component",
+          "target": "components/experience/horizontal-story-rail.tsx"
+        },
+        {
+          "path": "src/components/experience/horizontal-track.tsx",
+          "type": "registry:component",
+          "target": "components/experience/horizontal-track.tsx"
+        },
+        {
+          "path": "src/components/experience/use-element-scroll-progress.ts",
+          "type": "registry:hook",
+          "target": "components/experience/use-element-scroll-progress.ts"
+        },
+        {
+          "path": "docs/experience/horizontal-story-rail.md",
+          "type": "registry:file",
+          "target": "docs/experience/horizontal-story-rail.md"
+        },
+        {
+          "path": "docs/experience/horizontal-track.md",
+          "type": "registry:file",
+          "target": "docs/experience/horizontal-track.md"
+        }
+      ]
+    },
+    {
+      "name": "horizontal-track",
+      "type": "registry:component",
+      "title": "Controlled Horizontal Track",
+      "description": "Measured horizontal track driven by an external normalized MotionValue, with per-item sizing and no built-in sticky policy.",
+      "dependencies": [
+        "motion@^12.42.2"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/horizontal-track.tsx",
+          "type": "registry:component",
+          "target": "components/experience/horizontal-track.tsx"
+        },
+        {
+          "path": "docs/experience/horizontal-track.md",
+          "type": "registry:file",
+          "target": "docs/experience/horizontal-track.md"
+        }
+      ]
+    },
+    {
+      "name": "image-sequence-scrub",
+      "type": "registry:component",
+      "title": "Image Sequence Scrub",
+      "description": "Canvas image sequence driven by native scroll with bounded preloading, responsive frames, poster fallback and reduced-motion handling.",
+      "dependencies": [
+        "motion@^12.42.2"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/image-sequence-scrub.tsx",
+          "type": "registry:component",
+          "target": "components/experience/image-sequence-scrub.tsx"
+        },
+        {
+          "path": "src/components/experience/use-element-scroll-progress.ts",
+          "type": "registry:hook",
+          "target": "components/experience/use-element-scroll-progress.ts"
+        },
+        {
+          "path": "docs/experience/image-sequence-scrub.md",
+          "type": "registry:file",
+          "target": "docs/experience/image-sequence-scrub.md"
+        }
+      ]
+    },
+    {
+      "name": "mask-reveal",
+      "type": "registry:component",
+      "title": "Mask Reveal",
+      "description": "Directional or radial reveal between two editable React visuals with reversible scroll progression.",
+      "dependencies": [
+        "motion@^12.42.2"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/mask-reveal.tsx",
+          "type": "registry:component",
+          "target": "components/experience/mask-reveal.tsx"
+        },
+        {
+          "path": "src/components/experience/use-committed-progress.ts",
+          "type": "registry:hook",
+          "target": "components/experience/use-committed-progress.ts"
+        },
+        {
+          "path": "src/components/experience/use-element-scroll-progress.ts",
+          "type": "registry:hook",
+          "target": "components/experience/use-element-scroll-progress.ts"
+        },
+        {
+          "path": "docs/experience/mask-reveal.md",
+          "type": "registry:file",
+          "target": "docs/experience/mask-reveal.md"
+        }
+      ]
+    },
+    {
+      "name": "kinetic-type",
+      "type": "registry:component",
+      "title": "Kinetic Type",
+      "description": "Semantic word- or character-based display type driven by scroll with a static accessible fallback.",
+      "dependencies": [
+        "motion@^12.42.2"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/kinetic-type.tsx",
+          "type": "registry:component",
+          "target": "components/experience/kinetic-type.tsx"
+        },
+        {
+          "path": "src/components/experience/use-element-scroll-progress.ts",
+          "type": "registry:hook",
+          "target": "components/experience/use-element-scroll-progress.ts"
+        },
+        {
+          "path": "docs/experience/kinetic-type.md",
+          "type": "registry:file",
+          "target": "docs/experience/kinetic-type.md"
+        }
+      ]
+    },
+    {
+      "name": "before-after",
+      "type": "registry:component",
+      "title": "Before / After",
+      "description": "Controlled or uncontrolled accessible comparison slider for two registered visuals.",
+      "dependencies": [
+        "lucide-react@^1.24.0"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/before-after.tsx",
+          "type": "registry:component",
+          "target": "components/experience/before-after.tsx"
+        },
+        {
+          "path": "docs/experience/before-after.md",
+          "type": "registry:file",
+          "target": "docs/experience/before-after.md"
+        }
+      ]
+    },
+    {
+      "name": "expanding-media",
+      "type": "registry:component",
+      "title": "Expanding Media",
+      "description": "Scroll-driven editorial frame that expands an image or video to a full-viewport beat.",
+      "dependencies": [
+        "motion@^12.42.2"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/expanding-media.tsx",
+          "type": "registry:component",
+          "target": "components/experience/expanding-media.tsx"
+        },
+        {
+          "path": "src/components/experience/use-committed-progress.ts",
+          "type": "registry:hook",
+          "target": "components/experience/use-committed-progress.ts"
+        },
+        {
+          "path": "src/components/experience/use-element-scroll-progress.ts",
+          "type": "registry:hook",
+          "target": "components/experience/use-element-scroll-progress.ts"
+        },
+        {
+          "path": "docs/experience/expanding-media.md",
+          "type": "registry:file",
+          "target": "docs/experience/expanding-media.md"
+        }
+      ]
+    },
+    {
+      "name": "depth-gallery",
+      "type": "registry:component",
+      "title": "Focus Depth Gallery",
+      "description": "Deterministic DOM stack where the current frame lifts away to reveal the next, with a native swipe fallback.",
+      "dependencies": [
+        "motion@^12.42.2"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/depth-gallery.tsx",
+          "type": "registry:component",
+          "target": "components/experience/depth-gallery.tsx"
+        },
+        {
+          "path": "src/components/experience/use-element-scroll-progress.ts",
+          "type": "registry:hook",
+          "target": "components/experience/use-element-scroll-progress.ts"
+        },
+        {
+          "path": "docs/experience/depth-gallery.md",
+          "type": "registry:file",
+          "target": "docs/experience/depth-gallery.md"
+        }
+      ]
+    },
+    {
+      "name": "cursor-magnetic",
+      "type": "registry:component",
+      "title": "Magnetic Cursor Targets",
+      "description": "Bounded fine-pointer proximity field for independently tuned magnetic targets, with static touch and reduced-motion behavior.",
+      "dependencies": [
+        "motion@^12.42.2"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/cursor-magnetic.tsx",
+          "type": "registry:component",
+          "target": "components/experience/cursor-magnetic.tsx"
+        },
+        {
+          "path": "docs/experience/cursor-magnetic.md",
+          "type": "registry:file",
+          "target": "docs/experience/cursor-magnetic.md"
+        }
+      ]
+    }
+  ]
+}

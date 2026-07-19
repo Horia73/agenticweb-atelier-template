@@ -1,0 +1,77 @@
+---
+name: experience-primitives
+description: Select, install, customize, and verify the reusable experience mechanics in this template. Use when a Studio site needs a distinctive motion or interaction direction, when editing files under src/components/experience, when installing an item from registry.json, or when preparing 2.5D/ImageGen assets. Enforces brief-led art direction, exact asset gates, accessible fallbacks, and production QA instead of copying the Experience Lab.
+---
+
+# Experience Primitives
+
+Use the registry as a behavior library, never as a website template. The result must inherit its content, pacing, visual language, and hierarchy from the approved client direction.
+
+## Required Workflow
+
+1. Read `studio.template.json`, `EXPERIENCE_REGISTRY.md`, and `registry.json`.
+2. Confirm the selected client direction. During design exploration present exactly two coherent directions; do not select mechanics before the brief has a narrative reason for them.
+3. Pick at most one signature mechanic and up to two supporting mechanics. Prefer no special mechanic when it does not improve comprehension, emotion, or proof.
+4. Read the selected item's complete mini-tutorial in `docs/experience/` before editing or installing it.
+5. Pass the asset gate. Do not simulate missing depth assets by duplicating one photo, using approximate masks, or adding arbitrary parallax. For `layered-depth`, `depth-camera-scene` or `cinematic-world-scene`, read [references/depth-production.md](references/depth-production.md) completely.
+6. Import the component directly from `@/components/experience/<file>`. Keep shadcn primitives in `src/components/ui` and compose them into the experience; do not rebuild Button, Dialog, form, or focus behavior inside a mechanic.
+7. Personalize the component's content, assets, crop, timing, ranges, tokens, mobile behavior, and reduced-motion result. The lab's car, Adriatic copy, colors, layout, and timings are QA fixtures and are forbidden in client output.
+8. Keep semantic content in React/HTML. Rasterize only photography, texture, rendered objects, or atmosphere. Never bake required headings or CTA labels into an image.
+9. Test the component in the real page architecture, not only `/experience-lab`.
+
+## Production Gates
+
+Reject the implementation until all relevant statements are true:
+
+- The mechanic has a one-sentence purpose tied to the brief.
+- Assets are client-approved or generated for this project and have documented rights/provenance.
+- Desktop and mobile art direction are deliberate; mobile is not merely a squeezed desktop scene.
+- `prefers-reduced-motion`, touch/coarse pointer, keyboard, focus, and 200% zoom have usable outcomes.
+- A plain-content path still communicates the message if motion or media fails.
+- Full-screen media has stable dimensions, responsive delivery, and a declared byte budget.
+- No custom cursor hides the native cursor; proximity effects remain bounded to their field.
+- The neutral `[data-studio-seed]` root has been replaced before a client build is called complete.
+
+## Mechanic-Specific Rules
+
+- `layered-depth`: classify it as Basic 2.5D. Prefer an integrated master plus the exact full-canvas hero occlusion matte, with identical transforms and a static composite QA image.
+- `depth-camera-scene`: P0 Advanced requires one sequentially derived, registered 00–50 stack, dedicated contact/reflection, real camera dolly, readable semantic occlusion, mobile stack, manifest and zero-transform QA.
+- `cinematic-world-scene`: use only when P0 also needs at least two semantic depth beats and a final local `HorizontalTrack` controller. Never copy its fixture or nest `HorizontalStoryRail` inside it.
+- `spatial-product-stage`: choose registered raster plates, meaningful editable primitives or named GLB nodes; define exact assembly, hover/scroll/hybrid driver, mobile anchor and static fallback.
+- `liquid-glass`: keep semantic links/focus and verify contrast over every live background state; customize tint, radius, blur and density.
+- `shader-field`: keep WebGL bounded, cap DPR, pause offscreen and provide a project-specific static fallback with stable text contrast.
+- `media-portal`: one forward phase opens and remains open; only actual reverse-scroll closes it. Keep media controls inside the media layer.
+- `spatial-gallery`: hide planes before the camera reaches them, keep caption/image state deterministic and ship a complete native mobile/reduced rail.
+- `mesh-transition`: require one clean seam, exact endpoints, overscan without black edges, natural reverse and a static fallback.
+- `horizontal-story-rail`: preserve vertical wheel/trackpad input; horizontal movement is output, never a hidden horizontal scrollbar trap.
+- `horizontal-track`: treat it as controlled infrastructure inside an approved recipe, not as a standalone client direction. The parent owns progress, reduced-motion policy and interaction controls.
+- `sticky-story`: the desktop stage stays fixed while states crossfade; use multiple 2–4 chapter groups to alternate visual side instead of hard-coding a page layout.
+- `mask-reveal` and `expanding-media`: use one monotonic reveal/expand phase that stays complete while scrolling farther down and reverses only when the user actually scrolls back through its range. `playback="scrub"` is the default; use `commit` only when reversal must be disabled entirely.
+- `kinetic-type`: production uses art-directed `segments`; automatic split is a fallback, not the final design.
+- `before-after`: require registered images and preserve the native range input even when replacing the handle icon.
+- `depth-gallery`: build a clear focus sequence of 3–6 frames, not a random parallax grid. Keep a deterministic stack: the current frame lifts away to reveal the next frame below; never swap z-order or overlap two captions mid-transition.
+- `cursor-magnetic`: tune radius and strength per important target; keep the native cursor and a static touch/reduced-motion state.
+
+## Verification
+
+Run:
+
+```bash
+npm run typecheck
+npm run lint
+npm run registry:build
+```
+
+Then verify the real page and the selected lab fixture at 390, 768, and 1440 px. Exercise wheel/trackpad, touch fallback, keyboard, resize, route transitions, reduced motion, slow media, and scrolling slightly backward after one-way effects complete.
+
+Record in the implementation handoff:
+
+- selected signature/support mechanics and their brief rationale;
+- exact files and assets personalized;
+- desktop/mobile/reduced-motion behavior;
+- bytes or frame count for heavy media;
+- checks run and any deliberate exceptions.
+
+## Completion
+
+Work is complete only when the client page no longer contains the Studio seed, no Experience Lab fixture appears in production, every selected mechanic passes its mini-tutorial gates, and the type, UI, registry, production-build, and browser checks pass.

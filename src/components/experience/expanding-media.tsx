@@ -1,0 +1,89 @@
+"use client";
+
+import * as React from "react";
+import {
+  motion,
+  type MotionValue,
+  useReducedMotion,
+  useTransform,
+} from "motion/react";
+
+import { cn } from "@/lib/utils";
+import { useElementScrollProgress } from "@/components/experience/use-element-scroll-progress";
+import {
+  type ProgressPlayback,
+  useCommittedProgress,
+} from "@/components/experience/use-committed-progress";
+
+const subscribeToHydration = () => () => undefined;
+
+function useHydrated() {
+  return React.useSyncExternalStore(subscribeToHydration, () => true, () => false);
+}
+
+type ExpandingMediaProps = Omit<React.ComponentProps<"section">, "children"> & {
+  label: string;
+  media: React.ReactNode;
+  overlay?: React.ReactNode;
+  overlayClassName?: string;
+  playback?: ProgressPlayback;
+  progress?: MotionValue<number>;
+  range?: [number, number];
+  scrollScreens?: number;
+  scrimClassName?: string;
+  stageClassName?: string;
+  startInset?: string;
+  resetKey?: React.Key;
+};
+
+/** Expands an image or video from an editorial frame into a full-viewport beat. */
+export function ExpandingMedia({
+  className,
+  label,
+  media,
+  overlay,
+  overlayClassName,
+  playback = "scrub",
+  progress: controlledProgress,
+  range = [0.12, 0.72],
+  scrollScreens = 2.5,
+  scrimClassName = "bg-gradient-to-t from-black/70 via-black/10 to-transparent",
+  stageClassName,
+  startInset = "12% 10% 12% 10%",
+  resetKey,
+  style,
+  ...props
+}: ExpandingMediaProps) {
+  const rootRef = React.useRef<HTMLElement>(null);
+  const mounted = useHydrated();
+  const reducedMotionPreference = useReducedMotion();
+  const reducedMotion = mounted && Boolean(reducedMotionPreference);
+  const localProgress = useElementScrollProgress(rootRef);
+  const sourceProgress = controlledProgress ?? localProgress;
+  const progress = useCommittedProgress(sourceProgress, playback, resetKey);
+  const clipPath = useTransform(progress, range, [`inset(${startInset} round 2rem)`, "inset(0% 0% 0% 0% round 0rem)"], { clamp: true });
+  const scale = useTransform(progress, range, [0.96, 1], { clamp: true });
+
+  return (
+    <section
+      ref={rootRef}
+      aria-label={label}
+      data-expanding-media
+      data-playback={playback}
+      className={cn("relative isolate", className)}
+      style={{ minHeight: reducedMotion ? "100svh" : `${Math.max(1.5, scrollScreens) * 100}svh`, ...style }}
+      {...props}
+    >
+      <div className={cn(reducedMotion ? "relative min-h-svh" : "sticky top-0 h-svh overflow-hidden", stageClassName)}>
+        <motion.div className="absolute inset-0 overflow-hidden will-change-[clip-path,transform]" style={reducedMotion ? undefined : { clipPath, scale }}>
+          {media}
+        </motion.div>
+        {overlay ? (
+          <div className={cn("pointer-events-none absolute inset-0 z-10", scrimClassName, overlayClassName)}>
+            {overlay}
+          </div>
+        ) : null}
+      </div>
+    </section>
+  );
+}
