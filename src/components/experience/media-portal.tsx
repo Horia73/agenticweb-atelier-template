@@ -4,13 +4,14 @@ import * as React from "react";
 import {
   motion,
   type MotionValue,
+  useMotionTemplate,
   useMotionValue,
-  useReducedMotion,
   useSpring,
   useTransform,
 } from "motion/react";
 
 import { cn } from "@/lib/utils";
+import { usePrefersReducedMotion } from "@/components/experience/experience-runtime";
 import { useElementScrollProgress } from "@/components/experience/use-element-scroll-progress";
 
 export type MediaPortalProps = Omit<React.ComponentProps<"section">, "children"> & {
@@ -82,14 +83,21 @@ export function MediaPortal({
     : trigger === "hover"
       ? hoverTarget
       : scrollProgress;
-  const reducedMotion = useReducedMotion();
+  const reducedMotion = usePrefersReducedMotion();
   const progress = useSpring(source, { stiffness: 125, damping: 30, mass: 0.25 });
   const shapeConfig = SHAPES[shape];
-  const top = useTransform(progress, [0, 0.32, 1], shapeConfig.top.map((value) => `${value}%`));
-  const right = useTransform(progress, [0, 0.32, 1], shapeConfig.right.map((value) => `${value}%`));
-  const bottom = useTransform(progress, [0, 0.32, 1], shapeConfig.bottom.map((value) => `${value}%`));
-  const left = useTransform(progress, [0, 0.32, 1], shapeConfig.left.map((value) => `${value}%`));
+  const top = useTransform(progress, [0, 0.32, 1], [...shapeConfig.top]);
+  const right = useTransform(progress, [0, 0.32, 1], [...shapeConfig.right]);
+  const bottom = useTransform(progress, [0, 0.32, 1], [...shapeConfig.bottom]);
+  const left = useTransform(progress, [0, 0.32, 1], [...shapeConfig.left]);
   const borderRadius = useTransform(progress, [0, 0.42, 1], [...shapeConfig.radius]);
+  // The aperture is a single compositor-friendly clip on a full-stage layer;
+  // no top/right/bottom/left layout properties animate per frame.
+  const clipPath = useMotionTemplate`inset(${top}% ${right}% ${bottom}% ${left}% round ${borderRadius}px)`;
+  const topPct = useMotionTemplate`${top}%`;
+  const rightPct = useMotionTemplate`${right}%`;
+  const bottomPct = useMotionTemplate`${bottom}%`;
+  const leftPct = useMotionTemplate`${left}%`;
   const rotate = useTransform(progress, [0, 0.55, 1], shape === "diamond" ? [45, 45, 0] : [0, 0, 0]);
   const mediaRotate = useTransform(progress, [0, 0.55, 1], shape === "diamond" ? [-45, -45, 0] : [0, 0, 0]);
   const scale = useTransform(progress, [0, 0.4, 1], [0.9, 1, 1]);
@@ -120,13 +128,22 @@ export function MediaPortal({
           {backdrop}
         </motion.div>
         <motion.div
-          className={cn("absolute overflow-hidden will-change-[top,right,bottom,left,border-radius,transform]", portalClassName)}
-          style={{ borderRadius, bottom, left, right, rotate, scale, top }}
+          className={cn("absolute inset-0 overflow-hidden will-change-[clip-path,transform]", portalClassName)}
+          style={{ clipPath, rotate, scale }}
         >
-          <motion.div className={cn("absolute", shape === "diamond" ? "-inset-[22%]" : "inset-0")} style={{ rotate: mediaRotate }}>
+          <motion.div className="absolute inset-0" style={{ rotate: mediaRotate }}>
             {media}
           </motion.div>
-          <motion.div aria-hidden className="pointer-events-none absolute inset-0 border border-white/45 shadow-[inset_0_0_80px_rgb(255_255_255/.14),0_0_70px_rgb(255_255_255/.2)]" style={{ borderRadius, opacity: ringOpacity }} />
+        </motion.div>
+        {/* The ring hairline hugs the clip window's edge, which no border or
+            shadow can attach to, so this one childless leaf keeps animated
+            inset percentages; the heavy media subtree above stays on the
+            composited clip path. */}
+        <motion.div aria-hidden className="pointer-events-none absolute inset-0" style={{ rotate, scale }}>
+          <motion.div
+            className="absolute border border-white/45 shadow-[inset_0_0_80px_rgb(255_255_255/.14),0_0_70px_rgb(255_255_255/.2)]"
+            style={{ top: topPct, right: rightPct, bottom: bottomPct, left: leftPct, borderRadius, opacity: ringOpacity }}
+          />
         </motion.div>
         <div className="pointer-events-none absolute inset-0">{children}</div>
       </div>

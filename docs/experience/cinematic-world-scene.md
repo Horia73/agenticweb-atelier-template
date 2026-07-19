@@ -60,4 +60,4 @@ Respinge implementarea dacă straturile provin din imagini independente, textul 
 
 Testează intro/rear/front/catalog/final, scroll rapid înainte și înapoi, controalele catalogului cu tastatura, resize, 390/768/1440 px, reduced motion, context loss, loading lent și release-ul către flow-ul normal.
 
-Fixture: `http://localhost:3000/experience-lab#depth-camera-scene`.
+Recipe-ul rămâne instalabil din registry, dar nu mai ocupă selectorul P0 din Lab; verifică-l într-un harness construit din asset-urile proiectului.

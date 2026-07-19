@@ -5,17 +5,14 @@ import Image from "next/image";
 import {
   type MotionValue,
   useMotionValueEvent,
-  useReducedMotion,
 } from "motion/react";
 
 import { cn } from "@/lib/utils";
+import {
+  useMediaQuery,
+  usePrefersReducedMotion,
+} from "@/components/experience/experience-runtime";
 import { useElementScrollProgress } from "@/components/experience/use-element-scroll-progress";
-
-const subscribeToHydration = () => () => undefined;
-
-function useHydrated() {
-  return React.useSyncExternalStore(subscribeToHydration, () => true, () => false);
-}
 
 export type ImageSequenceScrubProps = Omit<React.ComponentProps<"section">, "children"> & {
   alt: string;
@@ -79,21 +76,11 @@ export function ImageSequenceScrub({
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const imagesRef = React.useRef(new Map<number, HTMLImageElement>());
   const frameRef = React.useRef(0);
-  const mounted = useHydrated();
-  const reducedMotionPreference = useReducedMotion();
-  const reducedMotion = mounted && Boolean(reducedMotionPreference);
-  const [mobile, setMobile] = React.useState(false);
+  const reducedMotion = usePrefersReducedMotion();
+  const mobile = useMediaQuery("(max-width: 767.98px)");
   const sources = mobile && mobileFrames?.length ? mobileFrames : frames;
   const scrollYProgress = useElementScrollProgress(rootRef);
   const progress = controlledProgress ?? scrollYProgress;
-
-  React.useEffect(() => {
-    const query = window.matchMedia("(max-width: 767.98px)");
-    const update = () => setMobile(query.matches);
-    update();
-    query.addEventListener("change", update);
-    return () => query.removeEventListener("change", update);
-  }, []);
 
   const loadFrame = React.useCallback((index: number) => {
     const src = sources[index];
@@ -116,6 +103,15 @@ export function ImageSequenceScrub({
     const start = Math.max(0, safeIndex - preloadRadius);
     const end = Math.min(sources.length - 1, safeIndex + preloadRadius);
     for (let frame = start; frame <= end; frame += 1) loadFrame(frame);
+    // Evict decoded frames far outside the preload window (keeping the first and
+    // last frame) so long sequences do not retain every frame forever.
+    const evictionDistance = preloadRadius * 3;
+    for (const cachedIndex of imagesRef.current.keys()) {
+      if (cachedIndex === 0 || cachedIndex === sources.length - 1) continue;
+      if (Math.abs(cachedIndex - safeIndex) > evictionDistance) {
+        imagesRef.current.delete(cachedIndex);
+      }
+    }
     const image = imagesRef.current.get(safeIndex);
     if (image?.complete && canvasRef.current) drawFrame(canvasRef.current, image, objectFit);
   }, [loadFrame, objectFit, preloadRadius, sources.length]);

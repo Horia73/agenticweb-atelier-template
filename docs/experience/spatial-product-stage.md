@@ -47,11 +47,10 @@ const parts = [
   mode="hybrid"
   parts={parts}
   visual={<ProjectPortrait />}
-  hoverAnchor={[0.72, 0.52]}
+  imageAnchor={{ point: [0.67, 0.5], imageAspect: 1600 / 960, objectPosition: [0.7, 0.5] }}
   hoverRadius={0.2}
   idleVisibility="hidden"
   smoothing={4.5}
-  groupPosition={[1.5, -0.4, 0]}
   fallback={<StaticProduct />}
 />
 ```
@@ -65,7 +64,9 @@ Pentru GLB, setează `modelSrc` și mapează `modelParts` prin `nodeName`; fieca
 - `scroll` face scrub reversibil: scroll înainte asamblează, reverse-scroll desface.
 - `hybrid` acceptă ambele drivere și păstrează controlul explicit de lock.
 - `assemblyDelay` creează o cascadă, dar valorile trebuie să păstreze produsul lizibil și să nu producă lag artificial. Un `smoothing` mai mic produce o apropiere mai lentă și mai grea; verifică mereu hover rapid repetat.
-- `groupPosition`, `mobileGroupPosition`, `groupScale` și camera se calibrează pe crop-ul real.
+- `imageAnchor`/`mobileImageAnchor` ancorează produsul de un punct din imaginea `visual` (fracții din sursă + `imageAspect` + `objectPosition`): componenta rejoacă crop-ul CSS object-cover la fiecare resize, deci produsul se asamblează pe același detaliu din imagine (ex. fața subiectului) și se scalează cu zoom-ul crop-ului, indiferent de aspect ratio. Hover-ul moștenește implicit același punct.
+- `groupAnchor`/`mobileGroupAnchor` fac același lucru dar în fracții de viewport, pentru staging fără imagine de referință. `groupPosition` rămâne pentru adâncime (z) sau plasare world-space fixă când ancorele lipsesc.
+- `groupScale` și camera se calibrează pe crop-ul real al vizualului.
 
 ## Contract AI și QA
 

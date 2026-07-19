@@ -9,11 +9,16 @@ import {
   damp,
   mix,
   resolveKeyframes,
-  supportsWebGL,
+  sortKeyframes,
   useHydrated,
   useMediaQuery,
 } from "@/components/experience/experience-runtime";
 import { useElementScrollProgress } from "@/components/experience/use-element-scroll-progress";
+import {
+  useWebGLStage,
+  type WebGLStageContext,
+  type WebGLStageHandle,
+} from "@/components/experience/use-webgl-stage";
 
 export type DepthCameraLayerKeyframe = {
   at: number;
@@ -24,6 +29,21 @@ export type DepthCameraLayerKeyframe = {
   opacity?: number;
 };
 
+export type DepthCameraBounds = {
+  /** Normalized placement inside the registered master canvas. */
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+export type DepthCameraWorldEffectKeyframe = {
+  at: number;
+  blur?: number;
+  brightness?: number;
+  saturation?: number;
+};
+
 export type DepthCameraLayer = {
   id: string;
   src: string;
@@ -31,6 +51,21 @@ export type DepthCameraLayer = {
   plane: "back" | "front";
   depth: number;
   opacity?: number;
+  /**
+   * Render this plate without alpha blending. Use for the fully covering
+   * backdrop plate so it composites as a solid base instead of blending.
+   * Front-plane layers always blend (they sit over the DOM sandwich).
+   */
+  opaque?: boolean;
+  /** Purely decorative plate that low-power devices skip to save a texture and a full-screen blend pass. */
+  dropOnLowPower?: boolean;
+  /**
+   * Places a trimmed high-resolution texture inside the registered canvas.
+   * This avoids shipping a mostly-transparent 4K full-canvas plate.
+   */
+  bounds?: DepthCameraBounds;
+  /** Aspect ratio of the registered master canvas used by `bounds`. */
+  canvasAspect?: number;
   timeline?: DepthCameraLayerKeyframe[];
 };
 
@@ -55,6 +90,10 @@ export type DepthCameraSceneProps = Omit<React.ComponentProps<"section">, "child
   maxDpr?: number;
   pointerStrength?: number;
   progress?: MotionValue<number>;
+  /** Unblurred continuity layer rendered over the world pass and under copy/subjects. */
+  persistentBackdrop?: React.ReactNode;
+  /** CSS post effects applied only to the back WebGL world pass. */
+  worldEffects?: DepthCameraWorldEffectKeyframe[];
   backOverlay?: React.ReactNode | ((progress: MotionValue<number>) => React.ReactNode);
   frontOverlay?: React.ReactNode | ((progress: MotionValue<number>) => React.ReactNode);
   reducedMotionFallback?: React.ReactNode;
@@ -65,6 +104,7 @@ export type DepthCameraSceneProps = Omit<React.ComponentProps<"section">, "child
 
 type PlaneRecord = {
   layer: DepthCameraLayer;
+  frames: DepthCameraLayerKeyframe[];
   mesh: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
   textureAspect: number;
 };
@@ -76,6 +116,12 @@ const DEFAULT_CAMERA: DepthCameraBeat[] = [
   { at: 0.68, x: 0.26, y: 0.08, z: 4.35, lookX: 0.1, lookY: 0.01, fov: 41 },
   { at: 0.88, x: 0.58, y: 0.12, z: 3.15, lookX: 0.26, lookY: 0.02, fov: 39 },
   { at: 1, x: 0.72, y: 0.15, z: 2.72, lookX: 0.34, lookY: 0.02, fov: 38 },
+];
+
+const DEFAULT_TIMELINE: DepthCameraLayerKeyframe[] = [{ at: 0 }, { at: 1 }];
+const DEFAULT_WORLD_EFFECTS: DepthCameraWorldEffectKeyframe[] = [
+  { at: 0, blur: 0, brightness: 1, saturation: 1 },
+  { at: 1, blur: 0, brightness: 1, saturation: 1 },
 ];
 
 function resolveNumber(value: number | undefined, fallback: number) {
@@ -94,21 +140,28 @@ function sampleCamera(frames: DepthCameraBeat[], progress: number) {
   };
 }
 
-function sampleLayer(layer: DepthCameraLayer, progress: number) {
-  const frames = layer.timeline?.length
-    ? layer.timeline
-    : [{ at: 0 }, { at: 1 }];
-  const { from, to, mix: amount } = resolveKeyframes(frames, progress);
+function sampleLayer(record: PlaneRecord, progress: number) {
+  const baseOpacity = record.layer.opacity ?? 1;
+  const { from, to, mix: amount } = resolveKeyframes(record.frames, progress);
   return {
     x: mix(resolveNumber(from.x, 0), resolveNumber(to.x, 0), amount),
     y: mix(resolveNumber(from.y, 0), resolveNumber(to.y, 0), amount),
     z: mix(resolveNumber(from.z, 0), resolveNumber(to.z, 0), amount),
     scale: mix(resolveNumber(from.scale, 1), resolveNumber(to.scale, 1), amount),
     opacity: mix(
-      resolveNumber(from.opacity, layer.opacity ?? 1),
-      resolveNumber(to.opacity, layer.opacity ?? 1),
+      resolveNumber(from.opacity, baseOpacity),
+      resolveNumber(to.opacity, baseOpacity),
       amount,
     ),
+  };
+}
+
+function sampleWorldEffect(frames: DepthCameraWorldEffectKeyframe[], progress: number) {
+  const { from, to, mix: amount } = resolveKeyframes(frames, progress);
+  return {
+    blur: mix(resolveNumber(from.blur, 0), resolveNumber(to.blur, 0), amount),
+    brightness: mix(resolveNumber(from.brightness, 1), resolveNumber(to.brightness, 1), amount),
+    saturation: mix(resolveNumber(from.saturation, 1), resolveNumber(to.saturation, 1), amount),
   };
 }
 
@@ -137,6 +190,7 @@ export function DepthCameraScene({
   onPointerLeave,
   onPointerMove,
   onProgressChange,
+  persistentBackdrop,
   pointerStrength = 0.11,
   poster,
   progress: controlledProgress,
@@ -145,6 +199,7 @@ export function DepthCameraScene({
   smoothing = 10,
   stageClassName,
   style,
+  worldEffects = DEFAULT_WORLD_EFFECTS,
   ...props
 }: DepthCameraSceneProps) {
   const rootRef = React.useRef<HTMLElement>(null);
@@ -153,202 +208,204 @@ export function DepthCameraScene({
   const frontCanvasRef = React.useRef<HTMLCanvasElement>(null);
   const pointerRef = React.useRef({ x: 0, y: 0 });
   const targetPointerRef = React.useRef({ x: 0, y: 0 });
-  const intersectionRef = React.useRef(true);
+  const smoothedRef = React.useRef(0);
   const rawProgress = useElementScrollProgress(rootRef);
   const visibleProgress = useMotionValue(0);
   const reducedMotion = useReducedMotion();
   const hydrated = useHydrated();
   const mobile = useMediaQuery(`(max-width: ${mobileBreakpoint - 0.02}px)`);
   const sceneProgress = controlledProgress ?? rawProgress;
-  const [ready, setReady] = React.useState(false);
-  const [failed, setFailed] = React.useState(false);
   const prefersReducedMotion = hydrated && Boolean(reducedMotion);
-  const layerSignature = React.useMemo(
-    () => layers.map((layer) => `${layer.id}:${layer.src}:${layer.mobileSrc ?? ""}`).join("|"),
-    [layers],
-  );
+  const lowPower = typeof navigator !== "undefined" && (navigator.hardwareConcurrency ?? 8) <= 4;
 
-  React.useEffect(() => {
-    const stage = stageRef.current;
-    const backCanvas = backCanvasRef.current;
-    const frontCanvas = frontCanvasRef.current;
-    if (!stage || !backCanvas || !frontCanvas || prefersReducedMotion) return;
-    if (!supportsWebGL()) {
-      const fallbackTimer = window.setTimeout(() => setFailed(true), 0);
-      return () => window.clearTimeout(fallbackTimer);
-    }
+  // Per-frame inputs flow through a ref so identity changes never rebuild the scene.
+  const runtimeRef = React.useRef({ onProgressChange, pointerStrength, sceneProgress, smoothing });
+  React.useInsertionEffect(() => {
+    runtimeRef.current = { onProgressChange, pointerStrength, sceneProgress, smoothing };
+  });
 
-    let disposed = false;
-    let frame = 0;
-    let previousTime = performance.now();
-    let smoothed = sceneProgress.get();
+  const layerSignature = React.useMemo(() => JSON.stringify(layers), [layers]);
+  const cameraSignature = React.useMemo(() => JSON.stringify(camera), [camera]);
+  const effectsSignature = React.useMemo(() => JSON.stringify(worldEffects), [worldEffects]);
+  const sceneSignature = `${layerSignature}|${cameraSignature}|${effectsSignature}|${mobile ? "mobile" : "desktop"}`;
+
+  const buildPass = (plane: DepthCameraLayer["plane"], context: WebGLStageContext): WebGLStageHandle => {
+    const { renderer, markReady, markFailed, isDisposed, requestResize } = context;
+    renderer.toneMapping = THREE.NoToneMapping;
+    renderer.setClearColor(0x000000, 0);
+    const scene = new THREE.Scene();
+    const cameraFrames = sortKeyframes(camera);
+    const worldEffectFrames = sortKeyframes(worldEffects);
+    const initialBeat = sampleCamera(cameraFrames, 0);
+    const passCamera = new THREE.PerspectiveCamera(initialBeat.fov, 1, 0.05, 100);
+    passCamera.position.set(initialBeat.x, initialBeat.y, initialBeat.z);
+    passCamera.lookAt(initialBeat.lookX, initialBeat.lookY, 0);
     const records: PlaneRecord[] = [];
-    const backScene = new THREE.Scene();
-    const frontScene = new THREE.Scene();
-    const firstCamera = sampleCamera(camera, 0);
-    const backCamera = new THREE.PerspectiveCamera(firstCamera.fov, 1, 0.05, 100);
-    const frontCamera = new THREE.PerspectiveCamera(firstCamera.fov, 1, 0.05, 100);
-    const lowPower = (navigator.hardwareConcurrency ?? 8) <= 4;
-    const pixelRatio = Math.min(window.devicePixelRatio || 1, lowPower ? 1.25 : maxDpr);
-    const rendererOptions: THREE.WebGLRendererParameters = {
-      alpha: true,
-      antialias: !lowPower,
-      powerPreference: "high-performance",
-      premultipliedAlpha: true,
-    };
-    const backRenderer = new THREE.WebGLRenderer({ ...rendererOptions, canvas: backCanvas });
-    const frontRenderer = new THREE.WebGLRenderer({ ...rendererOptions, canvas: frontCanvas });
-    for (const renderer of [backRenderer, frontRenderer]) {
-      renderer.setPixelRatio(pixelRatio);
-      renderer.outputColorSpace = THREE.SRGBColorSpace;
-      renderer.toneMapping = THREE.NoToneMapping;
-      renderer.setClearColor(0x000000, 0);
+    const passLayers = layers.filter(
+      (layer) => layer.plane === plane && !(lowPower && layer.dropOnLowPower),
+    );
+    const loader = new THREE.TextureLoader();
+    if (plane === "back") {
+      smoothedRef.current = runtimeRef.current.sceneProgress.get();
     }
 
-    const abort = (event: Event) => {
-      event.preventDefault();
-      if (!disposed) setFailed(true);
-    };
-    backCanvas.addEventListener("webglcontextlost", abort);
-    frontCanvas.addEventListener("webglcontextlost", abort);
-
-    const manager = new THREE.LoadingManager();
-    const loader = new THREE.TextureLoader(manager);
-    const activeLayers = lowPower
-      ? layers.filter((layer) => layer.id !== "50-edge-frame")
-      : layers;
-
-    const load = async () => {
-      const loaded = await Promise.all(activeLayers.map(async (layer, index) => {
-        const source = mobile && layer.mobileSrc ? layer.mobileSrc : layer.src;
-        const texture = await loader.loadAsync(source);
-        texture.colorSpace = THREE.SRGBColorSpace;
-        texture.anisotropy = Math.min(8, backRenderer.capabilities.getMaxAnisotropy());
-        texture.generateMipmaps = true;
-        texture.minFilter = THREE.LinearMipmapLinearFilter;
-        texture.magFilter = THREE.LinearFilter;
-        const image = texture.image as HTMLImageElement;
-        const textureAspect = Math.max(0.01, image.naturalWidth / Math.max(1, image.naturalHeight));
-        const geometry = new THREE.PlaneGeometry(textureAspect, 1, 1, 1);
-        const material = new THREE.MeshBasicMaterial({
-          map: texture,
-          transparent: layer.plane === "front" || layer.id !== "00-sky",
-          opacity: layer.opacity ?? 1,
-          depthTest: false,
-          depthWrite: false,
-          toneMapped: false,
-        });
-        const mesh = new THREE.Mesh(geometry, material);
-        mesh.position.z = layer.depth;
-        mesh.renderOrder = index;
-        (layer.plane === "back" ? backScene : frontScene).add(mesh);
-        const record = { layer, mesh, textureAspect };
-        records.push(record);
-        return record;
-      }));
-      return loaded;
-    };
-
-    const fitPlanes = () => {
-      const width = Math.max(1, stage.clientWidth);
-      const height = Math.max(1, stage.clientHeight);
-      const viewportAspect = width / height;
-      for (const renderer of [backRenderer, frontRenderer]) renderer.setSize(width, height, false);
-      for (const cameraInstance of [backCamera, frontCamera]) {
-        cameraInstance.aspect = viewportAspect;
-        cameraInstance.updateProjectionMatrix();
+    Promise.all(passLayers.map(async (layer, index) => {
+      const source = mobile && layer.mobileSrc ? layer.mobileSrc : layer.src;
+      const texture = await loader.loadAsync(source);
+      if (isDisposed()) {
+        texture.dispose();
+        return;
       }
-      const initial = sampleCamera(camera, 0);
-      const verticalFov = THREE.MathUtils.degToRad(initial.fov);
-      for (const record of records) {
-        const distance = Math.max(0.1, initial.z - record.layer.depth);
-        const visibleHeight = 2 * Math.tan(verticalFov / 2) * distance;
-        const visibleWidth = visibleHeight * viewportAspect;
-        const fit = Math.max(visibleHeight, visibleWidth / record.textureAspect) * 1.035;
-        record.mesh.userData.baseScale = fit;
-      }
-    };
-
-    const resizeObserver = new ResizeObserver(fitPlanes);
-    resizeObserver.observe(stage);
-    const intersectionObserver = new IntersectionObserver(
-      ([entry]) => { intersectionRef.current = Boolean(entry?.isIntersecting); },
-      { rootMargin: "25% 0px" },
-    );
-    intersectionObserver.observe(stage);
-
-    const render = (time: number) => {
-      if (disposed) return;
-      const delta = Math.min(0.05, Math.max(0.001, (time - previousTime) / 1000));
-      previousTime = time;
-      if (intersectionRef.current && document.visibilityState === "visible") {
-        smoothed = damp(smoothed, sceneProgress.get(), smoothing, delta);
-        visibleProgress.set(smoothed);
-        onProgressChange?.(smoothed);
-        pointerRef.current.x = damp(pointerRef.current.x, targetPointerRef.current.x, 8, delta);
-        pointerRef.current.y = damp(pointerRef.current.y, targetPointerRef.current.y, 8, delta);
-
-        const sampled = sampleCamera(camera, smoothed);
-        const pointerX = mobile ? 0 : pointerRef.current.x * pointerStrength;
-        const pointerY = mobile ? 0 : pointerRef.current.y * pointerStrength;
-        for (const cameraInstance of [backCamera, frontCamera]) {
-          cameraInstance.position.set(sampled.x + pointerX, sampled.y - pointerY, sampled.z);
-          cameraInstance.fov = sampled.fov;
-          cameraInstance.lookAt(sampled.lookX + pointerX * 0.18, sampled.lookY - pointerY * 0.12, 0);
-          cameraInstance.updateProjectionMatrix();
-        }
-        for (const record of records) {
-          const sampledLayer = sampleLayer(record.layer, smoothed);
-          const baseScale = resolveNumber(record.mesh.userData.baseScale as number | undefined, 1);
-          record.mesh.position.set(sampledLayer.x, sampledLayer.y, record.layer.depth + sampledLayer.z);
-          record.mesh.scale.setScalar(baseScale * sampledLayer.scale);
-          record.mesh.material.opacity = sampledLayer.opacity;
-        }
-        backRenderer.render(backScene, backCamera);
-        frontRenderer.render(frontScene, frontCamera);
-      }
-      frame = requestAnimationFrame(render);
-    };
-
-    load()
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+      texture.generateMipmaps = true;
+      texture.minFilter = THREE.LinearMipmapLinearFilter;
+      texture.magFilter = THREE.LinearFilter;
+      const image = texture.image as HTMLImageElement;
+      const textureAspect = Math.max(0.01, image.naturalWidth / Math.max(1, image.naturalHeight));
+      const geometry = new THREE.PlaneGeometry(textureAspect, 1, 1, 1);
+      const material = new THREE.MeshBasicMaterial({
+        map: texture,
+        transparent: layer.plane === "front" || !layer.opaque,
+        opacity: layer.opacity ?? 1,
+        depthTest: false,
+        depthWrite: false,
+        toneMapped: false,
+      });
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.z = layer.depth;
+      mesh.renderOrder = index;
+      scene.add(mesh);
+      records.push({
+        layer,
+        frames: sortKeyframes(layer.timeline?.length ? layer.timeline : DEFAULT_TIMELINE),
+        mesh,
+        textureAspect,
+      });
+    }))
       .then(() => {
-        if (disposed) return;
-        fitPlanes();
-        backRenderer.render(backScene, backCamera);
-        frontRenderer.render(frontScene, frontCamera);
-        setReady(true);
-        frame = requestAnimationFrame(render);
+        if (isDisposed()) return;
+        requestResize();
+        markReady();
       })
-      .catch(abort);
+      .catch(() => markFailed());
 
-    return () => {
-      disposed = true;
-      cancelAnimationFrame(frame);
-      resizeObserver.disconnect();
-      intersectionObserver.disconnect();
-      backCanvas.removeEventListener("webglcontextlost", abort);
-      frontCanvas.removeEventListener("webglcontextlost", abort);
+    const applyFrame = () => {
+      const progress = smoothedRef.current;
+      const strength = runtimeRef.current.pointerStrength;
+      const sampled = sampleCamera(cameraFrames, progress);
+      const pointerX = mobile ? 0 : pointerRef.current.x * strength;
+      const pointerY = mobile ? 0 : pointerRef.current.y * strength;
+      passCamera.position.set(sampled.x + pointerX, sampled.y - pointerY, sampled.z);
+      passCamera.fov = sampled.fov;
+      passCamera.lookAt(sampled.lookX + pointerX * 0.18, sampled.lookY - pointerY * 0.12, 0);
+      passCamera.updateProjectionMatrix();
       for (const record of records) {
-        record.mesh.geometry.dispose();
-        record.mesh.material.map?.dispose();
-        record.mesh.material.dispose();
+        const sampledLayer = sampleLayer(record, progress);
+        const baseScaleX = resolveNumber(record.mesh.userData.baseScaleX as number | undefined, 1);
+        const baseScaleY = resolveNumber(record.mesh.userData.baseScaleY as number | undefined, 1);
+        const baseX = resolveNumber(record.mesh.userData.baseX as number | undefined, 0);
+        const baseY = resolveNumber(record.mesh.userData.baseY as number | undefined, 0);
+        record.mesh.position.set(
+          baseX + sampledLayer.x,
+          baseY + sampledLayer.y,
+          record.layer.depth + sampledLayer.z,
+        );
+        record.mesh.scale.set(
+          baseScaleX * sampledLayer.scale,
+          baseScaleY * sampledLayer.scale,
+          1,
+        );
+        record.mesh.material.opacity = sampledLayer.opacity;
       }
-      backRenderer.dispose();
-      frontRenderer.dispose();
+      if (plane === "back" && backCanvasRef.current) {
+        const effect = sampleWorldEffect(worldEffectFrames, progress);
+        backCanvasRef.current.style.filter = `blur(${effect.blur.toFixed(2)}px) brightness(${effect.brightness.toFixed(3)}) saturate(${effect.saturation.toFixed(3)})`;
+        backCanvasRef.current.style.transform = `scale(${(1 + effect.blur * 0.0018).toFixed(4)})`;
+      }
+      renderer.render(scene, passCamera);
     };
-  }, [
-    camera,
-    layerSignature,
-    layers,
-    maxDpr,
-    mobile,
-    onProgressChange,
-    pointerStrength,
-    prefersReducedMotion,
-    sceneProgress,
-    smoothing,
-    visibleProgress,
-  ]);
+
+    return {
+      onResize: (width, height) => {
+        const viewportAspect = width / Math.max(1, height);
+        passCamera.aspect = viewportAspect;
+        passCamera.updateProjectionMatrix();
+        const verticalFov = THREE.MathUtils.degToRad(initialBeat.fov);
+        for (const record of records) {
+          const distance = Math.max(0.1, initialBeat.z - record.layer.depth);
+          const visibleHeight = 2 * Math.tan(verticalFov / 2) * distance;
+          const visibleWidth = visibleHeight * viewportAspect;
+          if (record.layer.bounds) {
+            const bounds = record.layer.bounds;
+            const canvasAspect = record.layer.canvasAspect ?? 16 / 9;
+            const fullCanvasFit = Math.max(visibleHeight, visibleWidth / canvasAspect) * 1.035;
+            record.mesh.userData.baseScaleX =
+              (fullCanvasFit * canvasAspect * bounds.width) / record.textureAspect;
+            record.mesh.userData.baseScaleY = fullCanvasFit * bounds.height;
+            record.mesh.userData.baseX =
+              (bounds.x + bounds.width / 2 - 0.5) * fullCanvasFit * canvasAspect;
+            record.mesh.userData.baseY =
+              (0.5 - bounds.y - bounds.height / 2) * fullCanvasFit;
+          } else {
+            const fit = Math.max(visibleHeight, visibleWidth / record.textureAspect) * 1.035;
+            record.mesh.userData.baseScaleX = fit;
+            record.mesh.userData.baseScaleY = fit;
+            record.mesh.userData.baseX = 0;
+            record.mesh.userData.baseY = 0;
+          }
+        }
+        applyFrame();
+      },
+      onFrame: (delta) => {
+        // The back pass is the sole writer of shared progress/pointer state;
+        // the front pass reads the same refs, so both passes stay registered.
+        if (plane === "back") {
+          const runtime = runtimeRef.current;
+          smoothedRef.current = damp(smoothedRef.current, runtime.sceneProgress.get(), runtime.smoothing, delta);
+          visibleProgress.set(smoothedRef.current);
+          runtime.onProgressChange?.(smoothedRef.current);
+          pointerRef.current.x = damp(pointerRef.current.x, targetPointerRef.current.x, 8, delta);
+          pointerRef.current.y = damp(pointerRef.current.y, targetPointerRef.current.y, 8, delta);
+        }
+        applyFrame();
+      },
+      dispose: () => {
+        for (const record of records) {
+          record.mesh.geometry.dispose();
+          record.mesh.material.map?.dispose();
+          record.mesh.material.dispose();
+        }
+      },
+    };
+  };
+
+  const stageEnabled = !prefersReducedMotion;
+  const effectiveMaxDpr = lowPower ? 1.25 : maxDpr;
+  const backStage = useWebGLStage({
+    stageRef,
+    canvasRef: backCanvasRef,
+    enabled: stageEnabled,
+    maxDpr: effectiveMaxDpr,
+    antialias: !lowPower,
+    alpha: true,
+    rootMargin: "25% 0px",
+    signature: sceneSignature,
+    create: (context) => buildPass("back", context),
+  });
+  const frontStage = useWebGLStage({
+    stageRef,
+    canvasRef: frontCanvasRef,
+    enabled: stageEnabled,
+    maxDpr: effectiveMaxDpr,
+    antialias: !lowPower,
+    alpha: true,
+    rootMargin: "25% 0px",
+    signature: sceneSignature,
+    create: (context) => buildPass("front", context),
+  });
+  const ready = backStage.ready && frontStage.ready;
+  const failed = backStage.failed || frontStage.failed;
 
   const handlePointerMove = (event: React.PointerEvent<HTMLElement>) => {
     if (!mobile && event.pointerType !== "touch") {
@@ -389,7 +446,18 @@ export function DepthCameraScene({
           {mobilePoster ? <source media={`(max-width: ${mobileBreakpoint - 0.02}px)`} srcSet={mobilePoster} /> : null}
           <img alt="" src={poster} className="size-full object-cover" decoding="async" fetchPriority="high" />
         </picture>
-        <canvas ref={backCanvasRef} aria-hidden className={cn("absolute inset-0 z-10 size-full transition-opacity duration-500", ready && !failed ? "opacity-100" : "opacity-0")} />
+        <canvas ref={backCanvasRef} aria-hidden className={cn("absolute inset-0 z-10 size-full origin-center transition-opacity duration-500 will-change-[filter,transform]", ready && !failed ? "opacity-100" : "opacity-0")} />
+        {persistentBackdrop ? (
+          <div
+            aria-hidden
+            className={cn(
+              "pointer-events-none absolute inset-0 z-[15] transition-opacity duration-500",
+              ready && !failed ? "opacity-100" : "opacity-0",
+            )}
+          >
+            {persistentBackdrop}
+          </div>
+        ) : null}
         <div className="pointer-events-none absolute inset-0 z-20">
           {renderOverlay(backOverlay, visibleProgress)}
         </div>

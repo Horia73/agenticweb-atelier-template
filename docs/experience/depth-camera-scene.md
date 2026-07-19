@@ -16,7 +16,7 @@ npx shadcn@latest add ./public/r/depth-camera-scene.json
 
 ## Workflow-ul de asset-uri
 
-Toate plate-urile sunt full-canvas, au exact aceeași cameră și rămân înregistrate pixel-la-pixel:
+Stack-ul fotografic clasic folosește plate-uri full-canvas cu exact aceeași cameră și origine:
 
 ```text
 00-sky
@@ -47,17 +47,43 @@ uv run --with numpy --with pillow python scripts/build-depth-camera-assets.py \
 
 Coordonatele și pragurile scriptului sunt specifice fixture-ului; pentru client se redesenează și se inspectează, nu se copiază orbește.
 
+## Focus handoff pentru zoom aparent masiv
+
+Nu mări un singur raster până se descompune. Pentru un travel care trebuie să pară de 5–8×, folosește o schimbare de lume ascunsă de un occluder natural:
+
+1. Aprobă `world A`, cu un culoar vizual și minimum două elemente apropiate care pot deveni plane 3D.
+2. Generează separat, la rezoluție mare, elementul focal și occluderele apropiate. Pentru obiecte opace simple poți folosi chroma uniform + matte removal; respinge orice asset care conține fragmente de fundal.
+3. Generează `world B` din camera și lumina lumii A, dar schimbă terenul/midground-ul. Păstrează o zonă continuă — de exemplu cerul, coroana sau plafonul — ca `persistentBackdrop` neblurabil.
+4. În prima treime, camera face doar un dolly moderat. Elementul focal folosește textura high-res decupată și `bounds`, crește mult și trece pe lângă cameră.
+5. Când occluderul ocupă cadrul, aplică `worldEffects` numai pass-ului din spate, schimbă opacitatea A → B sub blur, apoi elimină blurul. Nu blura continuitatea persistentă și nu face crossfade-ul în cadru liber.
+6. Fă textul din spatele focalului lizibil într-un hold separat. Oprește-l înainte de handoff; următorul mesaj intră numai după ce noua lume este clară.
+
+Asseturile mobile nu se derivă prin crop automat din studiul desktop. Pentru un site client se creează o compoziție mobilă separată înainte ca implementarea completă să fie acceptată.
+
 ## Exemplu minimal
 
 ```tsx
 import { DepthCameraScene, type DepthCameraLayer } from "@/components/experience/depth-camera-scene"
 
 const layers: DepthCameraLayer[] = [
-  { id: "sky", src: "/world/00-sky.webp", plane: "back", depth: -2.4 },
+  { id: "sky", src: "/world/00-sky.webp", plane: "back", depth: -2.4, opaque: true },
   { id: "landscape", src: "/world/10-landscape.webp", plane: "back", depth: -1.5 },
   { id: "hero", src: "/world/30-hero.webp", plane: "front", depth: 0 },
-  { id: "foreground", src: "/world/40-foreground.webp", plane: "front", depth: 0.8 },
+  { id: "foreground", src: "/world/40-foreground.webp", plane: "front", depth: 0.8, dropOnLowPower: true },
+  {
+    id: "trimmed-focal",
+    src: "/world/focal-high-res.webp",
+    plane: "front",
+    depth: 0.1,
+    canvasAspect: 16 / 9,
+    bounds: { x: 0.52, y: 0, width: 0.25, height: 0.86 },
+  },
 ]
+```
+
+Comportamentul per-layer este explicit, nu legat de nume: `opaque: true` marchează plate-ul de fundal care acoperă complet cadrul (randat fără alpha blending), iar `dropOnLowPower: true` renunță la plate-urile decorative pe dispozitive slabe. Fără aceste flag-uri, orice denumire de layer funcționează identic.
+
+```tsx
 
 export function ProjectWorld() {
   return (
@@ -66,6 +92,12 @@ export function ProjectWorld() {
       layers={layers}
       poster="/world/poster.webp"
       mobilePoster="/world/mobile-poster.webp"
+      persistentBackdrop={<img alt="" src="/world/persistent-canopy.webp" />}
+      worldEffects={[
+        { at: 0.3, blur: 0, brightness: 1 },
+        { at: 0.45, blur: 18, brightness: 0.72 },
+        { at: 0.65, blur: 0, brightness: 1 },
+      ]}
       backOverlay={<h1>Text semantic ocluzionat de hero</h1>}
       frontOverlay={<ProjectChrome />}
       reducedMotionFallback={<StaticProjectWorld />}
@@ -79,6 +111,8 @@ export function ProjectWorld() {
 - `camera` primește keyframe-uri `{ at, x, y, z, lookX, lookY, fov }`; un `z` mai mic produce dolly/zoom real.
 - `plane: "back" | "front"` stabilește pass-ul. `backOverlay` este între pass-uri, iar `frontOverlay` este peste toate plate-urile.
 - `timeline` per layer ajustează numai corecții locale; mișcarea dominantă trebuie să vină din cameră.
+- `bounds` + `canvasAspect` poziționează o textură decupată în coordonatele masterului. Folosește-le pentru LOD-uri high-res, nu pentru a ascunde asset-uri neînregistrate.
+- `worldEffects` afectează numai canvas-ul `back`; `persistentBackdrop` rămâne clar deasupra lui și sub text/subject.
 - `progress` permite un controller extern; altfel progresul vine din scroll vertical nativ și se inversează natural la reverse-scroll.
 - `smoothing`, `maxDpr`, `pointerStrength`, `scrollScreens` și camera se calibrează pentru fiecare direcție.
 
@@ -92,4 +126,4 @@ Agentul Studio trebuie să schimbe toate deciziile vizibile ale fixture-ului: lu
 - Testează 390/768/1440 px, zoom de browser, resize în mijlocul scenei, scroll rapid înainte/înapoi, loading lent, context loss, console și lipsa oricărui flash între frame-uri.
 - Verifică checkpoint-uri la început, fiecare hold narativ și final. Textul din spatele hero-ului trebuie să iasă suficient pentru lectură, nu să rămână permanent ascuns.
 
-Fixture: `http://localhost:3000/experience-lab#depth-camera-scene` cu `EXPERIENCE_LAB=1`.
+Engine-ul rămâne instalabil din registry, dar nu mai ocupă selectorul P0 din Lab; construiește un harness cu asset-urile proiectului pentru QA.

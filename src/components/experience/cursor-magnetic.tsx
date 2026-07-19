@@ -10,25 +10,21 @@ import {
 } from "motion/react";
 
 import { cn } from "@/lib/utils";
+import { useFinePointer } from "@/components/experience/experience-runtime";
 
 type PointerSample = { active: boolean; x: number; y: number };
 type PointerListener = (sample: PointerSample) => void;
+type MagneticTargetHandle = {
+  element: HTMLElement;
+  onSample: PointerListener;
+  refresh: () => void;
+};
 type MagneticContextValue = {
   disabled: boolean;
-  register: (listener: PointerListener) => () => void;
+  register: (target: MagneticTargetHandle) => () => void;
 };
 
 const MagneticContext = React.createContext<MagneticContextValue | null>(null);
-
-function useFinePointer() {
-  const subscribe = React.useCallback((onChange: () => void) => {
-    const media = window.matchMedia("(pointer: fine)");
-    media.addEventListener("change", onChange);
-    return () => media.removeEventListener("change", onChange);
-  }, []);
-  const getSnapshot = React.useCallback(() => window.matchMedia("(pointer: fine)").matches, []);
-  return React.useSyncExternalStore(subscribe, getSnapshot, () => false);
-}
 
 type MagneticFieldProps = React.ComponentProps<"div">;
 
@@ -39,28 +35,75 @@ export function MagneticField({
   onPointerMove,
   ...props
 }: MagneticFieldProps) {
-  const listeners = React.useRef(new Set<PointerListener>());
+  const fieldRef = React.useRef({
+    targets: new Set<MagneticTargetHandle>(),
+    observer: null as ResizeObserver | null,
+    refreshFrame: 0,
+    flushFrame: 0,
+    sample: { active: false, x: 0, y: 0 } as PointerSample,
+  });
   const reducedMotion = useReducedMotion();
   const finePointer = useFinePointer();
   const disabled = Boolean(reducedMotion) || !finePointer;
-  const register = React.useCallback((listener: PointerListener) => {
-    listeners.current.add(listener);
-    return () => listeners.current.delete(listener);
+
+  // One shared, rAF-coalesced rect refresh for every registered target.
+  const scheduleRefresh = React.useCallback(() => {
+    const field = fieldRef.current;
+    if (field.refreshFrame) return;
+    field.refreshFrame = requestAnimationFrame(() => {
+      field.refreshFrame = 0;
+      field.targets.forEach((target) => target.refresh());
+    });
   }, []);
+
+  const register = React.useCallback((target: MagneticTargetHandle) => {
+    const field = fieldRef.current;
+    field.targets.add(target);
+    field.observer ??= new ResizeObserver(scheduleRefresh);
+    field.observer.observe(target.element);
+    target.refresh();
+    return () => {
+      field.targets.delete(target);
+      field.observer?.unobserve(target.element);
+    };
+  }, [scheduleRefresh]);
   const context = React.useMemo(() => ({ disabled, register }), [disabled, register]);
 
-  const emit = React.useCallback((sample: PointerSample) => {
-    listeners.current.forEach((listener) => listener(sample));
+  // Pointer samples land in a ref; a single rAF flush notifies every target.
+  const scheduleEmit = React.useCallback((sample: PointerSample) => {
+    const field = fieldRef.current;
+    field.sample = sample;
+    if (field.flushFrame) return;
+    field.flushFrame = requestAnimationFrame(() => {
+      field.flushFrame = 0;
+      field.targets.forEach((target) => target.onSample(field.sample));
+    });
   }, []);
 
+  React.useEffect(() => {
+    const field = fieldRef.current;
+    window.addEventListener("scroll", scheduleRefresh, { passive: true });
+    window.addEventListener("resize", scheduleRefresh, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", scheduleRefresh);
+      window.removeEventListener("resize", scheduleRefresh);
+      cancelAnimationFrame(field.refreshFrame);
+      cancelAnimationFrame(field.flushFrame);
+      field.refreshFrame = 0;
+      field.flushFrame = 0;
+      field.observer?.disconnect();
+      field.observer = null;
+    };
+  }, [scheduleRefresh]);
+
   const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    emit(disabled || event.pointerType === "touch"
+    scheduleEmit(disabled || event.pointerType === "touch"
       ? { active: false, x: 0, y: 0 }
       : { active: true, x: event.clientX, y: event.clientY });
     onPointerMove?.(event);
   };
   const handlePointerLeave = (event: React.PointerEvent<HTMLDivElement>) => {
-    emit({ active: false, x: event.clientX, y: event.clientY });
+    scheduleEmit({ active: false, x: event.clientX, y: event.clientY });
     onPointerLeave?.(event);
   };
 
@@ -93,6 +136,7 @@ export const MagneticTarget = React.forwardRef<HTMLDivElement, MagneticTargetPro
     className,
     maxTilt = 4,
     maxTravel = 30,
+    onPointerEnter,
     onPointerLeave,
     onPointerMove,
     radius = 260,
@@ -102,6 +146,7 @@ export const MagneticTarget = React.forwardRef<HTMLDivElement, MagneticTargetPro
   }, forwardedRef) {
     const context = React.useContext(MagneticContext);
     const targetRef = React.useRef<HTMLDivElement | null>(null);
+    const centerRef = React.useRef<{ x: number; y: number } | null>(null);
     const rawX = useMotionValue(0);
     const rawY = useMotionValue(0);
     const rawRotateX = useMotionValue(0);
@@ -122,17 +167,29 @@ export const MagneticTarget = React.forwardRef<HTMLDivElement, MagneticTargetPro
       rawScale.set(1);
     }, [rawRotateX, rawRotateY, rawScale, rawX, rawY]);
 
+    // Cache the rest-space center (minus the live spring offset) so pointer
+    // moves never read layout.
+    const measure = React.useCallback(() => {
+      const node = targetRef.current;
+      if (!node) return;
+      const rect = node.getBoundingClientRect();
+      centerRef.current = {
+        x: rect.left + rect.width / 2 - x.get(),
+        y: rect.top + rect.height / 2 - y.get(),
+      };
+    }, [x, y]);
+
     const reactToPointer = React.useCallback((sample: PointerSample) => {
       const node = targetRef.current;
       if (!node || !sample.active || reducedMotion || context?.disabled) {
         reset();
         return;
       }
-      const rect = node.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
-      const deltaX = sample.x - centerX;
-      const deltaY = sample.y - centerY;
+      if (!centerRef.current) measure();
+      const center = centerRef.current;
+      if (!center) return;
+      const deltaX = sample.x - center.x;
+      const deltaY = sample.y - center.y;
       const distance = Math.hypot(deltaX, deltaY);
       if (distance >= radius) {
         reset();
@@ -145,12 +202,13 @@ export const MagneticTarget = React.forwardRef<HTMLDivElement, MagneticTargetPro
       rawRotateX.set(clamp((-deltaY / Math.max(radius, 1)) * maxTilt * influence, maxTilt));
       rawRotateY.set(clamp((deltaX / Math.max(radius, 1)) * maxTilt * influence, maxTilt));
       rawScale.set(1 + (activeScale - 1) * influence);
-    }, [activeScale, context?.disabled, maxTilt, maxTravel, radius, rawRotateX, rawRotateY, rawScale, rawX, rawY, reducedMotion, reset, strength]);
+    }, [activeScale, context?.disabled, maxTilt, maxTravel, measure, radius, rawRotateX, rawRotateY, rawScale, rawX, rawY, reducedMotion, reset, strength]);
 
     React.useEffect(() => {
-      if (!context) return;
-      return context.register(reactToPointer);
-    }, [context, reactToPointer]);
+      const node = targetRef.current;
+      if (!context || !node) return;
+      return context.register({ element: node, onSample: reactToPointer, refresh: measure });
+    }, [context, measure, reactToPointer]);
 
     const setTargetRef = React.useCallback((node: HTMLDivElement | null) => {
       targetRef.current = node;
@@ -158,6 +216,10 @@ export const MagneticTarget = React.forwardRef<HTMLDivElement, MagneticTargetPro
       else if (forwardedRef) forwardedRef.current = node;
     }, [forwardedRef]);
 
+    const handlePointerEnter = (event: React.PointerEvent<HTMLDivElement>) => {
+      if (!context) measure();
+      onPointerEnter?.(event);
+    };
     const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
       if (!context) reactToPointer({ active: event.pointerType !== "touch", x: event.clientX, y: event.clientY });
       onPointerMove?.(event);
@@ -174,6 +236,7 @@ export const MagneticTarget = React.forwardRef<HTMLDivElement, MagneticTargetPro
         className={cn("will-change-transform [transform-style:preserve-3d]", className)}
         style={{ ...style, rotateX, rotateY, scale, x, y }}
         {...props}
+        onPointerEnter={handlePointerEnter}
         onPointerMove={handlePointerMove}
         onPointerLeave={handlePointerLeave}
       />

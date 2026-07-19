@@ -1,15 +1,15 @@
 "use client";
 
 import * as React from "react";
-import { useReducedMotion } from "motion/react";
 import * as THREE from "three";
 
 import { cn } from "@/lib/utils";
-import { damp, supportsWebGL, useHydrated } from "@/components/experience/experience-runtime";
+import { damp, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
+import { useWebGLStage } from "@/components/experience/use-webgl-stage";
 
 export type ShaderFieldProps = Omit<React.ComponentProps<"section">, "children"> & {
   label: string;
-  mode?: "aurora" | "metaballs" | "contour" | "caustic";
+  mode?: "aurora" | "metaballs" | "contour" | "caustic" | "halftone";
   colors?: [string, string, string];
   speed?: number;
   intensity?: number;
@@ -21,6 +21,14 @@ export type ShaderFieldProps = Omit<React.ComponentProps<"section">, "children">
 };
 
 const DEFAULT_COLORS: [string, string, string] = ["#b9ff5c", "#5de8ff", "#5a45ff"];
+
+const MODE_VALUES: Record<NonNullable<ShaderFieldProps["mode"]>, number> = {
+  aurora: 0,
+  metaballs: 1,
+  contour: 2,
+  caustic: 3,
+  halftone: 4,
+};
 
 const VERTEX_SHADER = /* glsl */ `
   varying vec2 vUv;
@@ -115,7 +123,7 @@ const FRAGMENT_SHADER = /* glsl */ `
       float glow = smoothstep(.42, .92, terrain);
       color = mix(uColorC * .09, uColorB * .55, glow);
       color += lines * mix(uColorB, uColorA, terrain) * .8;
-    } else {
+    } else if (uMode < 3.5) {
       vec2 q = p * 1.32;
       float flowA = fbm(q * 2.15 + vec2(time * .052, -time * .027));
       float flowB = fbm((q + vec2(flowA * .34, -flowA * .22)) * 3.4 - vec2(time * .031, time * .018));
@@ -129,6 +137,20 @@ const FRAGMENT_SHADER = /* glsl */ `
       color += uColorB * veil * .22;
       color += mix(uColorA, uColorB, .45) * pointerLight * .18;
       color *= .58 + edgeShade * .72;
+    } else {
+      float pull = exp(-length(p - pointer) * 3.4);
+      vec2 q = p + (pointer - p) * pull * .14;
+      float lum = fbm(q * 2.35 + vec2(time * .05, -time * .036));
+      lum = clamp(lum + pull * .24, 0., 1.);
+      float angle = .6154;
+      mat2 screen = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
+      vec2 cell = fract(screen * q * 24.) - .5;
+      float radius = pow(lum, 1.15) * .68;
+      float dots = 1. - smoothstep(radius - .18, radius + .1, length(cell) * 2.);
+      vec3 ink = mix(uColorB, uColorA, smoothstep(.25, .85, lum));
+      color = uColorC * (.03 + lum * .05);
+      color = mix(color, ink, dots * (.5 + lum * .5));
+      color += uColorB * pull * .12;
     }
     color *= uIntensity;
     color = color / (color + vec3(1.));
@@ -155,90 +177,55 @@ export function ShaderField({
 }: ShaderFieldProps) {
   const rootRef = React.useRef<HTMLElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
-  const activeRef = React.useRef(true);
   const pointerRef = React.useRef({ x: 0.5, y: 0.5 });
   const targetPointerRef = React.useRef({ x: 0.5, y: 0.5 });
-  const reducedMotion = useReducedMotion();
-  const hydrated = useHydrated();
-  const [ready, setReady] = React.useState(false);
-  const [failed, setFailed] = React.useState(false);
-  const prefersReducedMotion = hydrated && Boolean(reducedMotion);
-  const colorSignature = colors.join("|");
+  const prefersReducedMotion = usePrefersReducedMotion();
 
-  React.useEffect(() => {
-    const root = rootRef.current;
-    const canvas = canvasRef.current;
-    if (!root || !canvas || prefersReducedMotion) return;
-    if (!supportsWebGL()) {
-      const fallbackTimer = window.setTimeout(() => setFailed(true), 0);
-      return () => window.clearTimeout(fallbackTimer);
-    }
-    let disposed = false;
-    let frame = 0;
-    let previous = performance.now();
-    let elapsed = 0;
-    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false, powerPreference: "high-performance" });
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, maxDpr));
-    const scene = new THREE.Scene();
-    const camera = new THREE.Camera();
-    const geometry = new THREE.PlaneGeometry(2, 2);
-    const uniforms = {
-      uTime: { value: 0 },
-      uMode: { value: mode === "aurora" ? 0 : mode === "metaballs" ? 1 : mode === "contour" ? 2 : 3 },
-      uIntensity: { value: intensity },
-      uResolution: { value: new THREE.Vector2(1, 1) },
-      uPointer: { value: new THREE.Vector2(0.5, 0.5) },
-      uColorA: { value: new THREE.Color(colors[0]) },
-      uColorB: { value: new THREE.Color(colors[1]) },
-      uColorC: { value: new THREE.Color(colors[2]) },
-    };
-    const material = new THREE.ShaderMaterial({ vertexShader: VERTEX_SHADER, fragmentShader: FRAGMENT_SHADER, uniforms, depthTest: false, depthWrite: false });
-    scene.add(new THREE.Mesh(geometry, material));
-    const resize = () => {
-      const width = Math.max(1, root.clientWidth);
-      const height = Math.max(1, root.clientHeight);
-      renderer.setSize(width, height, false);
-      uniforms.uResolution.value.set(width, height);
-    };
-    const resizeObserver = new ResizeObserver(resize);
-    resizeObserver.observe(root);
-    const intersectionObserver = new IntersectionObserver(([entry]) => { activeRef.current = Boolean(entry?.isIntersecting); }, { rootMargin: "20% 0px" });
-    intersectionObserver.observe(root);
-    const contextLost = (event: Event) => { event.preventDefault(); if (!disposed) setFailed(true); };
-    canvas.addEventListener("webglcontextlost", contextLost);
-    const render = (time: number) => {
-      if (disposed) return;
-      const delta = Math.min(0.05, Math.max(0.001, (time - previous) / 1000));
-      previous = time;
-      if (activeRef.current && document.visibilityState === "visible") {
-        elapsed += delta * speed;
-        pointerRef.current.x = damp(pointerRef.current.x, targetPointerRef.current.x, 7, delta);
-        pointerRef.current.y = damp(pointerRef.current.y, targetPointerRef.current.y, 7, delta);
-        uniforms.uTime.value = elapsed;
-        uniforms.uPointer.value.set(pointerRef.current.x, pointerRef.current.y);
-        renderer.render(scene, camera);
-      }
-      frame = requestAnimationFrame(render);
-    };
-    resize();
-    renderer.render(scene, camera);
-    frame = requestAnimationFrame((time) => {
-      if (disposed) return;
-      setReady(true);
-      render(time);
-    });
-    return () => {
-      disposed = true;
-      cancelAnimationFrame(frame);
-      resizeObserver.disconnect();
-      intersectionObserver.disconnect();
-      canvas.removeEventListener("webglcontextlost", contextLost);
-      geometry.dispose();
-      material.dispose();
-      renderer.dispose();
-    };
-  }, [colorSignature, colors, intensity, maxDpr, mode, prefersReducedMotion, speed]);
+  const { ready, failed } = useWebGLStage({
+    stageRef: rootRef,
+    canvasRef,
+    enabled: !prefersReducedMotion,
+    maxDpr,
+    alpha: true,
+    signature: JSON.stringify([colors, intensity, mode, speed]),
+    create: ({ renderer, markReady }) => {
+      let elapsed = 0;
+      const scene = new THREE.Scene();
+      const camera = new THREE.Camera();
+      const geometry = new THREE.PlaneGeometry(2, 2);
+      const uniforms = {
+        uTime: { value: 0 },
+        uMode: { value: MODE_VALUES[mode] },
+        uIntensity: { value: intensity },
+        uResolution: { value: new THREE.Vector2(1, 1) },
+        uPointer: { value: new THREE.Vector2(pointerRef.current.x, pointerRef.current.y) },
+        uColorA: { value: new THREE.Color(colors[0]) },
+        uColorB: { value: new THREE.Color(colors[1]) },
+        uColorC: { value: new THREE.Color(colors[2]) },
+      };
+      const material = new THREE.ShaderMaterial({ vertexShader: VERTEX_SHADER, fragmentShader: FRAGMENT_SHADER, uniforms, depthTest: false, depthWrite: false });
+      scene.add(new THREE.Mesh(geometry, material));
+      markReady();
+      return {
+        onResize: (width, height) => {
+          uniforms.uResolution.value.set(width, height);
+          renderer.render(scene, camera);
+        },
+        onFrame: (delta) => {
+          elapsed += delta * speed;
+          pointerRef.current.x = damp(pointerRef.current.x, targetPointerRef.current.x, 7, delta);
+          pointerRef.current.y = damp(pointerRef.current.y, targetPointerRef.current.y, 7, delta);
+          uniforms.uTime.value = elapsed;
+          uniforms.uPointer.value.set(pointerRef.current.x, pointerRef.current.y);
+          renderer.render(scene, camera);
+        },
+        dispose: () => {
+          geometry.dispose();
+          material.dispose();
+        },
+      };
+    },
+  });
 
   const handlePointerMove = (event: React.PointerEvent<HTMLElement>) => {
     if (event.pointerType !== "touch") {

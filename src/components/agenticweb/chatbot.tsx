@@ -7,6 +7,7 @@ import {
   MessageCircleIcon,
   SendIcon,
   SparklesIcon,
+  SquareIcon,
   XIcon,
 } from "lucide-react"
 
@@ -25,6 +26,7 @@ import {
   MessageScrollerViewport,
 } from "@/components/ui/message-scroller"
 import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
 import {
   Marker,
   MarkerContent,
@@ -126,7 +128,20 @@ export function Chatbot({
   React.useEffect(() => {
     const controller = new AbortController()
     getAwosChatConfig(controller.signal)
-      .then(setConfig)
+      .then((nextConfig) => {
+        setConfig(nextConfig)
+        if (!nextConfig) return
+        setMessages((current) => {
+          if (current.length > 0) return current
+          return [
+            {
+              id: "greeting",
+              role: "assistant",
+              content: nextConfig.welcome,
+            },
+          ]
+        })
+      })
       .catch((error: unknown) => {
         if (!(error instanceof DOMException && error.name === "AbortError")) {
           setConfig(null)
@@ -134,20 +149,6 @@ export function Chatbot({
       })
     return () => controller.abort()
   }, [])
-
-  React.useEffect(() => {
-    if (!config) return
-    setMessages((current) => {
-      if (current.length > 0) return current
-      return [
-        {
-          id: "greeting",
-          role: "assistant",
-          content: config.welcome,
-        },
-      ]
-    })
-  }, [config])
 
   React.useEffect(() => {
     try {
@@ -275,7 +276,22 @@ export function Chatbot({
         )
       }
     } catch (error) {
-      if (!(error instanceof DOMException && error.name === "AbortError")) {
+      const durationSeconds = Math.max(
+        1,
+        Math.round((window.performance.now() - startedAt) / 1000)
+      )
+      if (error instanceof DOMException && error.name === "AbortError") {
+        // Oprire manuală: păstrăm textul parțial deja transmis.
+        if (streaming) {
+          setMessages((current) =>
+            current.map((message) =>
+              message.id === assistantId
+                ? { ...message, streaming: false, durationSeconds }
+                : message
+            )
+          )
+        }
+      } else {
         setMessages((current) => [
           ...current,
           {
@@ -283,10 +299,7 @@ export function Chatbot({
             role: "assistant",
             content:
               "Nu am putut răspunde acum. Încearcă din nou în câteva momente.",
-            durationSeconds: Math.max(
-              1,
-              Math.round((window.performance.now() - startedAt) / 1000)
-            ),
+            durationSeconds,
           },
         ])
       }
@@ -390,14 +403,16 @@ export function Chatbot({
       {messages.length <= 1 && config && suggestions.length > 0 && (
         <div className="flex flex-wrap gap-2 px-4 pb-3">
           {suggestions.map((suggestion) => (
-            <button
+            <Button
               key={suggestion}
               type="button"
+              variant="outline"
+              size="sm"
               onClick={() => void send(suggestion)}
-              className="rounded-full border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
+              className="h-auto rounded-full px-3 py-1.5 text-xs font-normal text-muted-foreground hover:border-primary/40 hover:text-foreground"
             >
               {suggestion}
-            </button>
+            </Button>
           ))}
         </div>
       )}
@@ -409,7 +424,7 @@ export function Chatbot({
           void send(input)
         }}
       >
-        <textarea
+        <Textarea
           value={input}
           onChange={(event) => setInput(event.target.value)}
           onKeyDown={(event) => {
@@ -426,17 +441,30 @@ export function Chatbot({
           rows={1}
           maxLength={2000}
           placeholder="Scrie un mesaj…"
-          className="max-h-32 min-h-10 flex-1 resize-none rounded-xl border bg-background px-3 py-2 text-base outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring sm:text-sm"
+          className="max-h-32 min-h-10 flex-1 resize-none rounded-xl"
         />
-        <Button
-          type="submit"
-          size="icon"
-          disabled={!config || loading || !input.trim()}
-          aria-label="Trimite mesajul"
-          className="rounded-xl"
-        >
-          <SendIcon />
-        </Button>
+        {loading ? (
+          <Button
+            type="button"
+            size="icon"
+            variant="outline"
+            onClick={() => requestRef.current?.abort()}
+            aria-label="Oprește răspunsul"
+            className="rounded-xl"
+          >
+            <SquareIcon className="size-3.5 fill-current" />
+          </Button>
+        ) : (
+          <Button
+            type="submit"
+            size="icon"
+            disabled={!config || !input.trim()}
+            aria-label="Trimite mesajul"
+            className="rounded-xl"
+          >
+            <SendIcon />
+          </Button>
+        )}
       </form>
     </section>
   )

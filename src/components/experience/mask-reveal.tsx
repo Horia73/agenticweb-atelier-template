@@ -4,22 +4,16 @@ import * as React from "react";
 import {
   motion,
   type MotionValue,
-  useReducedMotion,
   useTransform,
 } from "motion/react";
 
 import { cn } from "@/lib/utils";
+import { usePrefersReducedMotion } from "@/components/experience/experience-runtime";
 import { useElementScrollProgress } from "@/components/experience/use-element-scroll-progress";
 import {
   type ProgressPlayback,
   useCommittedProgress,
 } from "@/components/experience/use-committed-progress";
-
-const subscribeToHydration = () => () => undefined;
-
-function useHydrated() {
-  return React.useSyncExternalStore(subscribeToHydration, () => true, () => false);
-}
 
 type MaskRevealProps = Omit<React.ComponentProps<"section">, "children"> & {
   after: React.ReactNode;
@@ -46,7 +40,12 @@ function maskValues(direction: NonNullable<MaskRevealProps["direction"]>) {
   }
 }
 
-/** Reveals one complete React visual over another with a scroll-driven mask. */
+/**
+ * Reveals one complete React visual over another with a scroll-driven mask.
+ *
+ * Accessibility: the `after` layer is rendered `aria-hidden` (purely decorative),
+ * so any unique meaning must live in `before` or `overlay` — never only in `after`.
+ */
 export function MaskReveal({
   after,
   before,
@@ -65,9 +64,7 @@ export function MaskReveal({
   ...props
 }: MaskRevealProps) {
   const rootRef = React.useRef<HTMLElement>(null);
-  const mounted = useHydrated();
-  const reducedMotionPreference = useReducedMotion();
-  const reducedMotion = mounted && Boolean(reducedMotionPreference);
+  const reducedMotion = usePrefersReducedMotion();
   const localProgress = useElementScrollProgress(rootRef);
   const sourceProgress = controlledProgress ?? localProgress;
   const progress = useCommittedProgress(sourceProgress, playback, resetKey);

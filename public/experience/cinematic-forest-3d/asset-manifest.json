@@ -1,0 +1,98 @@
+{
+  "id": "cinematic-forest-3d-v2",
+  "type": "hybrid-photogrammetric-3d-environment",
+  "license": "CC0-1.0",
+  "provider": "Poly Haven",
+  "models": [
+    {
+      "id": "fir_tree_01",
+      "sourcePage": "https://polyhaven.com/a/fir_tree_01",
+      "sourceBytes": 487358833,
+      "output": "fir-trees.glb",
+      "outputBytes": 6988832
+    },
+    {
+      "id": "tree_small_02",
+      "sourcePage": "https://polyhaven.com/a/tree_small_02",
+      "sourceBytes": 100974143,
+      "output": "broadleaf-tree.glb",
+      "outputBytes": 2552716
+    },
+    {
+      "id": "fir_sapling",
+      "sourcePage": "https://polyhaven.com/a/fir_sapling",
+      "sourceBytes": 25423602,
+      "output": "fir-saplings.glb",
+      "outputBytes": 3738728
+    },
+    {
+      "id": "fern_02",
+      "sourcePage": "https://polyhaven.com/a/fern_02",
+      "sourceBytes": 1146361,
+      "output": "ferns.glb",
+      "outputBytes": 184996
+    },
+    {
+      "id": "rock_moss_set_01",
+      "sourcePage": "https://polyhaven.com/a/rock_moss_set_01",
+      "sourceBytes": 1937065,
+      "output": "moss-rocks.glb",
+      "outputBytes": 449572
+    },
+    {
+      "id": "root_cluster_01",
+      "sourcePage": "https://polyhaven.com/a/root_cluster_01",
+      "sourceBytes": 9453108,
+      "output": "root-cluster.glb",
+      "outputBytes": 1103508
+    }
+  ],
+  "environment": {
+    "id": "forest_slope",
+    "sourcePage": "https://polyhaven.com/a/forest_slope",
+    "output": "forest-slope-4k.hdr",
+    "outputBytes": 29764886
+  },
+  "ground": {
+    "id": "forest_leaves_02",
+    "sourcePage": "https://polyhaven.com/a/forest_leaves_02",
+    "maps": [
+      {
+        "kind": "Diffuse",
+        "output": "ground-diffuse.jpg",
+        "outputBytes": 1668009
+      },
+      {
+        "kind": "nor_gl",
+        "output": "ground-normal.jpg",
+        "outputBytes": 2323898
+      },
+      {
+        "kind": "Rough",
+        "output": "ground-roughness.jpg",
+        "outputBytes": 723748
+      },
+      {
+        "kind": "Displacement",
+        "output": "ground-displacement.jpg",
+        "outputBytes": 332158
+      }
+    ]
+  },
+  "poster": "poster.webp",
+  "checksums": {
+    "fir-trees.glb": "b70038f68e6280e343f188e3c7360bd25cf27ec161d09ba4ff3017c457cc3c47",
+    "broadleaf-tree.glb": "dfc55118d2d459a93a6adaec882204f2d066c2fdcddeb849e727a098f759139d",
+    "fir-saplings.glb": "650fcdb59b5f6b4673d260ad37db41a4fd6113993a73d4dc0ad2ac71d9667b97",
+    "ferns.glb": "a71570a6bfe867fb36bf6fb9bfebb61aa5ae9fe36e538692a562aa0a005bd6ec",
+    "moss-rocks.glb": "fc7fcc429349dbbe196860cadbd5ccabddf569cf89bd3e9471b2898edc225ad5",
+    "root-cluster.glb": "1f37e1fb77e58e7b70426336077aad8ce29635a954d7bd49869f7adc57538060",
+    "forest-slope-4k.hdr": "112c4035c56e7699637ec798800edaade535cba6f3bfb8b0a602172c4ec30e52",
+    "ground-diffuse.jpg": "9c38b2b151a0415457a6914966422cfca5a546c94674442e5395e0b1e908a196",
+    "ground-normal.jpg": "af0346114834c347a8d6a138f6ea16a97b0bec8d6e4db32c24f1c7e482163235",
+    "ground-roughness.jpg": "ed2dd60a10242640b1738760015cfae85c8526a79dbf5da563fdffdf30828eae",
+    "ground-displacement.jpg": "0e3e244b3e3cfd4910762515e7d723b50abe1c7b72b456b3e39e9029eeb5defe",
+    "poster.webp": "231be899715fbd51d46092571de6d3616662c8a687dcc66260a053b89f73a1c9"
+  },
+  "pipeline": "Poly Haven source glTF/HDR/PBR → meshoptimizer GLB + WebP textures → scroll-directed R3F scene"
+}

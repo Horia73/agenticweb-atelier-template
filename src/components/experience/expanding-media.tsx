@@ -4,22 +4,16 @@ import * as React from "react";
 import {
   motion,
   type MotionValue,
-  useReducedMotion,
   useTransform,
 } from "motion/react";
 
 import { cn } from "@/lib/utils";
+import { usePrefersReducedMotion } from "@/components/experience/experience-runtime";
 import { useElementScrollProgress } from "@/components/experience/use-element-scroll-progress";
 import {
   type ProgressPlayback,
   useCommittedProgress,
 } from "@/components/experience/use-committed-progress";
-
-const subscribeToHydration = () => () => undefined;
-
-function useHydrated() {
-  return React.useSyncExternalStore(subscribeToHydration, () => true, () => false);
-}
 
 type ExpandingMediaProps = Omit<React.ComponentProps<"section">, "children"> & {
   label: string;
@@ -55,9 +49,7 @@ export function ExpandingMedia({
   ...props
 }: ExpandingMediaProps) {
   const rootRef = React.useRef<HTMLElement>(null);
-  const mounted = useHydrated();
-  const reducedMotionPreference = useReducedMotion();
-  const reducedMotion = mounted && Boolean(reducedMotionPreference);
+  const reducedMotion = usePrefersReducedMotion();
   const localProgress = useElementScrollProgress(rootRef);
   const sourceProgress = controlledProgress ?? localProgress;
   const progress = useCommittedProgress(sourceProgress, playback, resetKey);

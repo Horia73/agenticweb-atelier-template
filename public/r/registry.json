@@ -4,10 +4,59 @@
   "homepage": "https://agenticweb.ro",
   "items": [
     {
+      "name": "cinematic-forest-3d",
+      "type": "registry:component",
+      "title": "Cinematic Forest 3D · P0",
+      "description": "Real-time editable 3D world with optimized PBR geometry, terrain, HDR environment, reversible scroll camera, real depth occlusion, measured loading and poster fallbacks.",
+      "dependencies": [
+        "@react-three/drei@^10.7.7",
+        "@react-three/fiber@^9.6.1",
+        "motion@^12.42.2",
+        "three@^0.185.1"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/cinematic-forest-3d.tsx",
+          "type": "registry:component",
+          "target": "components/experience/cinematic-forest-3d.tsx"
+        },
+        {
+          "path": "src/components/experience/cinematic-3d-scene.tsx",
+          "type": "registry:component",
+          "target": "components/experience/cinematic-3d-scene.tsx"
+        },
+        {
+          "path": "src/components/experience/intro-loader.tsx",
+          "type": "registry:component",
+          "target": "components/experience/intro-loader.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "src/components/experience/use-element-scroll-progress.ts",
+          "type": "registry:hook",
+          "target": "components/experience/use-element-scroll-progress.ts"
+        },
+        {
+          "path": "scripts/build-cinematic-forest-3d.mjs",
+          "type": "registry:file",
+          "target": "scripts/build-cinematic-forest-3d.mjs"
+        },
+        {
+          "path": "docs/experience/cinematic-forest-3d.md",
+          "type": "registry:file",
+          "target": "docs/experience/cinematic-forest-3d.md"
+        }
+      ]
+    },
+    {
       "name": "depth-camera-scene",
       "type": "registry:component",
       "title": "Depth Camera Scene · P0",
-      "description": "Advanced 2.5D engine with a real PerspectiveCamera, registered raster plates, two WebGL passes, semantic DOM occlusion, reversible scroll and production fallbacks.",
+      "description": "Advanced 2.5D engine with a real PerspectiveCamera, registered or trimmed high-resolution planes, world focus-handoff effects, semantic DOM occlusion, reversible scroll and production fallbacks.",
       "dependencies": [
         "motion@^12.42.2",
         "three@^0.185.1"
@@ -32,6 +81,11 @@
           "path": "docs/experience/depth-camera-scene.md",
           "type": "registry:file",
           "target": "docs/experience/depth-camera-scene.md"
+        },
+        {
+          "path": "src/components/experience/use-webgl-stage.ts",
+          "type": "registry:lib",
+          "target": "components/experience/use-webgl-stage.ts"
         }
       ]
     },
@@ -88,6 +142,11 @@
           "path": "docs/experience/horizontal-track.md",
           "type": "registry:file",
           "target": "docs/experience/horizontal-track.md"
+        },
+        {
+          "path": "src/components/experience/use-webgl-stage.ts",
+          "type": "registry:lib",
+          "target": "components/experience/use-webgl-stage.ts"
         }
       ]
     },
@@ -124,6 +183,11 @@
           "path": "docs/experience/spatial-product-stage.md",
           "type": "registry:file",
           "target": "docs/experience/spatial-product-stage.md"
+        },
+        {
+          "path": "src/components/experience/use-webgl-stage.ts",
+          "type": "registry:lib",
+          "target": "components/experience/use-webgl-stage.ts"
         }
       ]
     },
@@ -172,6 +236,11 @@
           "path": "docs/experience/shader-field.md",
           "type": "registry:file",
           "target": "docs/experience/shader-field.md"
+        },
+        {
+          "path": "src/components/experience/use-webgl-stage.ts",
+          "type": "registry:lib",
+          "target": "components/experience/use-webgl-stage.ts"
         }
       ]
     },
@@ -198,6 +267,11 @@
           "path": "docs/experience/media-portal.md",
           "type": "registry:file",
           "target": "docs/experience/media-portal.md"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
         }
       ]
     },
@@ -231,6 +305,11 @@
           "path": "docs/experience/spatial-gallery.md",
           "type": "registry:file",
           "target": "docs/experience/spatial-gallery.md"
+        },
+        {
+          "path": "src/components/experience/use-webgl-stage.ts",
+          "type": "registry:lib",
+          "target": "components/experience/use-webgl-stage.ts"
         }
       ]
     },
@@ -263,6 +342,11 @@
           "path": "docs/experience/mesh-transition.md",
           "type": "registry:file",
           "target": "docs/experience/mesh-transition.md"
+        },
+        {
+          "path": "src/components/experience/use-webgl-stage.ts",
+          "type": "registry:lib",
+          "target": "components/experience/use-webgl-stage.ts"
         }
       ]
     },
@@ -289,6 +373,11 @@
           "path": "docs/experience/scroll-depth-scene.md",
           "type": "registry:file",
           "target": "docs/experience/scroll-depth-scene.md"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
         }
       ]
     },
@@ -310,6 +399,11 @@
           "path": "docs/experience/cursor-lens.md",
           "type": "registry:file",
           "target": "docs/experience/cursor-lens.md"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
         }
       ]
     },
@@ -328,6 +422,11 @@
           "path": "docs/experience/sticky-story.md",
           "type": "registry:file",
           "target": "docs/experience/sticky-story.md"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
         }
       ]
     },
@@ -364,6 +463,11 @@
           "path": "docs/experience/horizontal-track.md",
           "type": "registry:file",
           "target": "docs/experience/horizontal-track.md"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
         }
       ]
     },
@@ -385,6 +489,11 @@
           "path": "docs/experience/horizontal-track.md",
           "type": "registry:file",
           "target": "docs/experience/horizontal-track.md"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
         }
       ]
     },
@@ -411,6 +520,11 @@
           "path": "docs/experience/image-sequence-scrub.md",
           "type": "registry:file",
           "target": "docs/experience/image-sequence-scrub.md"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
         }
       ]
     },
@@ -442,6 +556,11 @@
           "path": "docs/experience/mask-reveal.md",
           "type": "registry:file",
           "target": "docs/experience/mask-reveal.md"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
         }
       ]
     },
@@ -468,6 +587,11 @@
           "path": "docs/experience/kinetic-type.md",
           "type": "registry:file",
           "target": "docs/experience/kinetic-type.md"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
         }
       ]
     },
@@ -520,6 +644,11 @@
           "path": "docs/experience/expanding-media.md",
           "type": "registry:file",
           "target": "docs/experience/expanding-media.md"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
         }
       ]
     },
@@ -546,6 +675,11 @@
           "path": "docs/experience/depth-gallery.md",
           "type": "registry:file",
           "target": "docs/experience/depth-gallery.md"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
         }
       ]
     },
@@ -567,6 +701,845 @@
           "path": "docs/experience/cursor-magnetic.md",
           "type": "registry:file",
           "target": "docs/experience/cursor-magnetic.md"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        }
+      ]
+    },
+    {
+      "name": "refractive-glass",
+      "type": "registry:component",
+      "title": "True Refractive Glass",
+      "description": "Image-aware WebGL lens with editable geometry, refraction, magnification and chromatic edge, plus static touch and reduced-motion behavior.",
+      "dependencies": [
+        "motion@^12.42.2",
+        "three@^0.185.1"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/refractive-glass.tsx",
+          "type": "registry:component",
+          "target": "components/experience/refractive-glass.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "docs/experience/refractive-glass.md",
+          "type": "registry:file",
+          "target": "docs/experience/refractive-glass.md"
+        },
+        {
+          "path": "src/components/experience/use-webgl-stage.ts",
+          "type": "registry:lib",
+          "target": "components/experience/use-webgl-stage.ts"
+        }
+      ]
+    },
+    {
+      "name": "product-orbit",
+      "type": "registry:component",
+      "title": "GLB Product Orbit",
+      "description": "GLB-ready Three.js product viewer with drag and keyboard rotation, physical materials, projected semantic hotspots and production fallbacks.",
+      "dependencies": [
+        "motion@^12.42.2",
+        "three@^0.185.1"
+      ],
+      "registryDependencies": [
+        "button"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/product-orbit.tsx",
+          "type": "registry:component",
+          "target": "components/experience/product-orbit.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "docs/experience/product-orbit.md",
+          "type": "registry:file",
+          "target": "docs/experience/product-orbit.md"
+        },
+        {
+          "path": "src/components/experience/use-webgl-stage.ts",
+          "type": "registry:lib",
+          "target": "components/experience/use-webgl-stage.ts"
+        }
+      ]
+    },
+    {
+      "name": "particle-assembly",
+      "type": "registry:component",
+      "title": "Particle Assembly",
+      "description": "Image-matte point cloud that morphs between an editable scattered state and a recognizable target using scroll, hover or controlled progress.",
+      "dependencies": [
+        "motion@^12.42.2",
+        "three@^0.185.1"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/particle-assembly.tsx",
+          "type": "registry:component",
+          "target": "components/experience/particle-assembly.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "src/components/experience/use-element-scroll-progress.ts",
+          "type": "registry:hook",
+          "target": "components/experience/use-element-scroll-progress.ts"
+        },
+        {
+          "path": "docs/experience/particle-assembly.md",
+          "type": "registry:file",
+          "target": "docs/experience/particle-assembly.md"
+        },
+        {
+          "path": "src/components/experience/use-webgl-stage.ts",
+          "type": "registry:lib",
+          "target": "components/experience/use-webgl-stage.ts"
+        }
+      ]
+    },
+    {
+      "name": "typography-depth-tunnel",
+      "type": "registry:component",
+      "title": "Typography Depth Tunnel",
+      "description": "Semantic CSS 3D typography sequence with scroll or controlled progress and a linear narrow-screen and reduced-motion result.",
+      "dependencies": [
+        "motion@^12.42.2"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/typography-depth-tunnel.tsx",
+          "type": "registry:component",
+          "target": "components/experience/typography-depth-tunnel.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "src/components/experience/use-element-scroll-progress.ts",
+          "type": "registry:hook",
+          "target": "components/experience/use-element-scroll-progress.ts"
+        },
+        {
+          "path": "docs/experience/typography-depth-tunnel.md",
+          "type": "registry:file",
+          "target": "docs/experience/typography-depth-tunnel.md"
+        }
+      ]
+    },
+    {
+      "name": "spatial-canvas",
+      "type": "registry:component",
+      "title": "Infinite Spatial Canvas",
+      "description": "Semantic pan-and-zoom world for non-linear archives with drag, keyboard and explicit controls while preserving native page-wheel behavior.",
+      "dependencies": [
+        "lucide-react@^1.24.0",
+        "motion@^12.42.2"
+      ],
+      "registryDependencies": [
+        "button"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/spatial-canvas.tsx",
+          "type": "registry:component",
+          "target": "components/experience/spatial-canvas.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "docs/experience/spatial-canvas.md",
+          "type": "registry:file",
+          "target": "docs/experience/spatial-canvas.md"
+        }
+      ]
+    },
+    {
+      "name": "volumetric-light-stage",
+      "type": "registry:component",
+      "title": "Volumetric Light Stage",
+      "description": "Image-backed procedural light shafts and haze with three editable emitters, bounded pointer influence and a production WebGL lifecycle.",
+      "dependencies": [
+        "motion@^12.42.2",
+        "three@^0.185.1"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/volumetric-light-stage.tsx",
+          "type": "registry:component",
+          "target": "components/experience/volumetric-light-stage.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "docs/experience/volumetric-light-stage.md",
+          "type": "registry:file",
+          "target": "docs/experience/volumetric-light-stage.md"
+        },
+        {
+          "path": "src/components/experience/use-webgl-stage.ts",
+          "type": "registry:lib",
+          "target": "components/experience/use-webgl-stage.ts"
+        }
+      ]
+    },
+    {
+      "name": "slice-recompose",
+      "type": "registry:component",
+      "title": "Slice & Recompose",
+      "description": "High-resolution source rebuilt from editable image strips with scroll, hover or external progress and a fully assembled reduced-motion state.",
+      "dependencies": [
+        "motion@^12.42.2"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/slice-recompose.tsx",
+          "type": "registry:component",
+          "target": "components/experience/slice-recompose.tsx"
+        },
+        {
+          "path": "src/components/experience/use-element-scroll-progress.ts",
+          "type": "registry:hook",
+          "target": "components/experience/use-element-scroll-progress.ts"
+        },
+        {
+          "path": "docs/experience/slice-recompose.md",
+          "type": "registry:file",
+          "target": "docs/experience/slice-recompose.md"
+        }
+      ]
+    },
+    {
+      "name": "film-strip-3d",
+      "type": "registry:component",
+      "title": "3D Film Strip",
+      "description": "Continuous CSS 3D film strip with several visible frames, one scroll-driven focus point and a native mobile/reduced-motion rail.",
+      "dependencies": [
+        "motion@^12.42.2"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/film-strip-3d.tsx",
+          "type": "registry:component",
+          "target": "components/experience/film-strip-3d.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "src/components/experience/use-element-scroll-progress.ts",
+          "type": "registry:hook",
+          "target": "components/experience/use-element-scroll-progress.ts"
+        },
+        {
+          "path": "docs/experience/film-strip-3d.md",
+          "type": "registry:file",
+          "target": "docs/experience/film-strip-3d.md"
+        }
+      ]
+    },
+    {
+      "name": "elastic-image-grid",
+      "type": "registry:component",
+      "title": "Elastic Image Grid",
+      "description": "Semantic responsive grid with a bounded fine-pointer spring field and static coarse-pointer and reduced-motion behavior.",
+      "dependencies": [
+        "motion@^12.42.2"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/elastic-image-grid.tsx",
+          "type": "registry:component",
+          "target": "components/experience/elastic-image-grid.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "docs/experience/elastic-image-grid.md",
+          "type": "registry:file",
+          "target": "docs/experience/elastic-image-grid.md"
+        }
+      ]
+    },
+    {
+      "name": "fluid-surface",
+      "type": "registry:component",
+      "title": "Fluid Surface Cursor",
+      "description": "Image-aware WebGL surface with dissipating pointer impulses, native cursor preservation, DPR cap, offscreen pause and static fallbacks.",
+      "dependencies": [
+        "motion@^12.42.2",
+        "three@^0.185.1"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/fluid-surface.tsx",
+          "type": "registry:component",
+          "target": "components/experience/fluid-surface.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "docs/experience/fluid-surface.md",
+          "type": "registry:file",
+          "target": "docs/experience/fluid-surface.md"
+        },
+        {
+          "path": "src/components/experience/use-webgl-stage.ts",
+          "type": "registry:lib",
+          "target": "components/experience/use-webgl-stage.ts"
+        }
+      ]
+    },
+    {
+      "name": "scene-handoff",
+      "type": "registry:component",
+      "title": "Scene Handoff",
+      "description": "Continuous reversible transition between two live React scenes with depth, shutter and iris variants and a linear reduced-motion result.",
+      "dependencies": [
+        "motion@^12.42.2"
+      ],
+      "files": [
+        {
+          "path": "src/components/experience/scene-handoff.tsx",
+          "type": "registry:component",
+          "target": "components/experience/scene-handoff.tsx"
+        },
+        {
+          "path": "src/components/experience/use-element-scroll-progress.ts",
+          "type": "registry:hook",
+          "target": "components/experience/use-element-scroll-progress.ts"
+        },
+        {
+          "path": "docs/experience/scene-handoff.md",
+          "type": "registry:file",
+          "target": "docs/experience/scene-handoff.md"
+        }
+      ]
+    },
+    {
+      "name": "shared-element-zoom",
+      "type": "registry:component",
+      "title": "Shared Element Zoom",
+      "description": "Grid-to-detail shared-element morph with dialog semantics, focus management, scroll lock and a reduced-motion fade.",
+      "files": [
+        {
+          "path": "src/components/experience/shared-element-zoom.tsx",
+          "type": "registry:component",
+          "target": "components/experience/shared-element-zoom.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "docs/experience/shared-element-zoom.md",
+          "type": "registry:file",
+          "target": "docs/experience/shared-element-zoom.md"
+        }
+      ],
+      "dependencies": [
+        "motion@^12.42.2"
+      ]
+    },
+    {
+      "name": "draw-on-scroll",
+      "type": "registry:component",
+      "title": "Draw On Scroll",
+      "description": "Scroll-driven stroke drawing for inline SVG shapes with stagger control, pinned or viewport progress and a fully drawn reduced-motion state.",
+      "files": [
+        {
+          "path": "src/components/experience/draw-on-scroll.tsx",
+          "type": "registry:component",
+          "target": "components/experience/draw-on-scroll.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "src/components/experience/use-element-scroll-progress.ts",
+          "type": "registry:lib",
+          "target": "components/experience/use-element-scroll-progress.ts"
+        },
+        {
+          "path": "docs/experience/draw-on-scroll.md",
+          "type": "registry:file",
+          "target": "docs/experience/draw-on-scroll.md"
+        }
+      ],
+      "dependencies": [
+        "motion@^12.42.2"
+      ]
+    },
+    {
+      "name": "marquee-velocity",
+      "type": "registry:component",
+      "title": "Marquee Velocity",
+      "description": "Infinite marquee whose speed and direction react to scroll velocity, with seamless measurement, offscreen pause and a static reduced-motion strip.",
+      "files": [
+        {
+          "path": "src/components/experience/marquee-velocity.tsx",
+          "type": "registry:component",
+          "target": "components/experience/marquee-velocity.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "docs/experience/marquee-velocity.md",
+          "type": "registry:file",
+          "target": "docs/experience/marquee-velocity.md"
+        }
+      ]
+    },
+    {
+      "name": "variable-font-axis",
+      "type": "registry:component",
+      "title": "Variable Font Axis",
+      "description": "Variable-font axes driven by pointer proximity or scroll; real selectable text, cached measurements and an idle-stopping animation loop.",
+      "files": [
+        {
+          "path": "src/components/experience/variable-font-axis.tsx",
+          "type": "registry:component",
+          "target": "components/experience/variable-font-axis.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "src/components/experience/use-element-scroll-progress.ts",
+          "type": "registry:lib",
+          "target": "components/experience/use-element-scroll-progress.ts"
+        },
+        {
+          "path": "docs/experience/variable-font-axis.md",
+          "type": "registry:file",
+          "target": "docs/experience/variable-font-axis.md"
+        }
+      ],
+      "dependencies": [
+        "motion@^12.42.2"
+      ]
+    },
+    {
+      "name": "image-trail",
+      "type": "registry:component",
+      "title": "Image Trail",
+      "description": "Decaying pointer trail of image cards from a fixed WAAPI pool; decorative-only, with touch and reduced-motion rendering content statically.",
+      "files": [
+        {
+          "path": "src/components/experience/image-trail.tsx",
+          "type": "registry:component",
+          "target": "components/experience/image-trail.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "docs/experience/image-trail.md",
+          "type": "registry:file",
+          "target": "docs/experience/image-trail.md"
+        }
+      ]
+    },
+    {
+      "name": "route-transition",
+      "type": "registry:component",
+      "title": "Route Transition",
+      "description": "View Transitions API helpers for Next App Router: transition-wrapped navigation, shared element names and circular theme wipes, all with graceful fallback.",
+      "files": [
+        {
+          "path": "src/components/experience/route-transition.tsx",
+          "type": "registry:component",
+          "target": "components/experience/route-transition.tsx"
+        },
+        {
+          "path": "docs/experience/route-transition.md",
+          "type": "registry:file",
+          "target": "docs/experience/route-transition.md"
+        }
+      ]
+    },
+    {
+      "name": "distortion-carousel",
+      "type": "registry:component",
+      "title": "Distortion Carousel",
+      "description": "Draggable WebGL image carousel with momentum, snap and velocity-driven bend/chromatic distortion; native snap rail on reduced motion or WebGL failure.",
+      "files": [
+        {
+          "path": "src/components/experience/distortion-carousel.tsx",
+          "type": "registry:component",
+          "target": "components/experience/distortion-carousel.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "src/components/experience/use-webgl-stage.ts",
+          "type": "registry:lib",
+          "target": "components/experience/use-webgl-stage.ts"
+        },
+        {
+          "path": "docs/experience/distortion-carousel.md",
+          "type": "registry:file",
+          "target": "docs/experience/distortion-carousel.md"
+        }
+      ],
+      "dependencies": [
+        "three@^0.185.1"
+      ]
+    },
+    {
+      "name": "portal-crossing",
+      "type": "registry:component",
+      "title": "Portal Crossing",
+      "description": "A 3D portal into another world: an irregular, depth-undulating rim tube — textured half with the origin world, half with the destination — rushes forward from far in the deep on scroll, its stencil aperture reveals the second world, and a scroll-only dolly crosses the threshold into DOM arrival content.",
+      "files": [
+        {
+          "path": "src/components/experience/portal-crossing.tsx",
+          "type": "registry:component",
+          "target": "components/experience/portal-crossing.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "src/components/experience/use-element-scroll-progress.ts",
+          "type": "registry:lib",
+          "target": "components/experience/use-element-scroll-progress.ts"
+        },
+        {
+          "path": "src/components/experience/use-webgl-stage.ts",
+          "type": "registry:lib",
+          "target": "components/experience/use-webgl-stage.ts"
+        },
+        {
+          "path": "docs/experience/portal-crossing.md",
+          "type": "registry:file",
+          "target": "docs/experience/portal-crossing.md"
+        }
+      ],
+      "dependencies": [
+        "motion@^12.42.2",
+        "three@^0.185.1"
+      ]
+    },
+    {
+      "name": "physics-playground",
+      "type": "registry:component",
+      "title": "Physics Playground",
+      "description": "Dependency-free 2D physics stage: items drop with gravity, collide, and can be grabbed and tossed; sleeps at rest and pauses offscreen.",
+      "files": [
+        {
+          "path": "src/components/experience/physics-playground.tsx",
+          "type": "registry:component",
+          "target": "components/experience/physics-playground.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "docs/experience/physics-playground.md",
+          "type": "registry:file",
+          "target": "docs/experience/physics-playground.md"
+        }
+      ]
+    },
+    {
+      "name": "holo-card",
+      "type": "registry:component",
+      "title": "Holo Card",
+      "description": "Trading-card holographic tilt: damped 3D pointer tracking with rainbow foil and glare sweeps; fully static on touch and reduced motion.",
+      "files": [
+        {
+          "path": "src/components/experience/holo-card.tsx",
+          "type": "registry:component",
+          "target": "components/experience/holo-card.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "docs/experience/holo-card.md",
+          "type": "registry:file",
+          "target": "docs/experience/holo-card.md"
+        }
+      ]
+    },
+    {
+      "name": "reveal-stagger",
+      "type": "registry:component",
+      "title": "Reveal Stagger",
+      "description": "Viewport-entry choreography: staggered fade/rise/blur/clip/zoom items plus masked word/character text reveals; server markup and reduced motion render final state.",
+      "files": [
+        {
+          "path": "src/components/experience/reveal-stagger.tsx",
+          "type": "registry:component",
+          "target": "components/experience/reveal-stagger.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "docs/experience/reveal-stagger.md",
+          "type": "registry:file",
+          "target": "docs/experience/reveal-stagger.md"
+        }
+      ]
+    },
+    {
+      "name": "count-up",
+      "type": "registry:component",
+      "title": "Count-Up",
+      "description": "Viewport-triggered stat counter with Intl formatting, reserved layout, animated value changes and an instant final value for reduced motion and no-JS.",
+      "files": [
+        {
+          "path": "src/components/experience/count-up.tsx",
+          "type": "registry:component",
+          "target": "components/experience/count-up.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "docs/experience/count-up.md",
+          "type": "registry:file",
+          "target": "docs/experience/count-up.md"
+        }
+      ]
+    },
+    {
+      "name": "hover-preview-list",
+      "type": "registry:component",
+      "title": "Hover Preview List",
+      "description": "Editorial index list with a cursor-following media panel: damped follow, velocity tilt, crossfade between rows, keyboard anchoring and inline previews on touch.",
+      "files": [
+        {
+          "path": "src/components/experience/hover-preview-list.tsx",
+          "type": "registry:component",
+          "target": "components/experience/hover-preview-list.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "docs/experience/hover-preview-list.md",
+          "type": "registry:file",
+          "target": "docs/experience/hover-preview-list.md"
+        }
+      ]
+    },
+    {
+      "name": "text-scramble",
+      "type": "registry:component",
+      "title": "Text Scramble",
+      "description": "Terminal-style decode: characters resolve left-to-right through a glyph pool, with visible/hover/load triggers and phrase cycling; real text stays the accessible name.",
+      "files": [
+        {
+          "path": "src/components/experience/text-scramble.tsx",
+          "type": "registry:component",
+          "target": "components/experience/text-scramble.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "docs/experience/text-scramble.md",
+          "type": "registry:file",
+          "target": "docs/experience/text-scramble.md"
+        }
+      ]
+    },
+    {
+      "name": "spotlight-grid",
+      "type": "registry:component",
+      "title": "Spotlight Grid",
+      "description": "Cursor-lit bento cards: one pointer field drives per-card border rings and interior glows via CSS variables; static resting state on touch and reduced motion.",
+      "files": [
+        {
+          "path": "src/components/experience/spotlight-grid.tsx",
+          "type": "registry:component",
+          "target": "components/experience/spotlight-grid.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "docs/experience/spotlight-grid.md",
+          "type": "registry:file",
+          "target": "docs/experience/spotlight-grid.md"
+        }
+      ]
+    },
+    {
+      "name": "scroll-stack",
+      "type": "registry:component",
+      "title": "Scroll Stack",
+      "description": "Stacking cards: each card pins near the viewport top while the next slides over it, scaling and dimming the covered one; reversible and measurement-driven, plain list on reduced motion.",
+      "files": [
+        {
+          "path": "src/components/experience/scroll-stack.tsx",
+          "type": "registry:component",
+          "target": "components/experience/scroll-stack.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "docs/experience/scroll-stack.md",
+          "type": "registry:file",
+          "target": "docs/experience/scroll-stack.md"
+        }
+      ]
+    },
+    {
+      "name": "knockout-text",
+      "type": "registry:component",
+      "title": "Knockout Text",
+      "description": "Pinned four-beat knockout sequence: dark stage, type rises in, letters become transparent windows over a fixed image via SVG mask, then zoom through the letters into a full-bleed takeover; fully reversible.",
+      "files": [
+        {
+          "path": "src/components/experience/knockout-text.tsx",
+          "type": "registry:component",
+          "target": "components/experience/knockout-text.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "docs/experience/knockout-text.md",
+          "type": "registry:file",
+          "target": "docs/experience/knockout-text.md"
+        }
+      ]
+    },
+    {
+      "name": "intro-loader",
+      "type": "registry:component",
+      "title": "Intro Loader",
+      "description": "Once-per-session intro or controlled loading screen: counter tied to document readiness or external progress, active-gated hold, curtain exit, scroll lock and pre-paint skip for repeat visits and reduced motion.",
+      "files": [
+        {
+          "path": "src/components/experience/intro-loader.tsx",
+          "type": "registry:component",
+          "target": "components/experience/intro-loader.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "docs/experience/intro-loader.md",
+          "type": "registry:file",
+          "target": "docs/experience/intro-loader.md"
+        }
+      ]
+    },
+    {
+      "name": "ambient-particles",
+      "type": "registry:component",
+      "title": "Ambient Particles",
+      "description": "Decorative canvas atmosphere (dust, snow, embers, fireflies): soft glow sprites over three depth bands with coherent wind gusts, edge fade, resize reprojection, area-scaled caps and offscreen pause.",
+      "files": [
+        {
+          "path": "src/components/experience/ambient-particles.tsx",
+          "type": "registry:component",
+          "target": "components/experience/ambient-particles.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "docs/experience/ambient-particles.md",
+          "type": "registry:file",
+          "target": "docs/experience/ambient-particles.md"
+        }
+      ]
+    },
+    {
+      "name": "split-flap",
+      "type": "registry:component",
+      "title": "Split-Flap",
+      "description": "Split-flap departure board derived entirely from timestamps: glyph-wheel flips with column stagger on reveal and text change, shrink-to-fit sizing, tile styling; static text on reduced motion.",
+      "files": [
+        {
+          "path": "src/components/experience/split-flap.tsx",
+          "type": "registry:component",
+          "target": "components/experience/split-flap.tsx"
+        },
+        {
+          "path": "src/components/experience/experience-runtime.ts",
+          "type": "registry:lib",
+          "target": "components/experience/experience-runtime.ts"
+        },
+        {
+          "path": "docs/experience/split-flap.md",
+          "type": "registry:file",
+          "target": "docs/experience/split-flap.md"
         }
       ]
     }

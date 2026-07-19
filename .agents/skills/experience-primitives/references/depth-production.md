@@ -65,6 +65,19 @@ ImageGen can be asked for transparency, but verify the actual alpha channel. A c
 
 Create the mobile stack from one shared mobile crop so every plate remains registered. Deliver posters, dimensions, anchors, rights, bytes and a manifest for both desktop and mobile.
 
+## Focus-handoff magnification
+
+Use this advanced variant when the brief needs a zoom that would exceed the useful resolution of one wide plate:
+
+1. Lock a wide `world A` and identify a physically credible focal occluder already belonging to it (tree, column, product, rock, fabric edge). Do not invent a floating transition object.
+2. Generate that opaque occluder and any near-frame occluders as dedicated high-resolution removable-background sources. Remove chroma locally, inspect the real alpha channel and reject every background-contaminated matte.
+3. Keep the textures trimmed. Record normalized `{ x, y, width, height }` against the master canvas and use `DepthCameraLayer.bounds` plus `canvasAspect`; do not ship mostly-transparent 4K canvases.
+4. Create `world B` with matching lens, crop, light direction and persistent upper structure while intentionally changing the lower landscape. Extract the continuous sky/canopy/ceiling as an unblurred `persistentBackdrop`.
+5. Limit real camera magnification to the range the world plates can support. Scale the dedicated focal texture through the camera, blur only the back pass, crossfade A → B at maximum occlusion, then clear blur before new semantic copy appears.
+6. On reverse scroll, the exact sequence reverses: copy withdraws, world B blurs, the occluder returns, A is restored and the wide composition reassembles. Do not use sticky one-way state for this mechanic.
+
+Reject the handoff if the world swap is visible in open space, the persistent layer changes exposure, the close texture softens, text overlaps across beats, or any trimmed plane contains duplicated background.
+
 When the clean plate is an ImageGen edit of the approved master, derive complex plates with a registered difference matte constrained to explicit regions. Use proportional alpha and edge unmatting against the clean plate for antialiased boundaries; binary thresholds around dark rock, glass or fine edges create bright halos. Render alpha plates losslessly (or prove the chosen codec on a contrasting background), keep a defocused/extended opaque bleed under moving layers and save both the zero-transform composite and per-plate contrast checks.
 
 For simple opaque isolated objects, ImageGen may generate against a perfectly flat removable chroma background followed by local matte removal. Do not use chroma for glass, smoke, hair, reflections, soft shadows or surface contact; derive those from the registered composite or use dedicated/native matting.

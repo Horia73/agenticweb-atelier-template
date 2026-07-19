@@ -40,6 +40,12 @@ export type CinematicWorldSceneProps = Omit<
   rearNarrative?: React.ReactNode | ((progress: MotionValue<number>) => React.ReactNode);
   frontNarrative?: React.ReactNode | ((progress: MotionValue<number>) => React.ReactNode);
   layers: DepthCameraLayer[];
+  /** Accessible name for the catalog region that owns ArrowLeft/ArrowRight frame navigation. */
+  catalogRegionLabel?: string;
+  /** Aria label for the previous-frame button. */
+  previousFrameLabel?: string;
+  /** Aria label for the next-frame button. */
+  nextFrameLabel?: string;
 };
 
 function resolveNarrative(
@@ -60,9 +66,9 @@ function CinematicBackOverlay({
 }) {
   const introOpacity = useTransform(progress, [0, 0.08, 0.19, 0.27], [1, 1, 0.45, 0]);
   const introY = useTransform(progress, [0, 0.27], [0, -110]);
-  const narrativeOpacity = useTransform(progress, [0.18, 0.28, 0.42, 0.52], [0, 1, 1, 0]);
-  const narrativeY = useTransform(progress, [0.18, 0.33, 0.52], [140, 0, -150]);
-  const narrativeScale = useTransform(progress, [0.18, 0.4, 0.52], [0.9, 1.06, 1.18]);
+  const narrativeOpacity = useTransform(progress, [0.14, 0.21, 0.33, 0.43], [0, 1, 1, 0]);
+  const narrativeY = useTransform(progress, [0.14, 0.28, 0.43], [110, 0, -120]);
+  const narrativeScale = useTransform(progress, [0.14, 0.33, 0.43], [0.94, 1.03, 1.1]);
   return (
     <>
       <motion.div className="absolute inset-0" style={{ opacity: introOpacity, y: introY }}>
@@ -82,13 +88,19 @@ function CinematicBackOverlay({
 
 function CinematicFrontOverlay({
   catalog,
+  catalogRegionLabel,
   chrome,
   narrative,
+  nextFrameLabel,
+  previousFrameLabel,
   progress,
 }: {
   catalog: CinematicWorldCatalog;
+  catalogRegionLabel: string;
   chrome?: React.ReactNode;
   narrative?: CinematicWorldSceneProps["frontNarrative"];
+  nextFrameLabel: string;
+  previousFrameLabel: string;
   progress: MotionValue<number>;
 }) {
   const target = useMotionValue(0);
@@ -98,12 +110,12 @@ function CinematicFrontOverlay({
   const [activeIndex, setActiveIndex] = React.useState(0);
   const [catalogInteractive, setCatalogInteractive] = React.useState(false);
   const chromeOpacity = useTransform(progress, [0.52, 0.66], [1, 0]);
-  const narrativeOpacity = useTransform(progress, [0.43, 0.54, 0.67, 0.76], [0, 1, 1, 0]);
-  const narrativeY = useTransform(progress, [0.43, 0.58, 0.76], [90, 0, -110]);
-  const catalogOpacity = useTransform(progress, [0.74, 0.84, 0.92], [0, 0.76, 1]);
-  const catalogY = useTransform(progress, [0.74, 0.92], ["18vh", "0vh"]);
-  const catalogScale = useTransform(progress, [0.74, 0.92], [0.94, 1]);
-  const scrimOpacity = useTransform(progress, [0.7, 0.91], [0, 0.84]);
+  const narrativeOpacity = useTransform(progress, [0.7, 0.75, 0.82, 0.88], [0, 1, 1, 0]);
+  const narrativeY = useTransform(progress, [0.7, 0.77, 0.88], [70, 0, -80]);
+  const catalogOpacity = useTransform(progress, [0.88, 0.95, 1], [0, 0.76, 1]);
+  const catalogY = useTransform(progress, [0.88, 1], ["14vh", "0vh"]);
+  const catalogScale = useTransform(progress, [0.88, 1], [0.96, 1]);
+  const scrimOpacity = useTransform(progress, [0.87, 0.99], [0, 0.84]);
 
   useMotionValueEvent(progress, "change", (value) => {
     const interactive = value >= 0.9;
@@ -119,6 +131,18 @@ function CinematicFrontOverlay({
     const resolved = Math.max(0, Math.min(lastIndex, nextIndex));
     setActiveIndex(resolved);
     target.set(lastIndex === 0 ? 0 : resolved / lastIndex);
+  };
+
+  const handleCatalogKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!catalogInteractive) return;
+    if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      goTo(activeIndex - 1);
+    }
+    if (event.key === "ArrowRight") {
+      event.preventDefault();
+      goTo(activeIndex + 1);
+    }
   };
 
   return (
@@ -140,6 +164,10 @@ function CinematicFrontOverlay({
       />
       <motion.div
         aria-hidden={!catalogInteractive}
+        role="group"
+        aria-label={catalogRegionLabel}
+        tabIndex={catalogInteractive ? 0 : undefined}
+        onKeyDown={handleCatalogKeyDown}
         data-cinematic-catalog
         className={cn(
           "absolute inset-0 z-30 flex flex-col overflow-hidden pb-6 pt-24 text-white",
@@ -159,10 +187,10 @@ function CinematicFrontOverlay({
             </div>
           </div>
           <div className="flex shrink-0 gap-2">
-            <Button type="button" variant="outline" size="icon" className="rounded-full border-white/20 bg-black/15 text-white backdrop-blur-md hover:bg-white hover:text-black" aria-label="Cadrul anterior" disabled={!catalogInteractive || activeIndex === 0} onClick={() => goTo(activeIndex - 1)}>
+            <Button type="button" variant="outline" size="icon" className="rounded-full border-white/20 bg-black/15 text-white backdrop-blur-md hover:bg-white hover:text-black" aria-label={previousFrameLabel} tabIndex={catalogInteractive ? undefined : -1} disabled={!catalogInteractive || activeIndex === 0} onClick={() => goTo(activeIndex - 1)}>
               <ArrowLeft aria-hidden />
             </Button>
-            <Button type="button" variant="outline" size="icon" className="rounded-full border-white/20 bg-black/15 text-white backdrop-blur-md hover:bg-white hover:text-black" aria-label="Cadrul următor" disabled={!catalogInteractive || catalog.items.length <= 1 || activeIndex === catalog.items.length - 1} onClick={() => goTo(activeIndex + 1)}>
+            <Button type="button" variant="outline" size="icon" className="rounded-full border-white/20 bg-black/15 text-white backdrop-blur-md hover:bg-white hover:text-black" aria-label={nextFrameLabel} tabIndex={catalogInteractive ? undefined : -1} disabled={!catalogInteractive || catalog.items.length <= 1 || activeIndex === catalog.items.length - 1} onClick={() => goTo(activeIndex + 1)}>
               <ArrowRight aria-hidden />
             </Button>
           </div>
@@ -180,9 +208,12 @@ function CinematicFrontOverlay({
 /** A composed Advanced recipe. Use `DepthCameraScene` directly for custom timelines. */
 export function CinematicWorldScene({
   catalog,
+  catalogRegionLabel = "Frame catalog",
   chrome,
   frontNarrative,
   intro,
+  nextFrameLabel = "Next frame",
+  previousFrameLabel = "Previous frame",
   rearNarrative,
   ...props
 }: CinematicWorldSceneProps) {
@@ -193,7 +224,15 @@ export function CinematicWorldScene({
         <CinematicBackOverlay intro={intro} narrative={rearNarrative} progress={progress} />
       )}
       frontOverlay={(progress) => (
-        <CinematicFrontOverlay catalog={catalog} chrome={chrome} narrative={frontNarrative} progress={progress} />
+        <CinematicFrontOverlay
+          catalog={catalog}
+          catalogRegionLabel={catalogRegionLabel}
+          chrome={chrome}
+          narrative={frontNarrative}
+          nextFrameLabel={nextFrameLabel}
+          previousFrameLabel={previousFrameLabel}
+          progress={progress}
+        />
       )}
     />
   );

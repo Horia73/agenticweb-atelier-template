@@ -33,5 +33,14 @@
   },
   "preview": {
     "distDirEnv": "NEXT_DIST_DIR"
+  },
+  "agenticwebApps": {
+    "environment": ["NEXT_PUBLIC_AWOS_SITE_KEY", "NEXT_PUBLIC_AWOS_URL"],
+    "components": {
+      "chatbot": "src/components/agenticweb/chatbot.tsx",
+      "booking": "src/components/agenticweb/booking-widget.tsx",
+      "restaurantMenu": "src/components/agenticweb/restaurant-menu.tsx",
+      "hotelBooking": "src/components/agenticweb/hotel-booking.tsx"
+    }
   }
 }

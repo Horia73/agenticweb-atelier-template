@@ -17,19 +17,23 @@ export function useElementScrollProgress(
     const element = target.current;
     if (!element) return;
     let frame = 0;
+    const measure = () => {
+      const rect = element.getBoundingClientRect();
+      const travel = Math.max(1, element.offsetHeight - window.innerHeight);
+      progress.set(Math.max(0, Math.min(1, -rect.top / travel)));
+    };
     const update = () => {
       cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
-        const rect = element.getBoundingClientRect();
-        const travel = Math.max(1, element.offsetHeight - window.innerHeight);
-        progress.set(Math.max(0, Math.min(1, -rect.top / travel)));
-      });
+      frame = requestAnimationFrame(measure);
     };
     const resizeObserver = new ResizeObserver(update);
     resizeObserver.observe(element);
     window.addEventListener("scroll", update, { passive: true });
     window.addEventListener("resize", update, { passive: true });
-    update();
+    // Synchronous first measurement: consumers that render a bootstrap frame
+    // before the first animation frame (e.g. a restored scroll position in a
+    // background tab) already see the true progress.
+    measure();
     return () => {
       cancelAnimationFrame(frame);
       resizeObserver.disconnect();

@@ -1,12 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { type MotionValue, useMotionValue, useReducedMotion } from "motion/react";
+import { type MotionValue, useMotionValue } from "motion/react";
 import * as THREE from "three";
 
 import { cn } from "@/lib/utils";
-import { damp, supportsWebGL, useHydrated } from "@/components/experience/experience-runtime";
+import { damp, usePrefersReducedMotion } from "@/components/experience/experience-runtime";
 import { useElementScrollProgress } from "@/components/experience/use-element-scroll-progress";
+import { useWebGLStage } from "@/components/experience/use-webgl-stage";
 
 export type MeshTransitionProps = Omit<React.ComponentProps<"section">, "children"> & {
   label: string;
@@ -18,6 +19,8 @@ export type MeshTransitionProps = Omit<React.ComponentProps<"section">, "childre
   scrollScreens?: number;
   intensity?: number;
   maxDpr?: number;
+  /** Screen-reader description of the transition; defaults to "{from.alt}. Transitions to: {to.alt}.". */
+  announcement?: string;
   overlay?: React.ReactNode | ((progress: MotionValue<number>) => React.ReactNode);
   fallback?: React.ReactNode;
   stageClassName?: string;
@@ -130,6 +133,7 @@ function renderOverlay(overlay: MeshTransitionProps["overlay"], progress: Motion
 
 /** GPU image-to-image transition with reversible scroll, hover or controlled playback. */
 export function MeshTransition({
+  announcement,
   className,
   fallback,
   from,
@@ -152,123 +156,109 @@ export function MeshTransition({
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const pointerRef = React.useRef({ x: 0.5, y: 0.5 });
   const targetPointerRef = React.useRef({ x: 0.5, y: 0.5 });
-  const activeRef = React.useRef(true);
   const hoverProgress = useMotionValue(0);
   const visibleProgress = useMotionValue(0);
   const scrollProgress = useElementScrollProgress(rootRef);
   const source = trigger === "controlled" && controlledProgress ? controlledProgress : trigger === "hover" ? hoverProgress : scrollProgress;
-  const reducedMotion = useReducedMotion();
-  const hydrated = useHydrated();
-  const [ready, setReady] = React.useState(false);
-  const [failed, setFailed] = React.useState(false);
-  const prefersReducedMotion = hydrated && Boolean(reducedMotion);
+  const sourceRef = React.useRef(source);
+  React.useInsertionEffect(() => {
+    sourceRef.current = source;
+  });
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const resolvedAnnouncement = announcement ?? `${from.alt}. Transitions to: ${to.alt}.`;
 
-  React.useEffect(() => {
-    const stage = stageRef.current;
-    const canvas = canvasRef.current;
-    if (!stage || !canvas || prefersReducedMotion) return;
-    if (!supportsWebGL()) {
-      const fallbackTimer = window.setTimeout(() => setFailed(true), 0);
-      return () => window.clearTimeout(fallbackTimer);
-    }
-    let disposed = false;
-    let frame = 0;
-    let previous = performance.now();
-    let smoothed = source.get();
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 10);
-    camera.position.z = 3.35;
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, maxDpr));
-    const loader = new THREE.TextureLoader();
-    const uniforms = {
-      uFrom: { value: null as THREE.Texture | null },
-      uTo: { value: null as THREE.Texture | null },
-      uResolution: { value: new THREE.Vector2(1, 1) },
-      uFromSize: { value: new THREE.Vector2(1, 1) },
-      uToSize: { value: new THREE.Vector2(1, 1) },
-      uPointer: { value: new THREE.Vector2(0.5, 0.5) },
-      uProgress: { value: source.get() },
-      uMode: { value: mode === "wave" ? 0 : mode === "fold" ? 1 : 2 },
-      uIntensity: { value: intensity },
-    };
-    const geometry = new THREE.PlaneGeometry(2, 2, 80, 80);
-    const material = new THREE.ShaderMaterial({ vertexShader: VERTEX_SHADER, fragmentShader: FRAGMENT_SHADER, uniforms, side: THREE.DoubleSide });
-    const mesh = new THREE.Mesh(geometry, material);
-    scene.add(mesh);
+  const { ready, failed } = useWebGLStage({
+    stageRef,
+    canvasRef,
+    enabled: !prefersReducedMotion,
+    maxDpr,
+    antialias: true,
+    signature: JSON.stringify([from.src, intensity, mode, to.src]),
+    create: ({ renderer, markReady, markFailed, isDisposed, requestResize }) => {
+      let smoothed = sourceRef.current.get();
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 10);
+      camera.position.z = 3.35;
+      const loader = new THREE.TextureLoader();
+      const uniforms = {
+        uFrom: { value: null as THREE.Texture | null },
+        uTo: { value: null as THREE.Texture | null },
+        uResolution: { value: new THREE.Vector2(1, 1) },
+        uFromSize: { value: new THREE.Vector2(1, 1) },
+        uToSize: { value: new THREE.Vector2(1, 1) },
+        uPointer: { value: new THREE.Vector2(0.5, 0.5) },
+        uProgress: { value: smoothed },
+        uMode: { value: mode === "wave" ? 0 : mode === "fold" ? 1 : 2 },
+        uIntensity: { value: intensity },
+      };
+      const geometry = new THREE.PlaneGeometry(2, 2, 80, 80);
+      const material = new THREE.ShaderMaterial({ vertexShader: VERTEX_SHADER, fragmentShader: FRAGMENT_SHADER, uniforms, side: THREE.DoubleSide });
+      const mesh = new THREE.Mesh(geometry, material);
+      scene.add(mesh);
 
-    const load = Promise.all([loader.loadAsync(from.src), loader.loadAsync(to.src)]).then(([fromTexture, toTexture]) => {
-      [fromTexture, toTexture].forEach((texture) => {
-        texture.colorSpace = THREE.SRGBColorSpace;
-        texture.minFilter = THREE.LinearMipmapLinearFilter;
-        texture.magFilter = THREE.LinearFilter;
-      });
-      const fromImage = fromTexture.image as HTMLImageElement;
-      const toImage = toTexture.image as HTMLImageElement;
-      uniforms.uFrom.value = fromTexture;
-      uniforms.uTo.value = toTexture;
-      uniforms.uFromSize.value.set(fromImage.naturalWidth, fromImage.naturalHeight);
-      uniforms.uToSize.value.set(toImage.naturalWidth, toImage.naturalHeight);
-    });
-    const resize = () => {
-      const width = Math.max(1, stage.clientWidth);
-      const height = Math.max(1, stage.clientHeight);
-      const textureDprCap = Math.min(
-        uniforms.uFromSize.value.x / width,
-        uniforms.uFromSize.value.y / height,
-        uniforms.uToSize.value.x / width,
-        uniforms.uToSize.value.y / height,
-      );
-      renderer.setPixelRatio(Math.max(0.75, Math.min(window.devicePixelRatio || 1, maxDpr, textureDprCap)));
-      renderer.setSize(width, height, false);
-      camera.aspect = width / height;
-      camera.updateProjectionMatrix();
-      const viewHeight = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.position.z;
-      mesh.scale.set(viewHeight * camera.aspect / 2 * 1.12, viewHeight / 2 * 1.12, 1);
-      uniforms.uResolution.value.set(width, height);
-    };
-    const resizeObserver = new ResizeObserver(resize);
-    resizeObserver.observe(stage);
-    const intersectionObserver = new IntersectionObserver(([entry]) => { activeRef.current = Boolean(entry?.isIntersecting); }, { rootMargin: "20% 0px" });
-    intersectionObserver.observe(stage);
-    const contextLost = (event: Event) => { event.preventDefault(); if (!disposed) setFailed(true); };
-    canvas.addEventListener("webglcontextlost", contextLost);
-    const render = (time: number) => {
-      if (disposed) return;
-      const delta = Math.min(0.05, Math.max(0.001, (time - previous) / 1000));
-      previous = time;
-      if (activeRef.current && document.visibilityState === "visible") {
-        smoothed = damp(smoothed, source.get(), 11, delta);
-        visibleProgress.set(smoothed);
-        pointerRef.current.x = damp(pointerRef.current.x, targetPointerRef.current.x, 7, delta);
-        pointerRef.current.y = damp(pointerRef.current.y, targetPointerRef.current.y, 7, delta);
-        uniforms.uProgress.value = smoothed;
-        uniforms.uPointer.value.set(pointerRef.current.x, pointerRef.current.y);
-        renderer.render(scene, camera);
-      }
-      frame = requestAnimationFrame(render);
-    };
-    load.then(() => {
-      if (disposed) return;
-      resize();
-      renderer.render(scene, camera);
-      setReady(true);
-      frame = requestAnimationFrame(render);
-    }).catch(() => setFailed(true));
-    return () => {
-      disposed = true;
-      cancelAnimationFrame(frame);
-      resizeObserver.disconnect();
-      intersectionObserver.disconnect();
-      canvas.removeEventListener("webglcontextlost", contextLost);
-      geometry.dispose();
-      material.dispose();
-      uniforms.uFrom.value?.dispose();
-      uniforms.uTo.value?.dispose();
-      renderer.dispose();
-    };
-  }, [from.src, intensity, maxDpr, mode, prefersReducedMotion, source, to.src, visibleProgress]);
+      Promise.all([loader.loadAsync(from.src), loader.loadAsync(to.src)])
+        .then(([fromTexture, toTexture]) => {
+          if (isDisposed()) {
+            fromTexture.dispose();
+            toTexture.dispose();
+            return;
+          }
+          const anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+          [fromTexture, toTexture].forEach((texture) => {
+            texture.colorSpace = THREE.SRGBColorSpace;
+            // generateMipmaps stays at its default (true); on WebGL1, non-power-of-two
+            // sources silently fall back to linear (non-mipmapped) filtering.
+            texture.minFilter = THREE.LinearMipmapLinearFilter;
+            texture.magFilter = THREE.LinearFilter;
+            texture.anisotropy = anisotropy;
+          });
+          const fromImage = fromTexture.image as HTMLImageElement;
+          const toImage = toTexture.image as HTMLImageElement;
+          uniforms.uFrom.value = fromTexture;
+          uniforms.uTo.value = toTexture;
+          uniforms.uFromSize.value.set(fromImage.naturalWidth, fromImage.naturalHeight);
+          uniforms.uToSize.value.set(toImage.naturalWidth, toImage.naturalHeight);
+          requestResize();
+          markReady();
+        })
+        .catch(() => markFailed());
+
+      return {
+        getDpr: (width, height) => Math.max(
+          0.75,
+          Math.min(
+            uniforms.uFromSize.value.x / width,
+            uniforms.uFromSize.value.y / height,
+            uniforms.uToSize.value.x / width,
+            uniforms.uToSize.value.y / height,
+          ),
+        ),
+        onResize: (width, height) => {
+          camera.aspect = width / height;
+          camera.updateProjectionMatrix();
+          const viewHeight = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.position.z;
+          mesh.scale.set(viewHeight * camera.aspect / 2 * 1.12, viewHeight / 2 * 1.12, 1);
+          uniforms.uResolution.value.set(width, height);
+          renderer.render(scene, camera);
+        },
+        onFrame: (delta) => {
+          smoothed = damp(smoothed, sourceRef.current.get(), 11, delta);
+          visibleProgress.set(smoothed);
+          pointerRef.current.x = damp(pointerRef.current.x, targetPointerRef.current.x, 7, delta);
+          pointerRef.current.y = damp(pointerRef.current.y, targetPointerRef.current.y, 7, delta);
+          uniforms.uProgress.value = smoothed;
+          uniforms.uPointer.value.set(pointerRef.current.x, pointerRef.current.y);
+          renderer.render(scene, camera);
+        },
+        dispose: () => {
+          geometry.dispose();
+          material.dispose();
+          uniforms.uFrom.value?.dispose();
+          uniforms.uTo.value?.dispose();
+        },
+      };
+    },
+  });
 
   const handlePointerMove = (event: React.PointerEvent<HTMLElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -293,7 +283,7 @@ export function MeshTransition({
   const scrollDriven = trigger !== "hover";
   return (
     <section ref={rootRef} aria-label={label} data-mesh-transition data-mode={mode} data-trigger={trigger} data-ready={ready || undefined} data-fallback={failed || undefined} className={cn("relative isolate", className)} style={{ minHeight: scrollDriven ? `${Math.max(1, scrollScreens) * 100}svh` : "100svh" }} onPointerEnter={() => hoverProgress.set(1)} onPointerMove={handlePointerMove} onPointerLeave={handlePointerLeave} {...props}>
-      <span className="sr-only">{from.alt}. Tranziție către: {to.alt}.</span>
+      <span className="sr-only">{resolvedAnnouncement}</span>
       <div ref={stageRef} className={cn(scrollDriven ? "sticky top-0" : "relative", "h-svh overflow-hidden bg-black", stageClassName)}>
         <canvas ref={canvasRef} aria-hidden className={cn("absolute inset-0 size-full transition-opacity duration-500", ready && !failed ? "opacity-100" : "opacity-0")} />
         {failed ? <div className="absolute inset-0">{fallback ?? (

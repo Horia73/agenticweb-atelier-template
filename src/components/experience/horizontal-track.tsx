@@ -4,6 +4,7 @@ import * as React from "react";
 import { motion, type MotionValue, useTransform } from "motion/react";
 
 import { cn } from "@/lib/utils";
+import { clamp01 } from "@/components/experience/experience-runtime";
 
 export type HorizontalTrackMetrics = {
   distance: number;
@@ -20,6 +21,8 @@ export type HorizontalTrackProps = Omit<React.ComponentProps<"div">, "children">
   progress: MotionValue<number>;
   progressClassName?: string;
   progressIndicatorClassName?: string;
+  /** Custom item counter, e.g. `(current, total) => \`${current} of ${total}\``. Defaults to "2 / 5". */
+  renderCounter?: (current: number, total: number) => React.ReactNode;
   showProgress?: boolean;
   trackClassName?: string;
 };
@@ -45,6 +48,7 @@ export function HorizontalTrack({
   progress,
   progressClassName,
   progressIndicatorClassName,
+  renderCounter,
   showProgress = true,
   style,
   trackClassName,
@@ -61,7 +65,7 @@ export function HorizontalTrack({
   const items = React.Children.toArray(children);
   const [distance, setDistance] = React.useState(0);
   const x = useTransform(progress, [0, 1], [0, -distance], { clamp: true });
-  const progressScale = useTransform(progress, (value) => Math.max(0, Math.min(1, value)));
+  const progressScale = useTransform(progress, (value) => clamp01(value));
 
   React.useEffect(() => {
     const viewport = viewportRef.current;
@@ -112,15 +116,20 @@ export function HorizontalTrack({
           const resolvedItemClassName = typeof itemClassName === "function"
             ? itemClassName(index)
             : itemClassName;
+          const counter = renderCounter?.(index + 1, items.length) ?? `${index + 1} / ${items.length}`;
+          const counterLabel = typeof counter === "string" || typeof counter === "number"
+            ? String(counter)
+            : undefined;
 
           return (
             <div
               key={key}
               role="listitem"
-              aria-label={`${index + 1} din ${items.length}`}
+              aria-label={counterLabel}
               data-horizontal-track-item={index}
               className={cn("w-[min(82vw,62rem)] shrink-0", resolvedItemClassName)}
             >
+              {counterLabel === undefined ? <span className="sr-only">{counter}</span> : null}
               {child}
             </div>
           );

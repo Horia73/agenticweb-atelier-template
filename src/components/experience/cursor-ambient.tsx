@@ -5,12 +5,15 @@ import {
   motion,
   useMotionTemplate,
   useMotionValue,
-  useReducedMotion,
   useSpring,
   useTransform,
 } from "motion/react";
 
 import { cn } from "@/lib/utils";
+import {
+  useFinePointer,
+  usePrefersReducedMotion,
+} from "@/components/experience/experience-runtime";
 
 type CursorAmbientProps = Omit<React.ComponentProps<"div">, "children"> & {
   base: React.ReactNode;
@@ -52,17 +55,28 @@ export function CursorAmbient({
   const ringX = useTransform(smoothX, (value) => value - lensSize / 2);
   const ringY = useTransform(smoothY, (value) => value - lensSize / 2);
   const clipPath = useMotionTemplate`circle(${smoothRadius}px at ${smoothX}px ${smoothY}px)`;
-  const prefersReducedMotion = Boolean(useReducedMotion());
-  const [finePointer, setFinePointer] = React.useState(false);
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const finePointer = useFinePointer();
   const [activeLabel, setActiveLabel] = React.useState(cursorLabel);
+  // rAF-coalesced label lookup: the `.closest` walk runs at most once per frame.
+  const labelLookupRef = React.useRef({ frame: 0, target: null as HTMLElement | null });
 
   React.useEffect(() => {
-    const query = window.matchMedia("(pointer: fine)");
-    const update = () => setFinePointer(query.matches);
-    update();
-    query.addEventListener("change", update);
-    return () => query.removeEventListener("change", update);
+    const labelLookup = labelLookupRef.current;
+    return () => cancelAnimationFrame(labelLookup.frame);
   }, []);
+
+  const scheduleLabelUpdate = (target: HTMLElement) => {
+    const labelLookup = labelLookupRef.current;
+    labelLookup.target = target;
+    if (labelLookup.frame) return;
+    labelLookup.frame = requestAnimationFrame(() => {
+      labelLookup.frame = 0;
+      const hit = labelLookup.target?.closest<HTMLElement>("[data-cursor-label]");
+      const next = hit?.dataset.cursorLabel || cursorLabel;
+      setActiveLabel((current) => (current === next ? current : next));
+    });
+  };
 
   const canFollow = finePointer && !prefersReducedMotion;
   const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -72,8 +86,7 @@ export function CursorAmbient({
       y.set(event.clientY - rect.top);
       radius.set(lensSize / 2);
       opacity.set(1);
-      const target = (event.target as HTMLElement).closest<HTMLElement>("[data-cursor-label]");
-      setActiveLabel(target?.dataset.cursorLabel || cursorLabel);
+      scheduleLabelUpdate(event.target as HTMLElement);
     }
     onPointerMove?.(event);
   };
@@ -88,8 +101,12 @@ export function CursorAmbient({
     onPointerEnter?.(event);
   };
   const handlePointerLeave = (event: React.PointerEvent<HTMLDivElement>) => {
+    const labelLookup = labelLookupRef.current;
     radius.set(0);
     opacity.set(0);
+    cancelAnimationFrame(labelLookup.frame);
+    labelLookup.frame = 0;
+    labelLookup.target = null;
     setActiveLabel(cursorLabel);
     onPointerLeave?.(event);
   };

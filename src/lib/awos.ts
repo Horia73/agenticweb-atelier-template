@@ -1,5 +1,8 @@
 const AWOS_URL =
-  process.env.NEXT_PUBLIC_AWOS_URL ?? "https://os.agenticweb.ro"
+  process.env.NEXT_PUBLIC_AWOS_URL ??
+  (process.env.NODE_ENV === "development"
+    ? "http://localhost:3107"
+    : "https://os.agenticweb.ro")
 const SITE_KEY = process.env.NEXT_PUBLIC_AWOS_SITE_KEY ?? ""
 
 export type AwosChatConfig = {
@@ -18,6 +21,13 @@ function requireSiteKey() {
     throw new Error("NEXT_PUBLIC_AWOS_SITE_KEY lipsește")
   }
   return SITE_KEY
+}
+
+export function awosEmbedUrl(
+  application: "booking" | "menu" | "stay",
+  siteKey = requireSiteKey()
+) {
+  return `${AWOS_URL.replace(/\/$/, "")}/embed/${application}/${encodeURIComponent(siteKey)}?embed=1`
 }
 
 function visitorId(): string | null {
@@ -73,6 +83,99 @@ export function awosTrack(name: string) {
   } catch {
     // Analytics-ul nu are voie să blocheze conversația.
   }
+}
+
+export type AwosLeadInput = {
+  name: string
+  email?: string
+  phone?: string
+  message?: string
+  source?: string
+}
+
+export async function awosLead(
+  input: AwosLeadInput,
+  signal?: AbortSignal
+): Promise<void> {
+  const response = await fetch(`${AWOS_URL}/api/embed/v1/lead`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      key: requireSiteKey(),
+      ...input,
+      page: location.pathname,
+      visitorId: visitorId() ?? undefined,
+    }),
+    signal,
+  })
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as {
+      error?: string
+    } | null
+    throw new Error(payload?.error ?? `lead_failed:${response.status}`)
+  }
+}
+
+export type AwosReview = {
+  id: string
+  author: string
+  rating: number | null
+  text: string
+  date: string | null
+}
+
+function normalizeReview(raw: unknown, index: number): AwosReview | null {
+  if (!raw || typeof raw !== "object") return null
+  const entry = raw as Record<string, unknown>
+  const text =
+    typeof entry.text === "string"
+      ? entry.text
+      : typeof entry.message === "string"
+        ? entry.message
+        : ""
+  if (!text.trim()) return null
+  const rating =
+    typeof entry.rating === "number"
+      ? Math.max(0, Math.min(5, entry.rating))
+      : null
+  return {
+    id: typeof entry.id === "string" ? entry.id : `review-${index}`,
+    author:
+      typeof entry.author === "string"
+        ? entry.author
+        : typeof entry.name === "string"
+          ? entry.name
+          : "Client",
+    rating,
+    text: text.trim(),
+    date:
+      typeof entry.date === "string"
+        ? entry.date
+        : typeof entry.createdAt === "string"
+          ? entry.createdAt
+          : null,
+  }
+}
+
+export async function getAwosReviews(
+  signal?: AbortSignal
+): Promise<AwosReview[]> {
+  const response = await fetch(
+    `${AWOS_URL}/api/embed/v1/review?key=${encodeURIComponent(requireSiteKey())}`,
+    { signal }
+  )
+  if (!response.ok) throw new Error(`reviews_failed:${response.status}`)
+  const payload = (await response.json()) as unknown
+  const rawList = Array.isArray(payload)
+    ? payload
+    : payload && typeof payload === "object"
+      ? ((payload as { reviews?: unknown[]; items?: unknown[] }).reviews ??
+        (payload as { items?: unknown[] }).items ??
+        [])
+      : []
+  return rawList
+    .map((entry, index) => normalizeReview(entry, index))
+    .filter((review): review is AwosReview => review !== null)
 }
 
 export async function awosChat(options: {

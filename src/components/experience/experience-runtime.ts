@@ -21,6 +21,25 @@ export function useMediaQuery(query: string, serverValue = false) {
   return React.useSyncExternalStore(subscribe, getSnapshot, () => serverValue);
 }
 
+/**
+ * Hydration-safe reduced-motion preference: false on the server and during
+ * hydration, then live. Replaces the repeated `mounted && useReducedMotion()`
+ * pattern.
+ */
+export function usePrefersReducedMotion() {
+  return useMediaQuery("(prefers-reduced-motion: reduce)");
+}
+
+/** True on touch-first devices; use to swap pointer effects for static or rail modes. */
+export function useCoarsePointer() {
+  return useMediaQuery("(pointer: coarse)");
+}
+
+/** True only when a hover-capable precise pointer is present. */
+export function useFinePointer() {
+  return useMediaQuery("(hover: hover) and (pointer: fine)");
+}
+
 export function clamp01(value: number) {
   return Math.min(1, Math.max(0, value));
 }
@@ -33,12 +52,22 @@ export function damp(current: number, target: number, smoothing: number, deltaSe
   return mix(current, target, 1 - Math.exp(-Math.max(0.01, smoothing) * deltaSeconds));
 }
 
+/** Returns the frames sorted by `at`, reusing the input when it is already ordered. */
+export function sortKeyframes<T extends { at: number }>(frames: T[]): T[] {
+  for (let index = 1; index < frames.length; index += 1) {
+    if (frames[index - 1]!.at > frames[index]!.at) {
+      return [...frames].sort((left, right) => left.at - right.at);
+    }
+  }
+  return frames;
+}
+
 export function resolveKeyframes<T extends { at: number }>(
   frames: T[],
   progress: number,
 ): { from: T; to: T; mix: number } {
   if (frames.length === 0) throw new Error("Experience keyframes cannot be empty.");
-  const sorted = [...frames].sort((left, right) => left.at - right.at);
+  const sorted = sortKeyframes(frames);
   if (progress <= sorted[0]!.at) return { from: sorted[0]!, to: sorted[0]!, mix: 0 };
   for (let index = 0; index < sorted.length - 1; index += 1) {
     const from = sorted[index]!;

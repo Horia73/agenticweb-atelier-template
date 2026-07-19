@@ -1,6 +1,6 @@
 # ShaderField
 
-`ShaderField` este o suprafață WebGL bounded pentru atmosferă reactivă. Oferă patru baze — `aurora`, `metaballs`, `contour`, `caustic` — dar copy-ul, dimensiunea, compoziția și culorile sunt ale proiectului.
+`ShaderField` este o suprafață WebGL bounded pentru atmosferă reactivă. Oferă cinci baze — `aurora`, `metaballs`, `contour`, `caustic`, `halftone` — dar copy-ul, dimensiunea, compoziția și culorile sunt ale proiectului.
 
 ## Instalare
 
@@ -31,6 +31,7 @@ npx shadcn@latest add ./public/r/shader-field.json
 - `metaballs`: produs experimental, cultură, tech sau tranziții organice.
 - `contour`: date, topografie, arhitectură și identități mai precise.
 - `caustic`: lumină lichidă, materiale premium, hospitality și produse în care lumina trebuie să pară substanță, nu gradient decorativ.
+- `halftone`: raster duotone de inspirație print — un câmp de luminanță procedural eșantionat printr-o grilă de puncte rotită, care se umflă sub pointer; pentru identități editoriale, poster și direcții retro-print.
 
 Nu folosi shader-ul ca decor generic în fiecare secțiune. Alege-l când mișcarea exprimă o proprietate a brandului și când fallback-ul static păstrează aceeași ierarhie.
 

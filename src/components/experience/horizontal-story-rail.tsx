@@ -4,7 +4,6 @@ import * as React from "react";
 import {
   type MotionValue,
   type SpringOptions,
-  useReducedMotion,
   useSpring,
 } from "motion/react";
 
@@ -14,13 +13,8 @@ import {
   type HorizontalTrackProps,
 } from "@/components/experience/horizontal-track";
 import { cn } from "@/lib/utils";
+import { usePrefersReducedMotion } from "@/components/experience/experience-runtime";
 import { useElementScrollProgress } from "@/components/experience/use-element-scroll-progress";
-
-const subscribeToHydration = () => () => undefined;
-
-function useHydrated() {
-  return React.useSyncExternalStore(subscribeToHydration, () => true, () => false);
-}
 
 export type HorizontalStoryRailProps = Omit<React.ComponentProps<"section">, "children"> & {
   children: React.ReactNode;
@@ -30,6 +24,7 @@ export type HorizontalStoryRailProps = Omit<React.ComponentProps<"section">, "ch
   trackClassName?: string;
   showProgress?: boolean;
   progress?: MotionValue<number>;
+  renderCounter?: HorizontalTrackProps["renderCounter"];
   scrollSpring?: false | SpringOptions;
 };
 
@@ -49,6 +44,7 @@ export function HorizontalStoryRail({
   itemClassName,
   label,
   progress: controlledProgress,
+  renderCounter,
   scrollSpring = false,
   showProgress = true,
   stageClassName,
@@ -58,10 +54,8 @@ export function HorizontalStoryRail({
 }: HorizontalStoryRailProps) {
   const sectionRef = React.useRef<HTMLElement>(null);
   const items = React.Children.toArray(children);
-  const reducedMotionPreference = useReducedMotion();
-  const mounted = useHydrated();
   const [metrics, setMetrics] = React.useState({ distance: 0, viewportHeight: 0 });
-  const prefersReducedMotion = mounted && Boolean(reducedMotionPreference);
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   const scrollYProgress = useElementScrollProgress(sectionRef);
   const smoothedProgress = useSpring(scrollYProgress, scrollSpring || DEFAULT_SCROLL_SPRING);
@@ -80,16 +74,23 @@ export function HorizontalStoryRail({
         {...props}
       >
         <div role="list" className={cn("grid gap-4 py-8", trackClassName)}>
-          {items.map((child, index) => (
-            <div
-              key={React.isValidElement(child) && child.key != null ? child.key : index}
-              role="listitem"
-              aria-label={`${index + 1} din ${items.length}`}
-              className={typeof itemClassName === "function" ? itemClassName(index) : itemClassName}
-            >
-              {child}
-            </div>
-          ))}
+          {items.map((child, index) => {
+            const counter = renderCounter?.(index + 1, items.length) ?? `${index + 1} / ${items.length}`;
+            const counterLabel = typeof counter === "string" || typeof counter === "number"
+              ? String(counter)
+              : undefined;
+            return (
+              <div
+                key={React.isValidElement(child) && child.key != null ? child.key : index}
+                role="listitem"
+                aria-label={counterLabel}
+                className={typeof itemClassName === "function" ? itemClassName(index) : itemClassName}
+              >
+                {counterLabel === undefined ? <span className="sr-only">{counter}</span> : null}
+                {child}
+              </div>
+            );
+          })}
         </div>
       </section>
     );
@@ -114,6 +115,7 @@ export function HorizontalStoryRail({
           label={label}
           progress={progress}
           itemClassName={itemClassName}
+          renderCounter={renderCounter}
           trackClassName={trackClassName}
           showProgress={showProgress}
           onMetricsChange={handleMetricsChange}

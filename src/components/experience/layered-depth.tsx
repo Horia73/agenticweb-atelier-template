@@ -7,32 +7,16 @@ import {
   type SpringOptions,
   useMotionValue,
   useMotionValueEvent,
-  useReducedMotion,
   useSpring,
   useTransform,
 } from "motion/react";
 
 import { cn } from "@/lib/utils";
+import {
+  useMediaQuery,
+  usePrefersReducedMotion,
+} from "@/components/experience/experience-runtime";
 import { useElementScrollProgress } from "@/components/experience/use-element-scroll-progress";
-
-const subscribeToHydration = () => () => undefined;
-
-function useHydrated() {
-  return React.useSyncExternalStore(subscribeToHydration, () => true, () => false);
-}
-
-function useMediaQuery(query: string) {
-  const subscribe = React.useCallback(
-    (onChange: () => void) => {
-      const media = window.matchMedia(query);
-      media.addEventListener("change", onChange);
-      return () => media.removeEventListener("change", onChange);
-    },
-    [query],
-  );
-  const getSnapshot = React.useCallback(() => window.matchMedia(query).matches, [query]);
-  return React.useSyncExternalStore(subscribe, getSnapshot, () => false);
-}
 
 type TimelineValue = number | string;
 
@@ -355,10 +339,8 @@ export function LayeredDepthScene({
   const rawPointerY = useMotionValue(0);
   const pointerX = useSpring(rawPointerX, pointerSpring);
   const pointerY = useSpring(rawPointerY, pointerSpring);
-  const reducedMotionPreference = useReducedMotion();
-  const mounted = useHydrated();
   const mobile = useMediaQuery(`(max-width: ${mobileBreakpoint - 0.02}px)`);
-  const prefersReducedMotion = mounted && Boolean(reducedMotionPreference);
+  const prefersReducedMotion = usePrefersReducedMotion();
   const scrollYProgress = useElementScrollProgress(rootRef);
   const smoothedProgress = useSpring(scrollYProgress, scrollSpring || DEFAULT_SCROLL_SPRING);
   const sceneProgress = controlledProgress ?? (scrollSpring === false ? scrollYProgress : smoothedProgress);

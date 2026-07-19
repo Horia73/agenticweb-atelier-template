@@ -2,8 +2,8 @@
 
 import * as React from "react";
 import { Boxes, Combine } from "lucide-react";
-import { useReducedMotion } from "motion/react";
 import * as THREE from "three";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 import { Button } from "@/components/ui/button";
@@ -12,11 +12,11 @@ import {
   clamp01,
   damp,
   mix,
-  supportsWebGL,
-  useHydrated,
   useMediaQuery,
+  usePrefersReducedMotion,
 } from "@/components/experience/experience-runtime";
 import { useElementScrollProgress } from "@/components/experience/use-element-scroll-progress";
+import { useWebGLStage } from "@/components/experience/use-webgl-stage";
 
 type Vector3Tuple = [number, number, number];
 
@@ -25,6 +25,33 @@ export type SpatialProductTransform = {
   rotation?: Vector3Tuple;
   scale?: number | Vector3Tuple;
 };
+
+export type SpatialProductImageAnchor = {
+  /** Target point as fractions of the source image ([0,0] top-left → [1,1] bottom-right). */
+  point: [number, number];
+  /** Natural aspect ratio (width / height) of the `visual` image. */
+  imageAspect: number;
+  /** CSS object-position of the cover fit, as fractions; defaults to [0.5, 0.5]. */
+  objectPosition?: [number, number];
+  /** Scale the product with the image zoom so it tracks the subject size; default true. */
+  scaleWithImage?: boolean;
+};
+
+/**
+ * Replays the CSS object-cover crop: returns where an image-space point lands in
+ * viewport fractions, plus the image zoom relative to a height-fit (≥ 1).
+ */
+function projectImageAnchor(anchor: SpatialProductImageAnchor, viewAspect: number): { fraction: [number, number]; zoom: number } {
+  const { imageAspect, objectPosition = [0.5, 0.5], point } = anchor;
+  const zoom = Math.max(viewAspect / imageAspect, 1);
+  const renderedWidth = imageAspect * zoom;
+  const offsetX = (viewAspect - renderedWidth) * objectPosition[0];
+  const offsetY = (1 - zoom) * objectPosition[1];
+  return {
+    fraction: [(offsetX + point[0] * renderedWidth) / Math.max(0.0001, viewAspect), offsetY + point[1] * zoom],
+    zoom,
+  };
+}
 
 export type SpatialProductGeometry =
   | { type: "plane"; size: [number, number] }
@@ -77,11 +104,30 @@ export type SpatialProductStageProps = Omit<React.ComponentProps<"section">, "ch
   cameraPosition?: Vector3Tuple;
   groupPosition?: Vector3Tuple;
   mobileGroupPosition?: Vector3Tuple;
+  /**
+   * Viewport-fraction anchor ([0,0] top-left → [1,1] bottom-right) the group's origin
+   * projects to at every aspect ratio. When set, it overrides the x/y of
+   * `groupPosition` (z is kept as depth) so the product assembles at the same
+   * screen spot regardless of window shape. Also becomes the default hover anchor.
+   */
+  groupAnchor?: [number, number];
+  mobileGroupAnchor?: [number, number];
+  /**
+   * Anchors the group to a point of the cover-fit `visual` image instead of the
+   * viewport: the component replays the CSS object-cover crop for the current
+   * aspect ratio, so the product assembles on the same image feature (e.g. a
+   * face) no matter the window shape, and scales with the image zoom.
+   * Takes precedence over `groupAnchor`.
+   */
+  imageAnchor?: SpatialProductImageAnchor;
+  mobileImageAnchor?: SpatialProductImageAnchor;
   groupScale?: number;
   hoverAnchor?: [number, number];
   hoverRadius?: number;
   assembledLabel?: string;
   explodedLabel?: string;
+  /** Generate a PMREM room environment so transmission and metal materials pick up reflections. */
+  environment?: boolean;
   idleVisibility?: "exploded" | "hidden";
   stageClassName?: string;
   showControl?: boolean;
@@ -111,6 +157,11 @@ const DEFAULT_MOBILE_GROUP_POSITION: Vector3Tuple = [0, -0.5, 0];
 const EMPTY_PARTS: SpatialProductPart[] = [];
 const EMPTY_MODEL_PARTS: SpatialProductModelPart[] = [];
 const DEFAULT_HOVER_ANCHOR: [number, number] = [0.5, 0.5];
+
+// Scratch instances reused by interpolateTransform so the per-part frame loop stays allocation-free.
+const SCRATCH_EULER = new THREE.Euler();
+const SCRATCH_FROM_QUATERNION = new THREE.Quaternion();
+const SCRATCH_TO_QUATERNION = new THREE.Quaternion();
 
 function normalizeScale(scale: SpatialProductTransform["scale"]): Vector3Tuple {
   if (Array.isArray(scale)) return scale;
@@ -189,9 +240,9 @@ function interpolateTransform(record: PartRecord, progress: number) {
     mix(exploded.position[1], assembled.position[1], amount),
     mix(exploded.position[2], assembled.position[2], amount),
   );
-  const fromQuaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(...exploded.rotation));
-  const toQuaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(...assembled.rotation));
-  object.quaternion.slerpQuaternions(fromQuaternion, toQuaternion, amount);
+  SCRATCH_FROM_QUATERNION.setFromEuler(SCRATCH_EULER.set(...exploded.rotation));
+  SCRATCH_TO_QUATERNION.setFromEuler(SCRATCH_EULER.set(...assembled.rotation));
+  object.quaternion.slerpQuaternions(SCRATCH_FROM_QUATERNION, SCRATCH_TO_QUATERNION, amount);
   object.scale.set(
     mix(exploded.scale[0], assembled.scale[0], amount),
     mix(exploded.scale[1], assembled.scale[1], amount),
@@ -242,15 +293,20 @@ function disposeObject(object: THREE.Object3D) {
  * or both; consumers own the art direction and every part transform.
  */
 export function SpatialProductStage({
-  assembledLabel = "Asamblează produsul",
+  assembledLabel = "Assemble product",
   cameraPosition = DEFAULT_CAMERA_POSITION,
   className,
-  explodedLabel = "Separă piesele",
+  environment = true,
+  explodedLabel = "Explode view",
   fallback,
+  groupAnchor,
   groupPosition = DEFAULT_GROUP_POSITION,
   groupScale = 1,
-  hoverAnchor = DEFAULT_HOVER_ANCHOR,
+  hoverAnchor,
   hoverRadius = 0.32,
+  imageAnchor,
+  mobileGroupAnchor,
+  mobileImageAnchor,
   idleVisibility = "exploded",
   label,
   maxDpr = 1.75,
@@ -279,184 +335,207 @@ export function SpatialProductStage({
   const lockedRef = React.useRef(false);
   const pointerRef = React.useRef({ x: 0, y: 0 });
   const targetPointerRef = React.useRef({ x: 0, y: 0 });
-  const activeRef = React.useRef(true);
+  const onAssemblyChangeRef = React.useRef(onAssemblyChange);
+  React.useEffect(() => {
+    onAssemblyChangeRef.current = onAssemblyChange;
+  });
   const scrollProgress = useElementScrollProgress(rootRef);
-  const reducedMotion = useReducedMotion();
-  const hydrated = useHydrated();
+  const prefersReducedMotion = usePrefersReducedMotion();
   const mobile = useMediaQuery("(max-width: 767.98px)");
   const [assembled, setAssembled] = React.useState(false);
-  const [ready, setReady] = React.useState(false);
-  const [failed, setFailed] = React.useState(false);
-  const prefersReducedMotion = hydrated && Boolean(reducedMotion);
-  const signature = React.useMemo(() => parts.map((part) => part.id).join("|"), [parts]);
 
-  React.useEffect(() => {
-    const stage = stageRef.current;
-    const canvas = canvasRef.current;
-    if (!stage || !canvas || prefersReducedMotion) return;
-    if (!supportsWebGL()) {
-      const fallbackTimer = window.setTimeout(() => setFailed(true), 0);
-      return () => window.clearTimeout(fallbackTimer);
-    }
-    let disposed = false;
-    let frame = 0;
-    let previous = performance.now();
-    let smoothed = mode === "hover" ? 0 : scrollProgress.get();
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
-    camera.position.set(...cameraPosition);
-    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, powerPreference: "high-performance" });
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.05;
-    renderer.setClearColor(0x000000, 0);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, maxDpr));
-    const product = new THREE.Group();
-    const position = mobile ? mobileGroupPosition : groupPosition;
-    product.position.set(...position);
-    product.scale.setScalar(groupScale * (mobile ? 0.86 : 1));
-    scene.add(product);
-    scene.add(new THREE.HemisphereLight(0xeaf7ff, 0x17202a, 2.2));
-    const key = new THREE.DirectionalLight(0xffffff, 4.4);
-    key.position.set(-3, 4, 6);
-    scene.add(key);
-    const cyan = new THREE.PointLight(0x4ce9ff, 18, 7, 2);
-    cyan.position.set(2.5, 0.8, 3.5);
-    scene.add(cyan);
-    const rim = new THREE.PointLight(0x5577ff, 13, 6, 2);
-    rim.position.set(-2.5, -1.5, 2);
-    scene.add(rim);
-    const records: PartRecord[] = [];
-    const textureLoader = new THREE.TextureLoader();
-
-    const addPrimitiveParts = async () => {
-      await Promise.all(parts.map(async (part) => {
-        const texture = part.texture ? await textureLoader.loadAsync(part.texture) : undefined;
-        if (texture) {
-          texture.colorSpace = THREE.SRGBColorSpace;
-          texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
-        }
-        const mesh = new THREE.Mesh(createGeometry(part.geometry), createMaterial(part.material, texture));
-        mesh.castShadow = false;
-        mesh.receiveShadow = false;
-        const assembledTransform = normalizeTransform(part.assembled);
-        const explodedTransform = normalizeTransform(part.exploded);
-        applyTransform(mesh, explodedTransform);
-        product.add(mesh);
-        const materials = collectOpacityMaterials(mesh);
-        if (idleVisibility === "hidden") materials.forEach(({ material }) => {
-          material.transparent = true;
-          material.needsUpdate = true;
-        });
-        records.push({ object: mesh, assembled: assembledTransform, exploded: explodedTransform, delay: clamp01(part.assemblyDelay ?? 0), materials });
-      }));
-    };
-
-    const addModelParts = async () => {
-      if (!modelSrc) return;
-      const gltf = await new GLTFLoader().loadAsync(modelSrc);
-      modelParts.forEach((part) => {
-        const source = gltf.scene.getObjectByName(part.nodeName);
-        if (!source) return;
-        const object = source.clone(true);
-        object.traverse((child) => {
-          if (!(child instanceof THREE.Mesh)) return;
-          child.material = Array.isArray(child.material)
-            ? child.material.map((material) => material.clone())
-            : child.material.clone();
-        });
-        const assembledTransform = normalizeTransform(part.assembled ?? {
-          position: source.position.toArray(),
-          rotation: [source.rotation.x, source.rotation.y, source.rotation.z],
-          scale: source.scale.toArray(),
-        });
-        const explodedTransform = normalizeTransform(part.exploded);
-        applyTransform(object, explodedTransform);
-        product.add(object);
-        const materials = collectOpacityMaterials(object);
-        if (idleVisibility === "hidden") materials.forEach(({ material }) => {
-          material.transparent = true;
-          material.needsUpdate = true;
-        });
-        records.push({ object, assembled: assembledTransform, exploded: explodedTransform, delay: clamp01(part.assemblyDelay ?? 0), materials });
-      });
-    };
-
-    const resize = () => {
-      const width = Math.max(1, stage.clientWidth);
-      const height = Math.max(1, stage.clientHeight);
-      renderer.setSize(width, height, false);
-      camera.aspect = width / height;
-      camera.updateProjectionMatrix();
-    };
-    const resizeObserver = new ResizeObserver(resize);
-    resizeObserver.observe(stage);
-    const intersectionObserver = new IntersectionObserver(([entry]) => { activeRef.current = Boolean(entry?.isIntersecting); }, { rootMargin: "20% 0px" });
-    intersectionObserver.observe(stage);
-    const contextLost = (event: Event) => { event.preventDefault(); if (!disposed) setFailed(true); };
-    canvas.addEventListener("webglcontextlost", contextLost);
-
-    const render = (time: number) => {
-      if (disposed) return;
-      const delta = Math.min(0.05, Math.max(0.001, (time - previous) / 1000));
-      previous = time;
-      if (activeRef.current && document.visibilityState === "visible") {
-        const scroll = scrollProgress.get();
-        const hover = Math.max(hoverRef.current, lockedRef.current ? 1 : 0);
-        const target = mode === "hover" ? hover : mode === "scroll" ? scroll : Math.max(scroll, hover);
-        smoothed = damp(smoothed, target, smoothing, delta);
-        onAssemblyChange?.(smoothed);
-        pointerRef.current.x = damp(pointerRef.current.x, targetPointerRef.current.x, 8, delta);
-        pointerRef.current.y = damp(pointerRef.current.y, targetPointerRef.current.y, 8, delta);
-        product.rotation.y = pointerRef.current.x * 0.14;
-        product.rotation.x = -pointerRef.current.y * 0.08;
-        records.forEach((record) => {
-          const local = clamp01((smoothed - record.delay) / Math.max(0.001, 1 - record.delay));
-          interpolateTransform(record, local);
-          const visibility = idleVisibility === "hidden" ? clamp01(local / 0.18) : 1;
-          setRecordVisibility(record, visibility);
-        });
-        renderer.render(scene, camera);
-      }
-      frame = requestAnimationFrame(render);
-    };
-
-    Promise.all([addPrimitiveParts(), addModelParts()])
-      .then(() => {
-        if (disposed) return;
-        resize();
-        setReady(true);
-        frame = requestAnimationFrame(render);
-      })
-      .catch(() => setFailed(true));
-
-    return () => {
-      disposed = true;
-      cancelAnimationFrame(frame);
-      resizeObserver.disconnect();
-      intersectionObserver.disconnect();
-      canvas.removeEventListener("webglcontextlost", contextLost);
-      disposeObject(product);
-      renderer.dispose();
-    };
-  }, [
-    cameraPosition,
-    groupPosition,
-    groupScale,
-    idleVisibility,
+  const { ready, failed } = useWebGLStage({
+    stageRef,
+    canvasRef,
+    enabled: !prefersReducedMotion,
     maxDpr,
-    mobile,
-    mobileGroupPosition,
-    mode,
-    modelParts,
-    modelSrc,
-    onAssemblyChange,
-    parts,
-    prefersReducedMotion,
-    scrollProgress,
-    signature,
-    smoothing,
-  ]);
+    antialias: true,
+    alpha: true,
+    signature: JSON.stringify([
+      cameraPosition,
+      environment,
+      groupAnchor ?? null,
+      groupPosition,
+      groupScale,
+      idleVisibility,
+      imageAnchor ?? null,
+      mobile,
+      mobileGroupAnchor ?? null,
+      mobileGroupPosition,
+      mobileImageAnchor ?? null,
+      mode,
+      modelParts,
+      modelSrc ?? null,
+      parts,
+      smoothing,
+    ]),
+    create: ({ renderer, markReady, markFailed, isDisposed, requestResize }) => {
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.05;
+      renderer.setClearColor(0x000000, 0);
+      let loaded = false;
+      let smoothed = mode === "hover" ? 0 : scrollProgress.get();
+      let sourceScene: THREE.Object3D | null = null;
+      let environmentTexture: THREE.Texture | null = null;
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
+      camera.position.set(...cameraPosition);
+      if (environment) {
+        const pmremGenerator = new THREE.PMREMGenerator(renderer);
+        const room = new RoomEnvironment();
+        environmentTexture = pmremGenerator.fromScene(room, 0.04).texture;
+        room.dispose();
+        pmremGenerator.dispose();
+        scene.environment = environmentTexture;
+      }
+      const product = new THREE.Group();
+      const position = mobile ? mobileGroupPosition : groupPosition;
+      const viewportAnchor = mobile ? mobileGroupAnchor ?? groupAnchor : groupAnchor;
+      const activeImageAnchor = mobile ? mobileImageAnchor ?? imageAnchor : imageAnchor;
+      // Project the anchor onto the group's depth plane so the product keeps its
+      // screen (or image) spot at every aspect ratio; image anchors also track
+      // the cover-crop zoom so the product scales with the pictured subject.
+      const placeProduct = () => {
+        const baseScale = groupScale * (mobile && !activeImageAnchor ? 0.86 : 1);
+        const resolved = activeImageAnchor
+          ? projectImageAnchor(activeImageAnchor, camera.aspect)
+          : viewportAnchor
+            ? { fraction: viewportAnchor, zoom: 1 }
+            : null;
+        if (!resolved) {
+          product.position.set(...position);
+          product.scale.setScalar(baseScale);
+          return;
+        }
+        const distance = camera.position.z - position[2];
+        const halfHeight = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * distance;
+        const halfWidth = halfHeight * camera.aspect;
+        product.position.set((resolved.fraction[0] * 2 - 1) * halfWidth, (1 - resolved.fraction[1] * 2) * halfHeight, position[2]);
+        product.scale.setScalar(baseScale * (activeImageAnchor?.scaleWithImage === false ? 1 : resolved.zoom));
+      };
+      placeProduct();
+      scene.add(product);
+      scene.add(new THREE.HemisphereLight(0xeaf7ff, 0x17202a, 2.2));
+      const key = new THREE.DirectionalLight(0xffffff, 4.4);
+      key.position.set(-3, 4, 6);
+      scene.add(key);
+      const cyan = new THREE.PointLight(0x4ce9ff, 18, 7, 2);
+      cyan.position.set(2.5, 0.8, 3.5);
+      scene.add(cyan);
+      const rim = new THREE.PointLight(0x5577ff, 13, 6, 2);
+      rim.position.set(-2.5, -1.5, 2);
+      scene.add(rim);
+      const records: PartRecord[] = [];
+      const textureLoader = new THREE.TextureLoader();
+
+      const addPrimitiveParts = async () => {
+        await Promise.all(parts.map(async (part) => {
+          const texture = part.texture ? await textureLoader.loadAsync(part.texture) : undefined;
+          if (isDisposed()) {
+            texture?.dispose();
+            return;
+          }
+          if (texture) {
+            texture.colorSpace = THREE.SRGBColorSpace;
+            texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+          }
+          const mesh = new THREE.Mesh(createGeometry(part.geometry), createMaterial(part.material, texture));
+          mesh.castShadow = false;
+          mesh.receiveShadow = false;
+          const assembledTransform = normalizeTransform(part.assembled);
+          const explodedTransform = normalizeTransform(part.exploded);
+          applyTransform(mesh, explodedTransform);
+          product.add(mesh);
+          const materials = collectOpacityMaterials(mesh);
+          if (idleVisibility === "hidden") materials.forEach(({ material }) => {
+            material.transparent = true;
+            material.needsUpdate = true;
+          });
+          records.push({ object: mesh, assembled: assembledTransform, exploded: explodedTransform, delay: clamp01(part.assemblyDelay ?? 0), materials });
+        }));
+      };
+
+      const addModelParts = async () => {
+        if (!modelSrc) return;
+        const gltf = await new GLTFLoader().loadAsync(modelSrc);
+        if (isDisposed()) {
+          disposeObject(gltf.scene);
+          return;
+        }
+        sourceScene = gltf.scene;
+        modelParts.forEach((part) => {
+          const source = gltf.scene.getObjectByName(part.nodeName);
+          if (!source) return;
+          const object = source.clone(true);
+          object.traverse((child) => {
+            if (!(child instanceof THREE.Mesh)) return;
+            child.material = Array.isArray(child.material)
+              ? child.material.map((material) => material.clone())
+              : child.material.clone();
+          });
+          const assembledTransform = normalizeTransform(part.assembled ?? {
+            position: source.position.toArray(),
+            rotation: [source.rotation.x, source.rotation.y, source.rotation.z],
+            scale: source.scale.toArray(),
+          });
+          const explodedTransform = normalizeTransform(part.exploded);
+          applyTransform(object, explodedTransform);
+          product.add(object);
+          const materials = collectOpacityMaterials(object);
+          if (idleVisibility === "hidden") materials.forEach(({ material }) => {
+            material.transparent = true;
+            material.needsUpdate = true;
+          });
+          records.push({ object, assembled: assembledTransform, exploded: explodedTransform, delay: clamp01(part.assemblyDelay ?? 0), materials });
+        });
+      };
+
+      Promise.all([addPrimitiveParts(), addModelParts()])
+        .then(() => {
+          if (isDisposed()) return;
+          loaded = true;
+          requestResize();
+          markReady();
+        })
+        .catch(() => {
+          if (!isDisposed()) markFailed();
+        });
+
+      return {
+        onResize: (width, height) => {
+          camera.aspect = width / height;
+          camera.updateProjectionMatrix();
+          placeProduct();
+        },
+        onFrame: (delta) => {
+          if (!loaded) return;
+          const scroll = scrollProgress.get();
+          const hover = Math.max(hoverRef.current, lockedRef.current ? 1 : 0);
+          const target = mode === "hover" ? hover : mode === "scroll" ? scroll : Math.max(scroll, hover);
+          smoothed = damp(smoothed, target, smoothing, delta);
+          onAssemblyChangeRef.current?.(smoothed);
+          pointerRef.current.x = damp(pointerRef.current.x, targetPointerRef.current.x, 8, delta);
+          pointerRef.current.y = damp(pointerRef.current.y, targetPointerRef.current.y, 8, delta);
+          product.rotation.y = pointerRef.current.x * 0.14;
+          product.rotation.x = -pointerRef.current.y * 0.08;
+          records.forEach((record) => {
+            const local = clamp01((smoothed - record.delay) / Math.max(0.001, 1 - record.delay));
+            interpolateTransform(record, local);
+            const visibility = idleVisibility === "hidden" ? clamp01(local / 0.18) : 1;
+            setRecordVisibility(record, visibility);
+          });
+          renderer.render(scene, camera);
+        },
+        dispose: () => {
+          disposeObject(product);
+          // Cloned parts share geometries with the source GLTF scene; three's dispose() is
+          // safe to call twice, so disposing both never double-frees GPU resources.
+          if (sourceScene) disposeObject(sourceScene);
+          environmentTexture?.dispose();
+        },
+      };
+    },
+  });
 
   const setLock = () => {
     lockedRef.current = !lockedRef.current;
@@ -473,9 +552,14 @@ export function SpatialProductStage({
       targetPointerRef.current.x = normalizedX - 0.5;
       targetPointerRef.current.y = normalizedY - 0.5;
       const aspect = rect.width / Math.max(1, rect.height);
+      const activeImageAnchor = mobile ? mobileImageAnchor ?? imageAnchor : imageAnchor;
+      const resolvedHoverAnchor = hoverAnchor
+        ?? (activeImageAnchor ? projectImageAnchor(activeImageAnchor, aspect).fraction : undefined)
+        ?? (mobile ? mobileGroupAnchor ?? groupAnchor : groupAnchor)
+        ?? DEFAULT_HOVER_ANCHOR;
       const distance = Math.hypot(
-        (normalizedX - hoverAnchor[0]) * Math.min(1.35, aspect),
-        normalizedY - hoverAnchor[1],
+        (normalizedX - resolvedHoverAnchor[0]) * Math.min(1.35, aspect),
+        normalizedY - resolvedHoverAnchor[1],
       );
       hoverRef.current = distance <= hoverRadius ? 1 : 0;
     }

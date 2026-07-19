@@ -15,21 +15,24 @@ type BeforeAfterProps = Omit<React.ComponentProps<"div">, "children"> & {
   handleIcon?: React.ReactNode;
   label: string;
   onValueChange?: (value: number) => void;
+  /** Accessible name for the range input. Defaults to `${label} slider` so it stays distinct from the group label. */
+  sliderLabel?: string;
   value?: number;
 };
 
 /** Keyboard, pointer and touch accessible comparison for two registered visuals. */
 export function BeforeAfter({
   after,
-  afterLabel = "După",
+  afterLabel = "After",
   before,
-  beforeLabel = "Înainte",
+  beforeLabel = "Before",
   className,
   defaultValue = 50,
   handleClassName,
   handleIcon = <ChevronsLeftRight className="size-4" strokeWidth={1.75} />,
   label,
   onValueChange,
+  sliderLabel,
   style,
   value: controlledValue,
   ...props
@@ -74,7 +77,7 @@ export function BeforeAfter({
         max={100}
         step={1}
         value={value}
-        aria-label={label}
+        aria-label={sliderLabel ?? `${label} slider`}
         aria-valuetext={`${beforeLabel} ${Math.round(value)}%, ${afterLabel} ${Math.round(100 - value)}%`}
         className="absolute inset-0 z-30 size-full cursor-ew-resize opacity-0"
         onChange={(event) => update(Number(event.currentTarget.value))}

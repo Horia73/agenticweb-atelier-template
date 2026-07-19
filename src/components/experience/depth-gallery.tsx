@@ -5,28 +5,17 @@ import {
   motion,
   type MotionValue,
   useMotionValueEvent,
-  useReducedMotion,
   useTransform,
 } from "motion/react";
 
 import { cn } from "@/lib/utils";
+import {
+  clamp01,
+  useHydrated,
+  useMediaQuery,
+  usePrefersReducedMotion,
+} from "@/components/experience/experience-runtime";
 import { useElementScrollProgress } from "@/components/experience/use-element-scroll-progress";
-
-const subscribeToHydration = () => () => undefined;
-
-function useHydrated() {
-  return React.useSyncExternalStore(subscribeToHydration, () => true, () => false);
-}
-
-function useMediaQuery(query: string) {
-  const subscribe = React.useCallback((onChange: () => void) => {
-    const media = window.matchMedia(query);
-    media.addEventListener("change", onChange);
-    return () => media.removeEventListener("change", onChange);
-  }, [query]);
-  const getSnapshot = React.useCallback(() => window.matchMedia(query).matches, [query]);
-  return React.useSyncExternalStore(subscribe, getSnapshot, () => false);
-}
 
 export type DepthGalleryItem = {
   className?: string;
@@ -49,10 +38,6 @@ export type DepthGalleryProps = Omit<React.ComponentProps<"section">, "children"
   stackOffset?: number;
   stageClassName?: string;
 };
-
-function clamp01(value: number) {
-  return Math.max(0, Math.min(1, value));
-}
 
 function FocusCard({
   active,
@@ -151,10 +136,11 @@ export function DepthGallery({
   ...props
 }: DepthGalleryProps) {
   const rootRef = React.useRef<HTMLElement>(null);
-  const mounted = useHydrated();
-  const reducedMotionPreference = useReducedMotion();
-  const reducedMotion = mounted && Boolean(reducedMotionPreference);
-  const compact = useMediaQuery("(pointer: coarse), (max-width: 767.98px)");
+  const reducedMotion = usePrefersReducedMotion();
+  const hydrated = useHydrated();
+  const coarseOrNarrow = useMediaQuery("(pointer: coarse), (max-width: 767.98px)");
+  // SSR tradeoff: the server cannot know pointer/viewport, so mobile's first paint is the 3D stack; gating on hydration makes the carousel swap land exactly once, post-mount.
+  const compact = hydrated && coarseOrNarrow;
   const staticLayout = reducedMotion || compact;
   const [activeIndex, setActiveIndex] = React.useState(0);
   const scrollYProgress = useElementScrollProgress(rootRef);

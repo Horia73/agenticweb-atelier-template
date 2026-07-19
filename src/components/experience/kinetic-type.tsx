@@ -4,18 +4,12 @@ import * as React from "react";
 import {
   motion,
   type MotionValue,
-  useReducedMotion,
   useTransform,
 } from "motion/react";
 
 import { cn } from "@/lib/utils";
+import { usePrefersReducedMotion } from "@/components/experience/experience-runtime";
 import { useElementScrollProgress } from "@/components/experience/use-element-scroll-progress";
-
-const subscribeToHydration = () => () => undefined;
-
-function useHydrated() {
-  return React.useSyncExternalStore(subscribeToHydration, () => true, () => false);
-}
 
 export type KineticTypeFrame = {
   blur?: number;
@@ -159,15 +153,25 @@ export function KineticType({
   ...props
 }: KineticTypeProps) {
   const rootRef = React.useRef<HTMLElement>(null);
-  const mounted = useHydrated();
-  const reducedMotionPreference = useReducedMotion();
-  const reducedMotion = mounted && Boolean(reducedMotionPreference);
+  const reducedMotion = usePrefersReducedMotion();
   const localProgress = useElementScrollProgress(rootRef);
   const progress = controlledProgress ?? localProgress;
   const resolvedSegments = React.useMemo(
     () => segments?.length ? segments : createFallbackSegments(text, split),
     [segments, split, text],
   );
+  const warnedRef = React.useRef(false);
+
+  React.useEffect(() => {
+    if (process.env.NODE_ENV === "production" || warnedRef.current) return;
+    if (resolvedSegments.length <= 120) return;
+    warnedRef.current = true;
+    console.warn(
+      `[KineticType] Animating ${resolvedSegments.length} segments creates roughly `
+      + `${resolvedSegments.length * 11} MotionValues. split="characters" on long text is a `
+      + "performance cliff; prefer split=\"words\" or an art-directed `segments` timeline.",
+    );
+  }, [resolvedSegments.length]);
 
   return (
     <section
