@@ -32,7 +32,7 @@ npx shadcn@latest add ./public/r/spatial-gallery.json
 
 Galeria funcționează când cadrele formează o secvență, nu când înlocuiește un grid care ar fi mai ușor de scanat. Calibrează `curve`, `spacing`, camera, frame colors și caption per colecție. Folosește crop-uri cu focal point stabil și nu amesteca imagini cu rezoluții slabe.
 
-Cadrele depășite sunt ascunse înainte să treacă prin cameră; viitoarele cadre rămân discrete. `onActiveChange` poate alimenta analytics, audio sau UI extern, dar nu muta state greu la fiecare frame.
+Cadrele pornesc cu `visible=false` și intră într-o fereastră strictă în jurul camerei, printr-un fade cubic lung; nu apar instant când trec pragul de vizibilitate. Traseul alternează controlat stânga/dreapta și interpolează între puncte, astfel încât ultimul cadru să nu moștenească accidental aceeași margine ca precedentul. `onActiveChange` poate alimenta analytics, audio sau UI extern, dar nu muta state greu la fiecare frame.
 
 ## Contract AI și QA
 

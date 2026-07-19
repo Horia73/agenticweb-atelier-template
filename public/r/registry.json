@@ -95,7 +95,7 @@
       "name": "spatial-product-stage",
       "type": "registry:component",
       "title": "Spatial Product Stage · P1",
-      "description": "Assembly and exploded-view stage for registered alpha plates, editable Three.js primitives or named GLB nodes, driven by hover, scroll or both.",
+      "description": "Assembly and exploded-view stage for registered alpha plates, editable Three.js primitives or named GLB nodes, with hidden or exploded idle states and hover, scroll or hybrid drivers.",
       "dependencies": [
         "motion@^12.42.2",
         "three@^0.185.1",
@@ -131,7 +131,7 @@
       "name": "liquid-glass",
       "type": "registry:component",
       "title": "Liquid Glass Surface + Nav · P2",
-      "description": "Content-agnostic glass surface and semantic morphing navigation dock with bounded pointer light and reduced-motion behavior.",
+      "description": "Content-agnostic clear or regular adaptive glass surface and semantic morphing navigation dock with bounded pointer light and reduced-motion behavior.",
       "dependencies": [
         "motion@^12.42.2"
       ],
@@ -152,7 +152,7 @@
       "name": "shader-field",
       "type": "registry:component",
       "title": "Shader Field · P3",
-      "description": "Bounded reactive WebGL field with aurora, metaballs and contour modes, DPR caps, offscreen pause and context-loss fallback.",
+      "description": "Bounded reactive WebGL field with aurora, metaballs, contour and caustic modes, DPR caps, offscreen pause and context-loss fallback.",
       "dependencies": [
         "motion@^12.42.2",
         "three@^0.185.1"
@@ -238,7 +238,7 @@
       "name": "mesh-transition",
       "type": "registry:component",
       "title": "Mesh Transition · P6",
-      "description": "GPU image-to-image wave, fold or liquid transition with a clean moving seam, overscan and reversible scroll, hover or controlled playback.",
+      "description": "GPU image-to-image wave, fold or liquid transition with a clean moving seam, texture-aware DPR cap, overscan and reversible scroll, hover or controlled playback.",
       "dependencies": [
         "motion@^12.42.2",
         "three@^0.185.1"
@@ -317,7 +317,7 @@
       "name": "sticky-story",
       "type": "registry:component",
       "title": "Sticky Story",
-      "description": "Responsive chapter narrative with a persistent visual and reduced-motion-safe transitions.",
+      "description": "Responsive chapter narrative with a persistent visual, safe fluid content gutters and reduced-motion-safe transitions.",
       "files": [
         {
           "path": "src/components/experience/sticky-story.tsx",

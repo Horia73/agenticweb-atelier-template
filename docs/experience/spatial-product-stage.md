@@ -49,6 +49,8 @@ const parts = [
   visual={<ProjectPortrait />}
   hoverAnchor={[0.72, 0.52]}
   hoverRadius={0.2}
+  idleVisibility="hidden"
+  smoothing={4.5}
   groupPosition={[1.5, -0.4, 0]}
   fallback={<StaticProduct />}
 />
@@ -59,9 +61,10 @@ Pentru GLB, setează `modelSrc` și mapează `modelParts` prin `nodeName`; fieca
 ## Comportament
 
 - `hover` asamblează numai în zona definită de `hoverAnchor` și `hoverRadius`, nu oriunde în viewport.
+- `idleVisibility="hidden"` ține piesele complet nerandate optic până începe activarea; fiecare piesă își primește apoi propriul fade scurt, sincronizat cu `assemblyDelay`. Folosește `exploded` numai când explozia este intenționat starea inițială.
 - `scroll` face scrub reversibil: scroll înainte asamblează, reverse-scroll desface.
 - `hybrid` acceptă ambele drivere și păstrează controlul explicit de lock.
-- `assemblyDelay` creează o cascadă, dar valorile trebuie să păstreze produsul lizibil și să nu producă lag artificial.
+- `assemblyDelay` creează o cascadă, dar valorile trebuie să păstreze produsul lizibil și să nu producă lag artificial. Un `smoothing` mai mic produce o apropiere mai lentă și mai grea; verifică mereu hover rapid repetat.
 - `groupPosition`, `mobileGroupPosition`, `groupScale` și camera se calibrează pe crop-ul real.
 
 ## Contract AI și QA

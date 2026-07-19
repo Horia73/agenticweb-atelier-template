@@ -37,6 +37,25 @@ type GalleryRecord = {
   texture: THREE.Texture;
 };
 
+function galleryPoint(index: number, curve: number) {
+  const side = index % 2 === 0 ? -1 : 1;
+  const amplitude = 0.56 + (index % 4) * 0.045;
+  return {
+    x: side * curve * amplitude,
+    y: ((index % 3) - 1) * 0.16,
+  };
+}
+
+function sampleGalleryPath(value: number, count: number, curve: number) {
+  const fromIndex = Math.max(0, Math.min(count - 1, Math.floor(value)));
+  const toIndex = Math.max(0, Math.min(count - 1, fromIndex + 1));
+  const local = clamp01(value - fromIndex);
+  const eased = local * local * (3 - 2 * local);
+  const from = galleryPoint(fromIndex, curve);
+  const to = galleryPoint(toIndex, curve);
+  return { x: mix(from.x, to.x, eased), y: mix(from.y, to.y, eased) };
+}
+
 function GalleryFallback({ items }: { items: SpatialGalleryItem[] }) {
   return (
     <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 py-20 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -119,14 +138,15 @@ export function SpatialGallery({
       const height = 1.95;
       const width = Math.min(3.3, height * aspect);
       const geometry = new THREE.PlaneGeometry(width, height, 1, 1);
-      const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, opacity: 1, toneMapped: true });
+      const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, opacity: 0, toneMapped: true });
       const mesh = new THREE.Mesh(geometry, material);
       const frameGeometry = new THREE.PlaneGeometry(width + 0.08, height + 0.08);
-      const frameMaterial = new THREE.MeshBasicMaterial({ color: index % 2 ? 0x9bf7ff : 0xe7ff89, transparent: true, opacity: 0.2 });
+      const frameMaterial = new THREE.MeshBasicMaterial({ color: index % 2 ? 0x9bf7ff : 0xe7ff89, transparent: true, opacity: 0 });
       const frame = new THREE.Mesh(frameGeometry, frameMaterial);
+      mesh.visible = false;
+      frame.visible = false;
       const z = -index * spacing;
-      const x = Math.sin(index * 1.18) * curve;
-      const y = Math.cos(index * 0.82) * 0.28;
+      const { x, y } = galleryPoint(index, curve);
       mesh.position.set(x, y, z);
       frame.position.set(x, y, z - 0.025);
       mesh.rotation.y = -x * 0.075;
@@ -156,7 +176,7 @@ export function SpatialGallery({
       const delta = Math.min(0.05, Math.max(0.001, (time - previous) / 1000));
       previous = time;
       if (activeRef.current && document.visibilityState === "visible") {
-        smoothed = damp(smoothed, scrollProgress.get(), 10, delta);
+        smoothed = damp(smoothed, scrollProgress.get(), 6.5, delta);
         const floatIndex = smoothed * Math.max(0, items.length - 1);
         const index = Math.min(items.length - 1, Math.max(0, Math.round(floatIndex)));
         if (index !== lastActive) {
@@ -165,20 +185,27 @@ export function SpatialGallery({
           onActiveChange?.(index);
         }
         const cameraZ = 4.65 - floatIndex * spacing;
-        const pathX = Math.sin(floatIndex * 1.18) * curve * 0.45;
-        const pathY = Math.cos(floatIndex * 0.82) * 0.12;
-        camera.position.set(pathX, pathY, cameraZ);
+        const path = sampleGalleryPath(floatIndex, items.length, curve);
+        camera.position.set(path.x * 0.45, path.y * 0.42, cameraZ);
         const lookIndex = Math.min(items.length - 1, floatIndex + 0.28);
-        camera.lookAt(Math.sin(lookIndex * 1.18) * curve * 0.52, Math.cos(lookIndex * 0.82) * 0.1, cameraZ - 4.65);
+        const lookPath = sampleGalleryPath(lookIndex, items.length, curve);
+        camera.lookAt(lookPath.x * 0.52, lookPath.y * 0.38, cameraZ - 4.65);
         records.forEach((record, recordIndex) => {
           const distance = Math.abs(floatIndex - recordIndex);
-          const focus = clamp01(1 - distance * 0.45);
-          const pastFade = clamp01((recordIndex - floatIndex + 0.68) / 0.5);
-          const scale = mix(0.78, 1, focus);
+          const focus = clamp01(1 - distance * 0.36);
+          const entryRaw = clamp01((floatIndex - (recordIndex - 0.92)) / 0.68);
+          const exitRaw = clamp01((recordIndex + 0.86 - floatIndex) / 0.38);
+          const entryFade = entryRaw * entryRaw * (3 - 2 * entryRaw);
+          const exitFade = exitRaw * exitRaw * (3 - 2 * exitRaw);
+          const opacity = focus * entryFade * exitFade;
+          const insideCameraWindow = opacity > 0.002 && distance < 1.18;
+          const scale = mix(0.82, 1, focus);
           record.mesh.scale.setScalar(scale);
           record.frame.scale.setScalar(scale);
-          record.mesh.material.opacity = mix(0.08, 1, focus) * pastFade;
-          record.frame.material.opacity = mix(0.015, 0.34, focus) * pastFade;
+          record.mesh.visible = insideCameraWindow;
+          record.frame.visible = insideCameraWindow;
+          record.mesh.material.opacity = insideCameraWindow ? opacity : 0;
+          record.frame.material.opacity = insideCameraWindow ? opacity * 0.3 : 0;
         });
         renderer.render(scene, camera);
       }
@@ -188,6 +215,18 @@ export function SpatialGallery({
     load.then(() => {
       if (disposed) return;
       resize();
+      records.forEach((record, index) => {
+        const initial = index === 0;
+        record.mesh.visible = initial;
+        record.frame.visible = initial;
+        record.mesh.material.opacity = initial ? 1 : 0;
+        record.frame.material.opacity = initial ? 0.34 : 0;
+      });
+      const initialPath = sampleGalleryPath(0, items.length, curve);
+      const initialLook = sampleGalleryPath(0.28, items.length, curve);
+      camera.position.set(initialPath.x * 0.45, initialPath.y * 0.42, 4.65);
+      camera.lookAt(initialLook.x * 0.52, initialLook.y * 0.38, 0);
+      renderer.render(scene, camera);
       setReady(true);
       frame = requestAnimationFrame(render);
     }).catch(() => setFailed(true));

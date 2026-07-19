@@ -1,6 +1,6 @@
 # ShaderField
 
-`ShaderField` este o suprafață WebGL bounded pentru atmosferă reactivă. Oferă trei baze — `aurora`, `metaballs`, `contour` — dar copy-ul, dimensiunea, compoziția și culorile sunt ale proiectului.
+`ShaderField` este o suprafață WebGL bounded pentru atmosferă reactivă. Oferă patru baze — `aurora`, `metaballs`, `contour`, `caustic` — dar copy-ul, dimensiunea, compoziția și culorile sunt ale proiectului.
 
 ## Instalare
 
@@ -30,6 +30,7 @@ npx shadcn@latest add ./public/r/shader-field.json
 - `aurora`: fundal editorial, calm, pentru type și spațiu negativ.
 - `metaballs`: produs experimental, cultură, tech sau tranziții organice.
 - `contour`: date, topografie, arhitectură și identități mai precise.
+- `caustic`: lumină lichidă, materiale premium, hospitality și produse în care lumina trebuie să pară substanță, nu gradient decorativ.
 
 Nu folosi shader-ul ca decor generic în fiecare secțiune. Alege-l când mișcarea exprimă o proprietate a brandului și când fallback-ul static păstrează aceeași ierarhie.
 
@@ -37,7 +38,7 @@ Nu folosi shader-ul ca decor generic în fiecare secțiune. Alege-l când mișca
 
 Runtime-ul limitează DPR, oprește animația offscreen, nu actualizează când documentul este ascuns și eliberează geometry/material/renderer. Context loss activează `fallback`.
 
-Agentul trebuie să personalizeze palette, mode, frecvențe, intensitate, viteza, reacția la pointer, dimensiunea și compoziția DOM. Nu livrează culorile neon și headline-ul din Lab neschimbate.
+Agentul trebuie să personalizeze palette prin `colors`, `mode`, `intensity`, `speed`, `pointerStrength`, dimensiunea și compoziția DOM. Acestea sunt props publice și nu cer fork. Dacă direcția cere alte frecvențe, noise sau geometrie a câmpului, agentul editează shader-ul livrat ca sursă — componenta nu este un runtime închis. Nu livrează culorile și headline-ul din Lab neschimbate.
 
 Testează contrastul în toate fazele animației, pointer/touch, reduced motion, WebGL dezactivat, tab background, resize, device pixel ratio mare și un device low-power. Păstrează `maxDpr` între aproximativ 1 și 1.75 pentru suprafețe full-screen.
 

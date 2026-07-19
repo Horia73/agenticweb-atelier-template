@@ -82,6 +82,7 @@ export type SpatialProductStageProps = Omit<React.ComponentProps<"section">, "ch
   hoverRadius?: number;
   assembledLabel?: string;
   explodedLabel?: string;
+  idleVisibility?: "exploded" | "hidden";
   stageClassName?: string;
   showControl?: boolean;
   onAssemblyChange?: (progress: number) => void;
@@ -92,6 +93,10 @@ type PartRecord = {
   assembled: ResolvedTransform;
   exploded: ResolvedTransform;
   delay: number;
+  materials: Array<{
+    material: THREE.Material & { opacity: number };
+    opacity: number;
+  }>;
 };
 
 type ResolvedTransform = {
@@ -194,6 +199,30 @@ function interpolateTransform(record: PartRecord, progress: number) {
   );
 }
 
+function collectOpacityMaterials(object: THREE.Object3D) {
+  const materials: PartRecord["materials"] = [];
+  object.traverse((child) => {
+    if (!(child instanceof THREE.Mesh)) return;
+    const source = Array.isArray(child.material) ? child.material : [child.material];
+    source.forEach((material) => {
+      if (!("opacity" in material)) return;
+      materials.push({
+        material: material as THREE.Material & { opacity: number },
+        opacity: material.opacity,
+      });
+    });
+  });
+  return materials;
+}
+
+function setRecordVisibility(record: PartRecord, opacity: number) {
+  const visible = opacity > 0.002;
+  record.object.visible = visible;
+  record.materials.forEach(({ material, opacity: baseOpacity }) => {
+    material.opacity = baseOpacity * opacity;
+  });
+}
+
 function disposeObject(object: THREE.Object3D) {
   object.traverse((child) => {
     if (!(child instanceof THREE.Mesh)) return;
@@ -222,6 +251,7 @@ export function SpatialProductStage({
   groupScale = 1,
   hoverAnchor = DEFAULT_HOVER_ANCHOR,
   hoverRadius = 0.32,
+  idleVisibility = "exploded",
   label,
   maxDpr = 1.75,
   mobileGroupPosition = DEFAULT_MOBILE_GROUP_POSITION,
@@ -313,7 +343,12 @@ export function SpatialProductStage({
         const explodedTransform = normalizeTransform(part.exploded);
         applyTransform(mesh, explodedTransform);
         product.add(mesh);
-        records.push({ object: mesh, assembled: assembledTransform, exploded: explodedTransform, delay: clamp01(part.assemblyDelay ?? 0) });
+        const materials = collectOpacityMaterials(mesh);
+        if (idleVisibility === "hidden") materials.forEach(({ material }) => {
+          material.transparent = true;
+          material.needsUpdate = true;
+        });
+        records.push({ object: mesh, assembled: assembledTransform, exploded: explodedTransform, delay: clamp01(part.assemblyDelay ?? 0), materials });
       }));
     };
 
@@ -324,6 +359,12 @@ export function SpatialProductStage({
         const source = gltf.scene.getObjectByName(part.nodeName);
         if (!source) return;
         const object = source.clone(true);
+        object.traverse((child) => {
+          if (!(child instanceof THREE.Mesh)) return;
+          child.material = Array.isArray(child.material)
+            ? child.material.map((material) => material.clone())
+            : child.material.clone();
+        });
         const assembledTransform = normalizeTransform(part.assembled ?? {
           position: source.position.toArray(),
           rotation: [source.rotation.x, source.rotation.y, source.rotation.z],
@@ -332,7 +373,12 @@ export function SpatialProductStage({
         const explodedTransform = normalizeTransform(part.exploded);
         applyTransform(object, explodedTransform);
         product.add(object);
-        records.push({ object, assembled: assembledTransform, exploded: explodedTransform, delay: clamp01(part.assemblyDelay ?? 0) });
+        const materials = collectOpacityMaterials(object);
+        if (idleVisibility === "hidden") materials.forEach(({ material }) => {
+          material.transparent = true;
+          material.needsUpdate = true;
+        });
+        records.push({ object, assembled: assembledTransform, exploded: explodedTransform, delay: clamp01(part.assemblyDelay ?? 0), materials });
       });
     };
 
@@ -367,6 +413,8 @@ export function SpatialProductStage({
         records.forEach((record) => {
           const local = clamp01((smoothed - record.delay) / Math.max(0.001, 1 - record.delay));
           interpolateTransform(record, local);
+          const visibility = idleVisibility === "hidden" ? clamp01(local / 0.18) : 1;
+          setRecordVisibility(record, visibility);
         });
         renderer.render(scene, camera);
       }
@@ -395,6 +443,7 @@ export function SpatialProductStage({
     cameraPosition,
     groupPosition,
     groupScale,
+    idleVisibility,
     maxDpr,
     mobile,
     mobileGroupPosition,

@@ -29,20 +29,32 @@ export type MediaPortalProps = Omit<React.ComponentProps<"section">, "children">
 
 const SHAPES = {
   circle: {
-    clip: ["circle(7% at 68% 52%)", "circle(13% at 68% 52%)", "circle(74% at 54% 50%)"],
-    radius: ["50%", "50%", "0%"],
+    top: [43, 35, 0],
+    right: [25, 21, 0],
+    bottom: [43, 35, 0],
+    left: [61, 53, 0],
+    radius: [999, 999, 0],
   },
   rounded: {
-    clip: ["inset(28% 38% 28% 38% round 2.5rem)", "inset(18% 25% 18% 25% round 3rem)", "inset(0% 0% 0% 0% round 0rem)"],
-    radius: ["2.5rem", "3rem", "0rem"],
+    top: [28, 18, 0],
+    right: [38, 25, 0],
+    bottom: [28, 18, 0],
+    left: [38, 25, 0],
+    radius: [40, 48, 0],
   },
   vertical: {
-    clip: ["inset(8% 47% 8% 47% round 999px)", "inset(8% 34% 8% 34% round 3rem)", "inset(0% 0% 0% 0% round 0rem)"],
-    radius: ["999px", "3rem", "0rem"],
+    top: [8, 8, 0],
+    right: [47, 34, 0],
+    bottom: [8, 8, 0],
+    left: [47, 34, 0],
+    radius: [999, 48, 0],
   },
   diamond: {
-    clip: ["polygon(50% 43%, 57% 50%, 50% 57%, 43% 50%)", "polygon(50% 22%, 78% 50%, 50% 78%, 22% 50%)", "polygon(50% -45%, 145% 50%, 50% 145%, -45% 50%)"],
-    radius: ["0px", "0px", "0px"],
+    top: [43, 22, -20],
+    right: [43, 22, -20],
+    bottom: [43, 22, -20],
+    left: [43, 22, -20],
+    radius: [0, 0, 0],
   },
 } as const;
 
@@ -73,8 +85,13 @@ export function MediaPortal({
   const reducedMotion = useReducedMotion();
   const progress = useSpring(source, { stiffness: 125, damping: 30, mass: 0.25 });
   const shapeConfig = SHAPES[shape];
-  const clipPath = useTransform(progress, [0, 0.32, 1], [...shapeConfig.clip]);
+  const top = useTransform(progress, [0, 0.32, 1], shapeConfig.top.map((value) => `${value}%`));
+  const right = useTransform(progress, [0, 0.32, 1], shapeConfig.right.map((value) => `${value}%`));
+  const bottom = useTransform(progress, [0, 0.32, 1], shapeConfig.bottom.map((value) => `${value}%`));
+  const left = useTransform(progress, [0, 0.32, 1], shapeConfig.left.map((value) => `${value}%`));
   const borderRadius = useTransform(progress, [0, 0.42, 1], [...shapeConfig.radius]);
+  const rotate = useTransform(progress, [0, 0.55, 1], shape === "diamond" ? [45, 45, 0] : [0, 0, 0]);
+  const mediaRotate = useTransform(progress, [0, 0.55, 1], shape === "diamond" ? [-45, -45, 0] : [0, 0, 0]);
   const scale = useTransform(progress, [0, 0.4, 1], [0.9, 1, 1]);
   const ringOpacity = useTransform(progress, [0, 0.18, 0.7, 1], [0.85, 1, 0.4, 0]);
   const backdropScale = useTransform(progress, [0, 1], [1, 1.08]);
@@ -102,8 +119,13 @@ export function MediaPortal({
         <motion.div aria-hidden className="absolute inset-0" style={{ scale: backdropScale, opacity: backdropOpacity }}>
           {backdrop}
         </motion.div>
-        <motion.div className={cn("absolute inset-0 overflow-hidden will-change-[clip-path,transform]", portalClassName)} style={{ clipPath, borderRadius, scale }}>
-          {media}
+        <motion.div
+          className={cn("absolute overflow-hidden will-change-[top,right,bottom,left,border-radius,transform]", portalClassName)}
+          style={{ borderRadius, bottom, left, right, rotate, scale, top }}
+        >
+          <motion.div className={cn("absolute", shape === "diamond" ? "-inset-[22%]" : "inset-0")} style={{ rotate: mediaRotate }}>
+            {media}
+          </motion.div>
           <motion.div aria-hidden className="pointer-events-none absolute inset-0 border border-white/45 shadow-[inset_0_0_80px_rgb(255_255_255/.14),0_0_70px_rgb(255_255_255/.2)]" style={{ borderRadius, opacity: ringOpacity }} />
         </motion.div>
         <div className="pointer-events-none absolute inset-0">{children}</div>

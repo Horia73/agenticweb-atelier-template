@@ -9,7 +9,7 @@ import { damp, supportsWebGL, useHydrated } from "@/components/experience/experi
 
 export type ShaderFieldProps = Omit<React.ComponentProps<"section">, "children"> & {
   label: string;
-  mode?: "aurora" | "metaballs" | "contour";
+  mode?: "aurora" | "metaballs" | "contour" | "caustic";
   colors?: [string, string, string];
   speed?: number;
   intensity?: number;
@@ -108,13 +108,27 @@ const FRAGMENT_SHADER = /* glsl */ `
       color = mix(color, uColorA, core);
       color += edge * mix(uColorB, uColorA, .45) * 1.35;
       color += halo * uColorB * .16;
-    } else {
+    } else if (uMode < 2.5) {
       float terrain = fbm(p * 3.2 + vec2(time * .035, 0.));
       terrain += exp(-length(p - pointer) * 3.) * .22;
       float lines = 1. - smoothstep(.025, .085, abs(fract(terrain * 8.) - .5));
       float glow = smoothstep(.42, .92, terrain);
       color = mix(uColorC * .09, uColorB * .55, glow);
       color += lines * mix(uColorB, uColorA, terrain) * .8;
+    } else {
+      vec2 q = p * 1.32;
+      float flowA = fbm(q * 2.15 + vec2(time * .052, -time * .027));
+      float flowB = fbm((q + vec2(flowA * .34, -flowA * .22)) * 3.4 - vec2(time * .031, time * .018));
+      float interference = sin((flowA * 1.35 + flowB * .92 + q.x * .24) * 18.);
+      float caustic = pow(max(0., .94 - abs(interference)), 7.5);
+      float veil = exp(-abs(q.y + sin(q.x * 1.8 + time * .08) * .22 + (flowB - .5) * .38) * 4.8);
+      float pointerLight = exp(-length(q - pointer * 1.32) * 3.2);
+      float edgeShade = 1. - smoothstep(.18, 1.05, length(q));
+      color = uColorC * (.028 + flowA * .055);
+      color += mix(uColorB, uColorA, flowB) * caustic * 1.35;
+      color += uColorB * veil * .22;
+      color += mix(uColorA, uColorB, .45) * pointerLight * .18;
+      color *= .58 + edgeShade * .72;
     }
     color *= uIntensity;
     color = color / (color + vec3(1.));
@@ -171,7 +185,7 @@ export function ShaderField({
     const geometry = new THREE.PlaneGeometry(2, 2);
     const uniforms = {
       uTime: { value: 0 },
-      uMode: { value: mode === "aurora" ? 0 : mode === "metaballs" ? 1 : 2 },
+      uMode: { value: mode === "aurora" ? 0 : mode === "metaballs" ? 1 : mode === "contour" ? 2 : 3 },
       uIntensity: { value: intensity },
       uResolution: { value: new THREE.Vector2(1, 1) },
       uPointer: { value: new THREE.Vector2(0.5, 0.5) },

@@ -80,7 +80,7 @@ export function StickyStory({
   const safeIndex = Math.min(activeIndex, chapters.length - 1);
 
   const content = (
-    <div className={cn("min-w-0", contentClassName)}>
+    <div className={cn("min-w-0 px-5 sm:px-10 lg:px-[clamp(2rem,6vw,7rem)]", contentClassName)}>
       {chapters.map((chapter, index) => (
         <article
           key={chapter.id}

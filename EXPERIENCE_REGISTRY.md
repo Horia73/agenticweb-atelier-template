@@ -8,9 +8,9 @@ Biblioteca conține mecanici de experiență instalabile ca sursă editabilă, n
 | --- | --- | --- |
 | `depth-camera-scene` | `DepthCameraScene` | P0: 2.5D Advanced cu PerspectiveCamera reală, stack 00–50 și ocluzie semantică între două pass-uri WebGL |
 | `cinematic-world-scene` | `CinematicWorldScene` | recipe P0 cu intro, rear/front narrative și catalog final controlat local |
-| `spatial-product-stage` | `SpatialProductStage` | P1: assembly/exploded pentru plate-uri alpha, primitive editabile sau noduri GLB; hover/scroll/hybrid |
-| `liquid-glass` | `LiquidGlassSurface`, `LiquidGlassNav` | P2: suprafață glass și nav semantic cu active pill |
-| `shader-field` | `ShaderField` | P3: aurora, metaballs și contour WebGL reactive |
+| `spatial-product-stage` | `SpatialProductStage` | P1: assembly/exploded pentru plate-uri alpha, primitive editabile sau noduri GLB; hover/scroll/hybrid și idle ascuns |
+| `liquid-glass` | `LiquidGlassSurface`, `LiquidGlassNav` | P2: suprafață clear/regular adaptivă și nav semantic cu active pill |
+| `shader-field` | `ShaderField` | P3: aurora, metaballs, contour și caustic WebGL reactive |
 | `media-portal` | `MediaPortal` | P4: apertură React care crește la full viewport |
 | `spatial-gallery` | `SpatialGallery` | P5: galerie cu cameră Three.js și fallback rail nativ |
 | `mesh-transition` | `MeshTransition` | P6: tranziție GPU wave/fold/liquid, scroll/hover/controlled |
@@ -58,7 +58,10 @@ Deschide `http://localhost:3000/experience-lab`. Hash-uri utile:
 #media-portal
 #spatial-gallery
 #mesh-transition
+#depth-gallery
 ```
+
+Registry-ul păstrează cele **20 de primitive/recipes** instalabile. Experience Lab are **19 direcții vizibile**: demo-ul standalone duplicat pentru `DepthCameraScene` a fost eliminat, iar engine-ul rămâne demonstrat în `2.5D Advanced`; `DepthGallery` este ultima direcție din selector.
 
 Rulează apoi:
 

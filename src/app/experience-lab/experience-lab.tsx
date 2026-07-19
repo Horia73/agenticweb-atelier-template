@@ -10,6 +10,7 @@ import { CinematicWorldScene } from "@/components/experience/cinematic-world-sce
 import { CursorLens } from "@/components/experience/cursor-ambient";
 import { MagneticField, MagneticTarget } from "@/components/experience/cursor-magnetic";
 import type { DepthCameraLayer } from "@/components/experience/depth-camera-scene";
+import { DepthGallery, type DepthGalleryItem } from "@/components/experience/depth-gallery";
 import { ExpandingMedia } from "@/components/experience/expanding-media";
 import { HorizontalStoryRail } from "@/components/experience/horizontal-story-rail";
 import { HorizontalTrack } from "@/components/experience/horizontal-track";
@@ -39,6 +40,8 @@ const ASSETS = {
   worldPoster: "/experience/depth-camera-world-v2/poster.webp",
   worldMobile: "/experience/depth-camera-world-v2/mobile-poster.webp",
   emptyWorld: "/experience/depth-camera-world-v2/layers/00-sky.webp",
+  meshCar: "/experience/mesh-transition-v1/car-2x.webp",
+  meshWorld: "/experience/mesh-transition-v1/world-2x.webp",
 } as const;
 
 const WORLD = {
@@ -79,12 +82,14 @@ const carLayers: LayeredDepthLayer[] = [
   {
     id: "master",
     depth: 0.1,
+    pointer: false,
     timeline: [{ at: 0, scale: 1 }, { at: 1, scale: 1.18, y: -12 }],
     content: <SceneImage src={ASSETS.carPoster} priority className="object-cover" />,
   },
   {
     id: "rear-copy",
     depth: 0.4,
+    pointer: false,
     ariaHidden: false,
     timeline: [{ at: 0, opacity: 0, y: "20vh" }, { at: 0.3, opacity: 1, y: "0vh" }, { at: 0.72, opacity: 0, y: "-16vh" }],
     content: <div className="flex h-full items-end justify-center pb-[10vh] text-white"><p className="text-[clamp(4rem,13vw,12rem)] font-semibold leading-none tracking-[-0.08em]">GRAND TOURING</p></div>,
@@ -92,8 +97,17 @@ const carLayers: LayeredDepthLayer[] = [
   {
     id: "subject-matte",
     depth: 0.72,
+    pointer: false,
     timeline: [{ at: 0, z: 12, scale: 1 }, { at: 1, z: 20, scale: 1.18, y: -12 }],
     content: <SceneImage src={ASSETS.carSubject} priority className="object-cover" />,
+  },
+  {
+    id: "front-copy",
+    depth: 0.9,
+    pointer: false,
+    ariaHidden: false,
+    timeline: [{ at: 0, opacity: 0, y: "-18vh" }, { at: 0.56, opacity: 0, y: "-18vh" }, { at: 0.8, opacity: 1, y: "0vh" }, { at: 1, opacity: 1, y: "0vh" }],
+    content: <div className="flex h-full items-start px-6 pt-[18vh] text-white sm:px-[7vw]"><div><p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/58">A continental state of mind</p><p className="mt-3 max-w-[9ch] text-[clamp(2.8rem,6vw,6rem)] font-semibold leading-[0.84] tracking-[-0.07em]">Built for the long way.</p></div></div>,
   },
 ];
 
@@ -110,6 +124,13 @@ const galleryItems: SpatialGalleryItem[] = [
   { id: "portrait", src: ASSETS.portrait, alt: "Portret editorial pentru un produs wearable", eyebrow: "02 / Human", title: "Interface", description: "Camera trece printr-o galerie spațială reală." },
   { id: "car", src: ASSETS.carPoster, alt: "Automobil pe un drum de coastă", eyebrow: "03 / Motion", title: "Velocity", description: "Fiecare plan păstrează scară, focus și distanță." },
   { id: "origin", src: ASSETS.emptyWorld, alt: "Orizont mineral fără obiect central", eyebrow: "04 / Origin", title: "Silence", description: "Pe mobil revine la un rail nativ, complet navigabil." },
+];
+
+const depthGalleryItems: DepthGalleryItem[] = [
+  { id: "threshold", eyebrow: "01 / Threshold", title: "A world in focus", description: "Cardul activ se ridică; următoarele cadre păstrează o profunzime controlată.", depth: 0.8, content: <SceneImage src={ASSETS.worldPoster} className="object-cover" /> },
+  { id: "interface", eyebrow: "02 / Interface", title: "Human scale", description: "Conținutul rămâne React editabil, independent de mecanica stack-ului.", depth: 0.55, content: <SceneImage src={ASSETS.portrait} className="object-cover object-[68%_center]" /> },
+  { id: "velocity", eyebrow: "03 / Velocity", title: "Forward motion", description: "Scroll-ul invers reconstruiește stiva fără schimbări bruște de z-index.", depth: 0.72, content: <SceneImage src={ASSETS.carPoster} className="object-cover" /> },
+  { id: "origin", eyebrow: "04 / Origin", title: "Return to silence", description: "Pe touch, aceeași structură devine un rail nativ cu snap și accesibilitate.", depth: 0.45, content: <SceneImage src={ASSETS.emptyWorld} className="object-cover" /> },
 ];
 
 const sequenceFrames = Array.from({ length: 36 }, (_, index) => `/experience/sequence-car-v2/frames/frame-${String(index + 1).padStart(3, "0")}.webp`);
@@ -143,7 +164,7 @@ function AdvancedDemo() {
 }
 
 function BasicDepthDemo() {
-  return <ScrollDepthScene label="2.5D Basic cu mașină și occlusion matte" layers={carLayers} scrollScreens={3.2} sourceContract={{ sourceId: "adriatic-road-v3", mode: "integrated-occlusion", aligned: true, contactPlates: 1 }} stageClassName="bg-black" reducedMotionFallback={<div className="relative h-svh"><SceneImage src={ASSETS.carPoster} className="object-cover" /></div>} overlay={<div className="flex h-full flex-col justify-between p-6 pb-10 pt-24 text-xs uppercase tracking-[0.2em] text-white"><span>Basic / integrated still</span><span className="flex items-center gap-2"><ArrowDown className="size-4" /> scroll</span></div>} />;
+  return <ScrollDepthScene label="2.5D Basic cu mașină și occlusion matte" layers={carLayers} pointerTravel={0} scrollScreens={3.2} sourceContract={{ sourceId: "adriatic-road-v3", mode: "integrated-occlusion", aligned: true, contactPlates: 1 }} stageClassName="bg-black" reducedMotionFallback={<div className="relative h-svh"><SceneImage src={ASSETS.carPoster} className="object-cover" /></div>} overlay={<div className="flex h-full flex-col justify-between p-6 pb-10 pt-24 text-xs uppercase tracking-[0.2em] text-white"><span>Basic / registered master + subject matte</span><span className="flex items-center gap-2"><ArrowDown className="size-4" /> scroll controls depth</span></div>} />;
 }
 
 function SpatialProductDemo() {
@@ -158,7 +179,9 @@ function SpatialProductDemo() {
       mobileGroupPosition={[0, 1.7, 0]}
       groupScale={1.24}
       hoverAnchor={[0.74, 0.53]}
-      hoverRadius={0.2}
+      hoverRadius={0.22}
+      idleVisibility="hidden"
+      smoothing={4.6}
       scrollScreens={2.4}
       stageClassName="bg-[#eaf1f6]"
       visual={<div className="absolute inset-0"><SceneImage src={ASSETS.portrait} priority className="object-cover object-[70%_center]" /></div>}
@@ -173,17 +196,17 @@ function LiquidGlassDemo() {
   const navItems = ["Origin", "Material", "Process", "Archive"].map((label) => ({ id: label.toLowerCase(), label, href: `#${label.toLowerCase()}` }));
   return (
     <section className="relative h-svh overflow-hidden bg-black text-white">
-      <SceneImage src={ASSETS.worldPoster} priority className="object-cover brightness-[.7] saturate-[1.25]" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_65%_30%,transparent,rgba(0,0,0,.58))]" />
-      <div className="absolute inset-x-5 top-24 z-10 mx-auto max-w-5xl"><LiquidGlassNav label="Navigație liquid glass" items={mobile ? navItems.slice(0, 2) : navItems} brand={mobile ? undefined : "APERTURE"} action={<a href="#contact" className="flex h-10 items-center rounded-xl bg-white px-4 text-xs font-semibold text-black">Start</a>} /></div>
-      <div className="relative flex h-full items-end p-5 pb-10 sm:p-10"><LiquidGlassSurface className="max-w-xl rounded-[2rem] p-7 sm:p-10"><p className="text-xs uppercase tracking-[0.2em] text-white/55">P2 / Liquid surface</p><h1 className="mt-4 text-[clamp(3.5rem,7vw,7rem)] font-semibold leading-[0.82] tracking-[-0.07em]">Glass care aparține lumii.</h1><p className="mt-5 max-w-md text-sm leading-relaxed text-white/62">Suprafață, nav și active pill sunt independente și complet editabile.</p></LiquidGlassSurface></div>
+      <SceneImage src={ASSETS.worldPoster} priority className="object-cover brightness-[.82] saturate-[1.18]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_64%_25%,transparent_0%,rgba(0,0,0,.08)_52%,rgba(0,0,0,.38)_100%)]" />
+      <div className="absolute inset-x-5 top-24 z-10 mx-auto max-w-5xl"><LiquidGlassNav label="Navigație liquid glass" items={mobile ? navItems.slice(0, 2) : navItems} brand={mobile ? undefined : "APERTURE"} surfaceProps={{ blur: 6, saturation: 1.6, borderOpacity: 0.12 }} action={<a href="#contact" className="flex h-10 items-center rounded-xl border border-white/14 bg-white/[.045] px-4 text-xs font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,.14)] backdrop-blur-[4px] transition-colors hover:bg-white/[.09]">Start</a>} /></div>
+      <div className="relative flex h-full items-end p-5 pb-10 sm:p-10"><LiquidGlassSurface variant="clear" blur={6} saturation={1.6} borderOpacity={0.12} className="max-w-xl rounded-[2rem] p-7 sm:p-10"><p className="text-xs uppercase tracking-[0.2em] text-white/65">P2 / Clear liquid surface</p><h1 className="mt-4 text-[clamp(3.5rem,7vw,7rem)] font-semibold leading-[0.82] tracking-[-0.07em] [text-shadow:0_2px_24px_rgb(0_0_0/.42)]">Glass care aparține lumii.</h1><p className="mt-5 max-w-md text-sm leading-relaxed text-white/78 [text-shadow:0_1px_14px_rgb(0_0_0/.5)]">Lensing subtil, transparență contextuală și highlights adaptive — fără un panou lăptos peste scenă.</p></LiquidGlassSurface></div>
     </section>
   );
 }
 
 function ShaderDemo() {
-  const [mode, setMode] = React.useState<"aurora" | "metaballs" | "contour">("aurora");
-  return <ShaderField label="Câmp shader reactiv" mode={mode} className="grid h-svh place-items-center px-5 text-white" fallback={<div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,#3d65ff,#08090d_60%)]" />}><div className="pointer-events-auto absolute left-5 top-24 z-10 sm:left-10 sm:top-28"><label htmlFor="shader-mode" className="mb-2 block text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-white/50">Field</label><NativeSelect id="shader-mode" value={mode} onChange={(event) => setMode(event.currentTarget.value as typeof mode)} className="w-40 border-white/15 bg-black/35 text-white backdrop-blur-xl"><NativeSelectOption value="aurora">Aurora</NativeSelectOption><NativeSelectOption value="metaballs">Metaballs</NativeSelectOption><NativeSelectOption value="contour">Contour</NativeSelectOption></NativeSelect></div><div className="text-center"><p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/55">P3 / Shader field</p><h1 className="mt-5 text-[clamp(4rem,12vw,12rem)] font-semibold leading-[0.75] tracking-[-0.09em]">AMBIENT<br />IS ACTIVE.</h1><p className="mx-auto mt-6 max-w-md text-sm text-white/60">Aurora, metaballs sau contours. Fără copy impus în componentă.</p></div></ShaderField>;
+  const [mode, setMode] = React.useState<"aurora" | "metaballs" | "contour" | "caustic">("caustic");
+  return <ShaderField label="Câmp shader reactiv" mode={mode} colors={["#f4d7a2", "#73d7ff", "#071426"]} speed={0.62} intensity={1.2} pointerStrength={0.65} className="flex h-svh items-end px-5 pb-[7vh] text-white sm:px-[7vw]" fallback={<div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_28%,#456d80,#071426_48%,#02070c_82%)]" />}><div className="pointer-events-auto absolute left-5 top-24 z-10 sm:left-10 sm:top-28"><label htmlFor="shader-mode" className="mb-2 block text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-white/50">Field</label><NativeSelect id="shader-mode" value={mode} onChange={(event) => setMode(event.currentTarget.value as typeof mode)} className="w-40 border-white/15 bg-black/28 text-white backdrop-blur-xl"><NativeSelectOption value="caustic">Caustic</NativeSelectOption><NativeSelectOption value="aurora">Aurora</NativeSelectOption><NativeSelectOption value="metaballs">Metaballs</NativeSelectOption><NativeSelectOption value="contour">Contour</NativeSelectOption></NativeSelect></div><div className="relative max-w-5xl"><p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/58">P3 / Caustic field</p><h1 className="mt-5 text-[clamp(3.7rem,10vw,10rem)] font-semibold leading-[0.84] tracking-[-0.085em]">LIGHT<br />BECOMES<br />MATERIAL.</h1><p className="mt-6 max-w-md text-sm leading-relaxed text-white/62">Un ambient GPU editabil, cu mișcare lentă și spațiu real pentru conținut.</p></div></ShaderField>;
 }
 
 function MediaPortalDemo() {
@@ -201,7 +224,7 @@ function TransitionCopy({ progress }: { progress: MotionValue<number> }) {
 }
 
 function MeshTransitionDemo() {
-  return <MeshTransition label="Tranziție mesh între automobil și portal" from={{ src: ASSETS.carPoster, alt: "Automobil pe coastă" }} to={{ src: ASSETS.worldPoster, alt: "Portal în peisaj mineral" }} mode="liquid" trigger="scroll" scrollScreens={2.5} fallback={<SceneImage src={ASSETS.worldPoster} className="object-cover" />} overlay={(progress) => <TransitionCopy progress={progress} />} />;
+  return <MeshTransition label="Tranziție mesh între automobil și portal" from={{ src: ASSETS.meshCar, alt: "Automobil pe coastă" }} to={{ src: ASSETS.meshWorld, alt: "Portal în peisaj mineral" }} mode="liquid" trigger="scroll" scrollScreens={2.5} fallback={<SceneImage src={ASSETS.worldPoster} className="object-cover" />} overlay={(progress) => <TransitionCopy progress={progress} />} />;
 }
 
 const railItems = [
@@ -231,9 +254,24 @@ const stickyChapters: StickyStoryChapter[] = [
   { id: "release", eyebrow: "03 / Release", title: "Pagina continuă", body: "După ultimul capitol, sticky-ul se eliberează normal." },
 ];
 
-function StickyDemo() { return <StickyStory chapters={stickyChapters} visualSide="right" visualLabel="Vizual persistent" renderVisual={(_, index) => <div className="relative h-full"><SceneImage src={index === 1 ? ASSETS.worldPoster : ASSETS.carPoster} className="object-cover" /><span className="absolute bottom-8 left-8 text-8xl font-semibold text-white/80">0{index + 1}</span></div>} />; }
+const mirroredStickyChapters: StickyStoryChapter[] = [
+  { id: "proof", eyebrow: "04 / Proof", title: "Compoziția se inversează", body: "Al doilea grup mută vizualul în stânga fără să schimbe engine-ul sau ordinea semantică." },
+  { id: "detail", eyebrow: "05 / Detail", title: "Ritmul continuă", body: "Pot urma alte imagini, video-uri sau stări de produs, cu aceeași ancoră sticky." },
+  { id: "handoff", eyebrow: "06 / Handoff", title: "Oglinda se eliberează", body: "După încă trei capitole, pagina reintră natural în flow și poate continua cu orice secțiune." },
+];
+
+function StickyDemo() {
+  const firstSources = [ASSETS.carPoster, ASSETS.worldPoster, ASSETS.carPoster];
+  const mirroredSources = [ASSETS.portrait, ASSETS.worldPoster, ASSETS.emptyWorld];
+  return (
+    <div className="bg-background">
+      <StickyStory chapters={stickyChapters} visualSide="right" visualLabel="Vizual persistent, primul grup" renderVisual={(_, index) => <div className="relative h-full"><SceneImage src={firstSources[index]!} className="object-cover" /><span className="absolute bottom-8 left-8 text-8xl font-semibold text-white/80">0{index + 1}</span></div>} />
+      <StickyStory chapters={mirroredStickyChapters} visualSide="left" visualLabel="Vizual persistent, grup oglindit" renderVisual={(_, index) => <div className="relative h-full"><SceneImage src={mirroredSources[index]!} className={cn("object-cover", index === 0 && "object-[68%_center]")} /><span className="absolute bottom-8 right-8 text-8xl font-semibold text-white/80">0{index + 4}</span></div>} />
+    </div>
+  );
+}
 function SequenceDemo() { return <ImageSequenceScrub alt="Automobil roșu pe șosea" frames={sequenceFrames} poster={ASSETS.carSequence} label="Secvență de 36 cadre" scrollScreens={3} overlay={<div className="flex h-full items-end p-8 text-white"><h1 className="text-6xl font-semibold tracking-[-0.07em]">Frame-perfect.</h1></div>} />; }
-function MaskDemo() { return <MaskReveal label="Reveal din alb-negru în culoare" direction="circle" before={<SceneImage src={ASSETS.carPoster} className="object-cover grayscale" />} after={<SceneImage src={ASSETS.carPoster} className="object-cover saturate-150" />} overlay={<div className="grid h-full place-items-center"><p className="text-[clamp(5rem,14vw,13rem)] font-semibold tracking-[-0.09em] text-white mix-blend-difference">REVEAL</p></div>} />; }
+function MaskDemo() { return <MaskReveal label="Reveal din alb-negru în culoare" direction="circle" playback="commit" before={<SceneImage src={ASSETS.carPoster} className="object-cover grayscale" />} after={<SceneImage src={ASSETS.carPoster} className="object-cover saturate-150" />} overlay={<div className="grid h-full place-items-center"><p className="text-[clamp(5rem,14vw,13rem)] font-semibold tracking-[-0.09em] text-white mix-blend-difference">REVEAL</p></div>} />; }
 const kineticSegments: KineticTypeSegment[] = [
   { text: "IDEA", className: "block", range: [0.05, 0.32], from: { x: "-45vw", rotate: -8, opacity: 0 }, to: { x: "0vw", rotate: 0, opacity: 1 } },
   { text: "conduce", className: "ml-[.45em] block italic text-[#d7ff43]", range: [0.24, 0.55], from: { x: "42vw", opacity: 0 }, to: { x: "0vw", opacity: 1 } },
@@ -242,8 +280,34 @@ const kineticSegments: KineticTypeSegment[] = [
 function KineticDemo() { return <KineticType label="Tipografie kinetic" text="Ideea conduce mișcarea" segments={kineticSegments} scrollScreens={3} className="bg-[#101010] px-5 text-white sm:px-[7vw]" textClassName="w-full text-[clamp(4rem,11vw,11rem)] font-semibold leading-[.72] tracking-[-.08em]" />; }
 function CursorDemo() { return <CursorLens label="Cursor lens fără punct central" cursorLabel="DISCOVER" lensSize={250} className="h-svh bg-black text-white" base={<SceneImage src={ASSETS.worldPoster} className="object-cover grayscale contrast-125" />} reveal={<SceneImage src={ASSETS.worldPoster} className="object-cover saturate-150" />}><div className="flex h-full flex-col justify-between p-6 pb-10 pt-24"><div className="flex justify-between text-xs uppercase tracking-[.2em]"><span>Cursor lens</span><Scan className="size-5" /></div><p className="text-[clamp(4rem,10vw,10rem)] font-semibold leading-[.78] tracking-[-.08em]">Descoperă<br />altă stare.</p></div></CursorLens>; }
 function BeforeAfterDemo() { return <section className="grid min-h-svh place-items-center bg-[#e7e3da] p-5"><BeforeAfter label="Compară două stări" beforeLabel="Monochrome" afterLabel="Color" className="aspect-[16/10] w-full max-w-6xl rounded-[2rem]" before={<SceneImage src={ASSETS.worldPoster} className="object-cover grayscale" />} after={<SceneImage src={ASSETS.worldPoster} className="object-cover saturate-150" />} /></section>; }
-function ExpandingDemo() { return <ExpandingMedia label="Media care se extinde" playback="scrub" media={<SceneImage src={ASSETS.worldPoster} className="object-cover" />} overlay={<div className="flex h-full items-end p-8 text-white"><p className="text-7xl font-semibold tracking-[-.07em]">Din cadru, în lume.</p></div>} />; }
-function MagneticDemo() { return <MagneticField className="grid min-h-svh place-items-center bg-[#111318] p-6 text-white"><div className="grid w-full max-w-5xl gap-5 sm:grid-cols-3">{["Context", "Material", "Detail"].map((title, index) => <MagneticTarget key={title} radius={300} strength={0.18} maxTravel={34} maxTilt={4}><article className={cn("flex aspect-[4/5] flex-col justify-between rounded-[2rem] p-7", index === 1 ? "bg-[#d7ff43] text-black" : "bg-white/8")}><span>0{index + 1}</span><h2 className="text-4xl font-semibold tracking-[-.05em]">{title}</h2></article></MagneticTarget>)}</div></MagneticField>; }
+function ExpandingDemo() { return <ExpandingMedia label="Media care se extinde" playback="commit" media={<SceneImage src={ASSETS.worldPoster} className="object-cover" />} overlay={<div className="flex h-full items-end p-8 text-white"><p className="text-7xl font-semibold tracking-[-.07em]">Din cadru, în lume.</p></div>} />; }
+function MagneticDemo() {
+  return (
+    <MagneticField className="min-h-svh overflow-hidden bg-[#090b0e] px-5 pb-10 pt-28 text-white sm:px-[6vw]">
+      <div className="mx-auto grid min-h-[calc(100svh-9.5rem)] max-w-7xl gap-5 lg:grid-cols-[1.35fr_.65fr]">
+        <MagneticTarget radius={420} strength={0.12} maxTravel={28} maxTilt={2.8} className="min-h-[54svh]">
+          <article className="group relative h-full min-h-[54svh] overflow-hidden rounded-[2.5rem] border border-white/10 bg-white/5">
+            <SceneImage src={ASSETS.worldPoster} className="object-cover transition-transform duration-700 group-hover:scale-[1.025]" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/82 via-black/5 to-black/15" />
+            <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-6 p-7 sm:p-10"><div><p className="text-xs uppercase tracking-[0.22em] text-white/60">01 / Primary field</p><h1 className="mt-3 text-[clamp(3.5rem,7vw,7rem)] font-semibold leading-[0.8] tracking-[-0.075em]">Follow the<br />material.</h1></div><span className="hidden size-16 place-items-center rounded-full border border-white/30 bg-black/12 text-xl backdrop-blur-md sm:grid">↗</span></div>
+          </article>
+        </MagneticTarget>
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-1 lg:grid-rows-[.72fr_1.28fr]">
+          <MagneticTarget radius={300} strength={0.18} maxTravel={32} maxTilt={4}>
+            <article className="flex h-full min-h-52 flex-col justify-between rounded-[2rem] bg-[#d7ff43] p-7 text-black"><p className="text-xs font-semibold uppercase tracking-[0.2em] opacity-55">02 / Signal</p><p className="max-w-[8ch] text-4xl font-semibold leading-[0.9] tracking-[-0.06em]">Motion with hierarchy.</p></article>
+          </MagneticTarget>
+          <MagneticTarget radius={340} strength={0.14} maxTravel={30} maxTilt={3.5}>
+            <article className="relative flex h-full min-h-72 flex-col justify-between overflow-hidden rounded-[2rem] border border-white/12 bg-[#171b20] p-7"><div className="absolute -right-16 -top-16 size-56 rounded-full border border-white/12 bg-[radial-gradient(circle_at_35%_35%,rgba(255,255,255,.2),transparent_65%)]" /><p className="relative text-xs uppercase tracking-[0.2em] text-white/50">03 / Detail</p><div className="relative"><p className="text-7xl font-semibold tracking-[-0.08em]">34px</p><p className="mt-3 max-w-xs text-sm leading-relaxed text-white/52">Fiecare target își controlează independent raza, deplasarea și tilt-ul.</p></div></article>
+          </MagneticTarget>
+        </div>
+      </div>
+    </MagneticField>
+  );
+}
+
+function DepthGalleryDemo() {
+  return <DepthGallery label="Galerie focus în straturi suprapuse" items={depthGalleryItems} scrollScreens={4.5} stackOffset={6.5} stageClassName="bg-[#0a0c10]" />;
+}
 
 const demos = [
   ["depth-camera-scene", "P0 · 2.5D Advanced / Three.js", AdvancedDemo],
@@ -264,6 +328,7 @@ const demos = [
   ["before-after", "Before / after", BeforeAfterDemo],
   ["expanding-media", "Expanding media", ExpandingDemo],
   ["cursor-magnetic", "Magnetic cursor", MagneticDemo],
+  ["depth-gallery", "Depth gallery stack", DepthGalleryDemo],
 ] as const;
 
 type DemoId = (typeof demos)[number][0];

@@ -24,6 +24,8 @@ npx shadcn@latest add ./public/r/sticky-story.json
 
 Pe desktop, toate stările vizuale sunt suprapuse într-un stage `sticky top: 0; height: 100svh`; containerul nu urcă și nu își schimbă geometria între capitole. `visualSide="right" | "left"` permite compoziții consecutive de câte 2–4 capitole fără să impună un template de pagină. Pe mobil, fiecare capitol își afișează vizualul în flux.
 
+Coloana de conținut include implicit un gutter fluid (`px-5` → `clamp(2rem, 6vw, 7rem)`), astfel încât textul să nu atingă marginea viewportului. Îl poți înlocui prin `contentClassName`, dar păstrează minimum 20 px la 390 px și verifică headline-urile lungi.
+
 ## Personalizare obligatorie pentru AI
 
 - rescrie toate capitolele și construiește stări vizuale distincte, nu variații cosmetice;
@@ -33,3 +35,5 @@ Pe desktop, toate stările vizuale sunt suprapuse într-un stage `sticky top: 0;
 - respinge dacă vizualul duplică textul fără valoare sau schimbarea produce layout shift.
 
 Încarcă doar starea activă și vecinii când media este grea; asigură dimensiune stabilă pentru container.
+
+Pentru modelul 3 + 3 din Lab, compune două instanțe consecutive: prima cu `visualSide="right"`, a doua cu `visualSide="left"`. Așa obții oglindirea fără ca un singur engine să-și mute coloanele în mijlocul unei secțiuni sticky.

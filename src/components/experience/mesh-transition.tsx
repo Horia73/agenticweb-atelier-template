@@ -214,6 +214,13 @@ export function MeshTransition({
     const resize = () => {
       const width = Math.max(1, stage.clientWidth);
       const height = Math.max(1, stage.clientHeight);
+      const textureDprCap = Math.min(
+        uniforms.uFromSize.value.x / width,
+        uniforms.uFromSize.value.y / height,
+        uniforms.uToSize.value.x / width,
+        uniforms.uToSize.value.y / height,
+      );
+      renderer.setPixelRatio(Math.max(0.75, Math.min(window.devicePixelRatio || 1, maxDpr, textureDprCap)));
       renderer.setSize(width, height, false);
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
