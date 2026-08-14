@@ -85,12 +85,50 @@ export function awosTrack(name: string) {
   }
 }
 
+/**
+ * O valoare trimisă în cerere ÎMPREUNĂ cu înțelesul ei.
+ *
+ * O cifră fără unitate nu se poate citi. Trimisă prin `meta`, ea ajunge în OS
+ * ca text gol de sens, iar acolo înțelesul se deduce din numele cheii: orice
+ * conține „price" devine sumă în lei. Deducția greșește tăcut — un configurator
+ * a trimis un tarif lei/kW numit `selectedMountingPrice` și cererea a arătat o
+ * structură de 3.043 lei ca fiind de 589,73.
+ *
+ * Site-ul e cel care ȘTIE ce a calculat, deci el spune: etichetă, unitate, fel,
+ * care e cifra cererii și care valori sunt intrări de calcul.
+ */
+export type AwosLeadField = {
+  /** Cheia sub care valoarea apare în cerere. Cu spații, e luată ca etichetă. */
+  key: string
+  value: string | number | boolean
+  label?: string
+  /** Unitatea în care E valoarea: „RON", „EUR", „kWh", „kW", „buc", „%". */
+  unit?: string
+  kind?: "text" | "money" | "number" | "energy" | "boolean"
+  /** Rămâne în cerere (căutare, export, AI) dar nu se afișează. */
+  hidden?: boolean
+  /** Cifra-titlu: prețul final al cererii, nu o componentă. Una singură. */
+  primary?: boolean
+  /** Secțiunea în care stă. Fără ea, câmpul urcă între primele fapte. */
+  group?: string
+}
+
 export type AwosLeadInput = {
   name: string
   email?: string
   phone?: string
   message?: string
-  source?: string
+  source?: "form" | "callback" | "configurator" | "quote" | "order"
+  /** DE UNDE din site a venit cererea: slug stabil, `form:contact-footer`,
+   *  `configurator:panouri`. Fără el, cererile tuturor formularelor se amestecă
+   *  pe sursă și nu se pot separa în Clienți. */
+  channel?: string
+  /** Câmpuri suplimentare fără înțeles declarat. Pentru orice cifră calculată
+   *  — mai ales într-un configurator — folosește `fields`. */
+  meta?: Record<string, string | number | boolean>
+  /** Valorile cu înțelesul lor. Tarifele, coeficienții și prețurile de achiziție
+   *  sunt intrări în calcul, nu rezultate: `hidden: true` sau nu se trimit. */
+  fields?: AwosLeadField[]
 }
 
 export async function awosLead(

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { awosLead, awosTrack } from "@/lib/awos"
+import { awosLead, awosTrack, type AwosLeadInput } from "@/lib/awos"
 import { cn } from "@/lib/utils"
 
 type LeadFormLabels = {
@@ -31,6 +31,7 @@ const DEFAULT_LABELS: LeadFormLabels = {
 }
 
 export function LeadForm({
+  channel,
   className,
   labels: labelOverrides,
   onSuccess,
@@ -39,13 +40,19 @@ export function LeadForm({
   source,
   title,
 }: {
+  /** DE UNDE din site vine cererea: slug stabil per plasare, `form:footer`,
+   *  `form:pagina-contact`. Devine filtru și etichetă în Clienți, iar firma îl
+   *  poate redenumi din OS fără să umble în site. Fără el, toate formularele
+   *  site-ului se amestecă pe sursă și nu se mai pot separa. */
+  channel?: string
   className?: string
   labels?: Partial<LeadFormLabels>
   onSuccess?: () => void
   showMessage?: boolean
   showPhone?: boolean
-  /** Identificator opțional al plasării (ex. "footer", "pagina-contact"). */
-  source?: string
+  /** Taxonomia platformei — ce FEL de cerere e. Plasarea se spune prin
+   *  `channel`, nu aici. */
+  source?: AwosLeadInput["source"]
   title?: string
 }) {
   const labels = { ...DEFAULT_LABELS, ...labelOverrides }
@@ -84,6 +91,7 @@ export function LeadForm({
           phone: phone || undefined,
           message: message || undefined,
           source,
+          channel,
         },
         controller.signal
       )
