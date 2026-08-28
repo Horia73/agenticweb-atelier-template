@@ -46,3 +46,8 @@ de construcție azi, AI Manager-ul / editorul de site după lansare).
 10. Fără dependențe grele fără motiv.
 11. `npm run check:ui` trebuie să rămână verde. O excepție nativă reală se
    documentează pe linia elementului cu `ui-primitive-allow-native`.
+12. Măsurarea implicită este exclusiv AgenticWeb OS basic cookieless. Nu instala
+   `@vercel/analytics`, `@vercel/speed-insights`, Google Analytics, Meta Pixel,
+   TikTok Pixel sau alt tracker direct. Orice enrichment/ads cerut ulterior se
+   declară în manifestul Consent Manager și se încarcă prin atributele
+   `data-agenticweb-consent` + `data-agenticweb-src/href`, numai după acord.

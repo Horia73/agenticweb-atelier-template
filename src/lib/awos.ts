@@ -1,9 +1,10 @@
-const AWOS_URL =
+export const AWOS_URL =
   process.env.NEXT_PUBLIC_AWOS_URL ??
   (process.env.NODE_ENV === "development"
     ? "http://localhost:3107"
     : "https://os.agenticweb.ro")
-const SITE_KEY = process.env.NEXT_PUBLIC_AWOS_SITE_KEY ?? ""
+export const SITE_KEY = process.env.NEXT_PUBLIC_AWOS_SITE_KEY ?? ""
+export const AWOS_EMBED_URL = `${AWOS_URL.replace(/\/$/, "")}/embed/v1.js`
 
 export type AwosChatConfig = {
   siteName: string
@@ -69,19 +70,12 @@ export async function getAwosChatConfig(
 export function awosTrack(name: string) {
   if (!SITE_KEY) return
   try {
-    const body = JSON.stringify({
-      key: SITE_KEY,
-      e: [{ t: "ev", n: name, p: location.pathname }],
-    })
-    if (!navigator.sendBeacon?.(`${AWOS_URL}/api/embed/v1/a`, body)) {
-      fetch(`${AWOS_URL}/api/embed/v1/a`, {
-        method: "POST",
-        body,
-        keepalive: true,
-      }).catch(() => undefined)
+    const target = window as Window & {
+      agenticwebTrack?: (eventName: string) => void
     }
+    target.agenticwebTrack?.(String(name).trim().slice(0, 80))
   } catch {
-    // Analytics-ul nu are voie să blocheze conversația.
+    // Enrichment-ul analytics nu are voie să blocheze conversația.
   }
 }
 

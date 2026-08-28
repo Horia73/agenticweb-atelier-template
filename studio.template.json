@@ -46,5 +46,22 @@
       "restaurantMenu": "src/components/agenticweb/restaurant-menu.tsx",
       "hotelBooking": "src/components/agenticweb/hotel-booking.tsx"
     }
+  },
+  "measurement": {
+    "provider": "agenticweb-os",
+    "defaultMode": "cookieless-basic",
+    "browserStorage": false,
+    "forbiddenPackages": [
+      "@vercel/analytics",
+      "@vercel/speed-insights"
+    ],
+    "consentGated": [
+      "journeys",
+      "active-time",
+      "web-vitals",
+      "browser-errors",
+      "dom-events",
+      "advertising-pixels"
+    ]
   }
 }

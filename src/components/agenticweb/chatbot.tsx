@@ -486,6 +486,7 @@ export function ChatWidget({
   if (!open) {
     return (
       <Button
+        data-awos-chat
         type="button"
         size="icon-lg"
         onClick={() => setOpen(true)}
@@ -498,7 +499,7 @@ export function ChatWidget({
   }
 
   return (
-    <div className="fixed inset-x-3 bottom-3 z-50 sm:inset-x-auto sm:right-6 sm:bottom-6 sm:w-[25rem]">
+    <div data-awos-chat className="fixed inset-x-3 bottom-3 z-50 sm:inset-x-auto sm:right-6 sm:bottom-6 sm:w-[25rem]">
       <Chatbot
         title={title}
         suggestions={suggestions}

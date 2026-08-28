@@ -4,6 +4,7 @@ import "./globals.css";
 import { Instrument_Serif, Inter } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { ChatWidget } from "@/components/agenticweb/chatbot";
+import { AWOS_EMBED_URL, SITE_KEY } from "@/lib/awos";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 const instrumentSerif = Instrument_Serif({
@@ -35,6 +36,9 @@ export default function RootLayout({
             title={site.chatbot.title}
             suggestions={site.chatbot.suggestions}
           />
+        ) : null}
+        {SITE_KEY ? (
+          <script src={AWOS_EMBED_URL} data-site-key={SITE_KEY} async />
         ) : null}
       </body>
     </html>
