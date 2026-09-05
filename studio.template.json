@@ -30,15 +30,18 @@
     "build": "build",
     "typecheck": "typecheck",
     "lint": "lint",
-    "test": null,
-    "accessibility": null,
-    "performance": null
+    "test": "test",
+    "accessibility": "audit:accessibility",
+    "performance": "audit:performance"
   },
   "preview": {
     "distDirEnv": "NEXT_DIST_DIR"
   },
   "agenticwebApps": {
-    "environment": ["NEXT_PUBLIC_AWOS_SITE_KEY", "NEXT_PUBLIC_AWOS_URL"],
+    "environment": [
+      "NEXT_PUBLIC_AWOS_SITE_KEY",
+      "NEXT_PUBLIC_AWOS_URL"
+    ],
     "components": {
       "leadForm": "src/components/agenticweb/lead-form.tsx",
       "chatbot": "src/components/agenticweb/chatbot.tsx",
@@ -63,5 +66,6 @@
       "dom-events",
       "advertising-pixels"
     ]
-  }
+  },
+  "contractVersion": 1
 }

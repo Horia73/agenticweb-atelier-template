@@ -12,3 +12,6 @@ output/
 .DS_Store
 *.tsbuildinfo
 next-env.d.ts
+
+# Regenerable, source-bound audit output (CI uploads it separately).
+/artifacts/validation/

@@ -1,0 +1,405 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "contractVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "framework": {
+      "type": "string",
+      "enum": [
+        "nextjs-app-router",
+        "nextjs-pages-router"
+      ]
+    },
+    "paths": {
+      "type": "object",
+      "properties": {
+        "appRoot": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "publicAssets": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "tokenAdapter": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "contentAdapter": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "appRoot",
+        "publicAssets",
+        "tokenAdapter",
+        "contentAdapter"
+      ],
+      "additionalProperties": false
+    },
+    "ui": {
+      "type": "object",
+      "properties": {
+        "primitiveFoundation": {
+          "type": "string",
+          "const": "shadcn"
+        },
+        "designMode": {
+          "type": "string",
+          "enum": [
+            "shadcn-first",
+            "hybrid",
+            "custom-first"
+          ]
+        },
+        "config": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "components": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "skill": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "enforcementScript": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9:_-]{1,80}$"
+        }
+      },
+      "required": [
+        "primitiveFoundation",
+        "designMode",
+        "config",
+        "components",
+        "skill",
+        "enforcementScript"
+      ],
+      "additionalProperties": false
+    },
+    "experience": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "catalogVersion": {
+              "type": "string",
+              "enum": [
+                "1.0.0",
+                "1.1.0",
+                "1.2.0"
+              ]
+            },
+            "registry": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300
+            },
+            "components": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300
+            },
+            "labRoute": {
+              "type": "string",
+              "const": "/experience-lab"
+            },
+            "labEnv": {
+              "type": "string",
+              "const": "EXPERIENCE_LAB=1"
+            }
+          },
+          "required": [
+            "catalogVersion",
+            "registry",
+            "components",
+            "labRoute",
+            "labEnv"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "catalogVersion": {
+              "type": "string",
+              "enum": [
+                "1.3.0",
+                "2.0.0"
+              ]
+            },
+            "registry": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300
+            },
+            "components": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300
+            },
+            "skill": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300
+            },
+            "labRoute": {
+              "type": "string",
+              "const": "/experience-lab"
+            },
+            "labEnv": {
+              "type": "string",
+              "const": "EXPERIENCE_LAB=1"
+            }
+          },
+          "required": [
+            "catalogVersion",
+            "registry",
+            "components",
+            "skill",
+            "labRoute",
+            "labEnv"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "catalogVersion": {
+              "type": "string",
+              "enum": [
+                "3.0.0",
+                "3.1.0"
+              ]
+            },
+            "registry": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300
+            },
+            "catalog": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300
+            },
+            "grammar": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300
+            },
+            "components": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300
+            },
+            "skill": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300
+            },
+            "responsiveContract": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300
+            },
+            "labRoute": {
+              "type": "string",
+              "const": "/experience-lab"
+            },
+            "labEnv": {
+              "type": "string",
+              "const": "EXPERIENCE_LAB=1"
+            }
+          },
+          "required": [
+            "catalogVersion",
+            "registry",
+            "catalog",
+            "grammar",
+            "components",
+            "skill",
+            "labRoute",
+            "labEnv"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "scripts": {
+      "type": "object",
+      "properties": {
+        "dev": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9:_-]{1,80}$"
+        },
+        "build": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9:_-]{1,80}$"
+        },
+        "typecheck": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9:_-]{1,80}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "lint": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9:_-]{1,80}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "test": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9:_-]{1,80}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "accessibility": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9:_-]{1,80}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "performance": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9:_-]{1,80}$"
+        }
+      },
+      "required": [
+        "dev",
+        "build",
+        "performance"
+      ],
+      "additionalProperties": false
+    },
+    "preview": {
+      "type": "object",
+      "properties": {
+        "distDirEnv": {
+          "type": "string",
+          "const": "NEXT_DIST_DIR"
+        }
+      },
+      "required": [
+        "distDirEnv"
+      ],
+      "additionalProperties": false
+    },
+    "agenticwebApps": {
+      "type": "object",
+      "properties": {
+        "environment": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Z0-9_]*$"
+          }
+        },
+        "components": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "minLength": 1
+          },
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          }
+        }
+      },
+      "required": [
+        "environment",
+        "components"
+      ],
+      "additionalProperties": false
+    },
+    "measurement": {
+      "type": "object",
+      "properties": {
+        "provider": {
+          "type": "string",
+          "const": "agenticweb-os"
+        },
+        "defaultMode": {
+          "type": "string",
+          "const": "cookieless-basic"
+        },
+        "browserStorage": {
+          "type": "boolean",
+          "const": false
+        },
+        "forbiddenPackages": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "consentGated": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "provider",
+        "defaultMode",
+        "browserStorage",
+        "forbiddenPackages",
+        "consentGated"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "framework",
+    "paths",
+    "ui",
+    "scripts",
+    "preview"
+  ],
+  "additionalProperties": false
+}

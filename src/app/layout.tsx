@@ -1,18 +1,13 @@
 import type { Metadata } from "next";
 import { site } from "@/content";
 import "./globals.css";
-import { Instrument_Serif, Inter } from "next/font/google";
-import { cn } from "@/lib/utils";
+import "@fontsource-variable/inter";
+import "@fontsource/instrument-serif/latin.css";
+import "@fontsource/instrument-serif/latin-ext.css";
+import "@fontsource/instrument-serif/latin-italic.css";
+import "@fontsource/instrument-serif/latin-ext-italic.css";
 import { ChatWidget } from "@/components/agenticweb/chatbot";
 import { AWOS_EMBED_URL, SITE_KEY } from "@/lib/awos";
-
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
-const instrumentSerif = Instrument_Serif({
-  subsets: ["latin"],
-  variable: "--font-editorial",
-  weight: "400",
-  style: ["normal", "italic"],
-});
 
 export const metadata: Metadata = {
   title: `${site.name} — ${site.tagline}`,
@@ -27,7 +22,7 @@ export default function RootLayout({
   return (
     <html
       lang="ro"
-      className={cn("font-sans", inter.variable, instrumentSerif.variable)}
+      className="font-sans"
     >
       <body>
         {children}

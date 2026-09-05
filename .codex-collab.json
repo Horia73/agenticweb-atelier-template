@@ -1,0 +1,7 @@
+{
+  "base_branch": "main",
+  "remote": "origin",
+  "checks": [
+    "python3 -c \"from pathlib import Path; p=Path('node_modules'); p.unlink() if p.is_symlink() else None\" && npm ci --no-audit --no-fund && npm run verify"
+  ]
+}

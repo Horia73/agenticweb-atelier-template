@@ -42,7 +42,7 @@ de construcție azi, AI Manager-ul / editorul de site după lansare).
    `src/components/ui/`; excepțiile native reale se documentează explicit.
 7. Mobile-first; `sm:`/`lg:` sunt straturi peste baza mobilă.
 8. Română corectă, cu diacritice, în tot ce e vizibil.
-9. Fonturi noi doar prin `next/font/google`, legate la `--font-sans`.
+9. Fonturile se găzduiesc local, prin pachete Fontsource sau `next/font/local`, legate la tokenii de font. Buildul și auditurile trebuie să funcționeze fără acces la Google Fonts.
 10. Fără dependențe grele fără motiv.
 11. `npm run check:ui` trebuie să rămână verde. O excepție nativă reală se
    documentează pe linia elementului cu `ui-primitive-allow-native`.
@@ -51,3 +51,7 @@ de construcție azi, AI Manager-ul / editorul de site după lansare).
    TikTok Pixel sau alt tracker direct. Orice enrichment/ads cerut ulterior se
    declară în manifestul Consent Manager și se încarcă prin atributele
    `data-agenticweb-consent` + `data-agenticweb-src/href`, numai după acord.
+
+## Verificări de producție
+
+Rulează `npm run verify` (contract, catalog, tipuri, lint, teste de formular, build, axe și Lighthouse). Același gate rulează în GitHub Actions la push/PR. Harness-ul folosește un build local izolat, reutilizat numai pe aceeași sursă; oprește propriul server la final. Configurează rutele reprezentative în `studio.audit.json`. Dovezile sunt în `artifacts/validation/`; un scor Lighthouse singur este diagnostic. Testele adaptorului folosesc un transport simulat; înainte de predarea unui client, verifică separat cererea reală până la CRM și confirmarea tranzacțională, pe domeniul său autorizat.

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": "24.x"
+    "node": "22.x"
   },
   "scripts": {
     "dev": "NODE_ENV=development next dev",
@@ -17,11 +17,19 @@
     "experience:check": "node scripts/validate-experience-catalog.mjs",
     "registry:build": "shadcn build",
     "lint": "npm run lint:code && npm run check:ui",
-    "check": "npm run experience:check && npm run typecheck && npm run lint && npm run build"
+    "check": "npm run contract:check && npm run experience:check && npm run typecheck && npm run lint && npm test && npm run build",
+    "test": "tsx --test tests/*.test.ts",
+    "audit:accessibility": "node scripts/audit-site.mjs accessibility",
+    "audit:performance": "node scripts/audit-site.mjs performance",
+    "contract:check": "node scripts/check-template-contract.mjs",
+    "verify": "npm run contract:check && npm run experience:check && npm run typecheck && npm run lint && npm test && npm run audit:accessibility && npm run audit:performance",
+    "audit:deps": "npm audit --omit=dev --audit-level=high"
   },
-  "//dev": "NODE_ENV=development e explicit: gazda de preview (providerul Studioului) rulează ca serviciu cu NODE_ENV=production, iar `next dev` moștenit cu production sare peste pipeline-ul PostCSS → Tailwind nu compilează. Forțarea aici repară fără să atingem gazda.",
-  "//": "Build-critical deps stau în dependencies (nu devDependencies): unele medii de hosting rulează `npm install` cu NODE_ENV=production, care sare peste devDependencies. Fără Tailwind/PostCSS aici, CSS-ul nu s-ar compila.",
+  "//dev": "NODE_ENV=development e explicit: gazda de preview (providerul Studioului) ruleaz\u0103 ca serviciu cu NODE_ENV=production, iar `next dev` mo\u0219tenit cu production sare peste pipeline-ul PostCSS \u2192 Tailwind nu compileaz\u0103. For\u021barea aici repar\u0103 f\u0103r\u0103 s\u0103 atingem gazda.",
+  "//": "Build-critical deps stau \u00een dependencies (nu devDependencies): unele medii de hosting ruleaz\u0103 `npm install` cu NODE_ENV=production, care sare peste devDependencies. F\u0103r\u0103 Tailwind/PostCSS aici, CSS-ul nu s-ar compila.",
   "dependencies": {
+    "@fontsource-variable/inter": "5.3.0",
+    "@fontsource/instrument-serif": "5.3.0",
     "@shadcn/react": "^0.2.1",
     "@streamdown/cjk": "^1.0.3",
     "@streamdown/code": "^1.1.1",
@@ -33,13 +41,19 @@
     "@types/react-dom": "^19",
     "@types/three": "^0.185.1",
     "ai": "^6.0.229",
+    "ajv": "8.20.0",
+    "axe-core": "4.13.0",
+    "chrome-launcher": "1.2.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "esbuild": "0.28.2",
     "eslint": "^9.39.5",
-    "eslint-config-next": "^16.2.10",
+    "eslint-config-next": "16.3.4",
+    "lighthouse": "13.4.1",
     "lucide-react": "^1.24.0",
     "motion": "^12.42.2",
-    "next": "16.2.10",
+    "next": "16.3.4",
+    "playwright-core": "1.63.0",
     "radix-ui": "^1.6.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
@@ -48,6 +62,7 @@
     "tailwind-merge": "^3.6.0",
     "tailwindcss": "^4.1.4",
     "three": "^0.185.1",
+    "tsx": "4.23.13",
     "tw-animate-css": "^1.4.0",
     "typescript": "^5"
   }

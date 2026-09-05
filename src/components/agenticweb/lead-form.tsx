@@ -307,6 +307,7 @@ export function LeadForm({
     "idle" | "sending" | "success" | "error"
   >("idle")
   const requestRef = React.useRef<AbortController | null>(null)
+  const submissionRef = React.useRef<string | null>(null)
   const formRef = React.useRef<HTMLFormElement | null>(null)
   const idPrefix = React.useId()
   const step = steps[currentStep] ?? steps[0]
@@ -351,7 +352,7 @@ export function LeadForm({
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (status === "sending" || !validateCurrentStep()) return
+    if (requestRef.current || status === "sending" || !validateCurrentStep()) return
     const form = event.currentTarget
     const latestAnswers = { ...answers, ...formValues(form) }
 
@@ -364,28 +365,32 @@ export function LeadForm({
     setAnswers(latestAnswers)
     setStatus("sending")
     const controller = new AbortController()
-    requestRef.current?.abort()
     requestRef.current = controller
+    submissionRef.current ??= `form_${crypto.randomUUID()}`
     try {
       await awosLead(
-        buildLeadPayload({
-          answers: latestAnswers,
-          channel,
-          fields: allFields,
-          source,
-        }),
+        {
+          externalId: submissionRef.current,
+          ...buildLeadPayload({
+            answers: latestAnswers,
+            channel,
+            fields: allFields,
+            source,
+          }),
+        },
         controller.signal
       )
       awosTrack("lead_submit")
       setStatus("success")
       form.reset()
-      onSuccess?.()
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return
       setStatus("error")
+      return
     } finally {
       if (requestRef.current === controller) requestRef.current = null
     }
+    onSuccess?.()
   }
 
   if (status === "success") {
@@ -434,9 +439,10 @@ export function LeadForm({
                       id={id}
                       invalid={Boolean(error)}
                       onInvalid={(event) => {
+                        const message = event.currentTarget.validationMessage
                         setInvalidFields((current) => ({
                           ...current,
-                          [field.name]: event.currentTarget.validationMessage,
+                          [field.name]: message,
                         }))
                       }}
                     />

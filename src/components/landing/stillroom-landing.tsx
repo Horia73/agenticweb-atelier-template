@@ -660,7 +660,7 @@ function AboutStillroom() {
             <h3 className="mt-2 text-base font-semibold leading-5">
               {site.about.bento.purchaseLabel}
             </h3>
-            <p className="mt-auto text-sm leading-6 text-primary-foreground/75">
+            <p className="mt-auto text-sm leading-6 text-primary-foreground">
               {site.about.bento.purchaseBody}
             </p>
           </article>

@@ -31,17 +31,12 @@ export function awosEmbedUrl(
   return `${AWOS_URL.replace(/\/$/, "")}/embed/${application}/${encodeURIComponent(siteKey)}?embed=1`
 }
 
+// Transient per-document identity; basic mode never writes browser storage.
+let documentVisitorId: string | null = null
 function visitorId(): string | null {
-  try {
-    let id = localStorage.getItem("awos:visitor")
-    if (!id) {
-      id = `v_${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`
-      localStorage.setItem("awos:visitor", id)
-    }
-    return id
-  } catch {
-    return null
-  }
+  if (typeof window === "undefined") return null
+  documentVisitorId ??= `v_${crypto.randomUUID()}`
+  return documentVisitorId
 }
 
 export async function getAwosChatConfig(
@@ -108,6 +103,8 @@ export type AwosLeadField = {
 }
 
 export type AwosLeadInput = {
+  /** Stable across retries of the same user submission. */
+  externalId?: string
   name: string
   email?: string
   phone?: string
